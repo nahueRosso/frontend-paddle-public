@@ -1,0 +1,437 @@
+[
+  {
+    "id": "1d203895-b326-4837-8bc0-80eec26e8f31",
+    "tenantId": "118439687992895018187",
+    "name": "polirubro",
+    "startDate": "2026-03-12",
+    "endDate": "2026-03-15",
+    "registrationDeadline": "2026-02-28",
+    "type": "regular",
+    "format": "group_stage_playoff",
+    "sumLimit": null,
+    "givesPoints": true,
+    "status": "group_stage",
+    "maxTeams": null,
+    "groupsCount": 4,
+    "qualifyPerGroup": 2,
+    "playoffSize": 8,
+    "categories": [
+      {
+        "id": "acf344ab-5906-4737-9036-f010c8597f23",
+        "tenantId": "118439687992895018187",
+        "categoryLevel": 7,
+        "gender": "mixed",
+        "categoryFemale": 7
+      }
+    ],
+    "teams": [
+      {
+        "id": "dc7fb916-45b6-405d-97e9-3aeba0c2de47",
+        "tenantId": "118439687992895018187",
+        "approved": false,
+        "finalPosition": null
+      },
+      {
+        "id": "74d2f1fa-cd8d-4537-ae0b-2180a18c9c0d",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "e5f79bcf-596c-43c8-a5a1-11f2434bd9e2",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "afdc581f-bdf5-4a17-af61-63a200dd8ca3",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "eeacb980-9f4a-4234-af2c-4171f57f3f73",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "a6a27e62-c01a-4a6d-946f-112f5c65bf8e",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "bfcc19ae-521a-4a02-93e9-e608ab7e4bf0",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "9707e1e4-c974-4b21-90ae-2642ccce3f12",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "83b65c91-ed72-4544-a955-c7ebac0f96e4",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "7f25ad88-3a2c-436b-a3d3-c8e8a473682d",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "9526ed8c-d79b-4563-b74d-5f3f1a2665b0",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "3dfbbd94-bb49-4922-9d4d-2a23eb75a17b",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "8b4d287f-519a-4a94-89e6-792886c714bc",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      }
+    ],
+    "matches": [],
+    "pointsConfig": [],
+    "groups": [
+      {
+        "id": "a0203ff8-e335-44a7-a9d7-2ee1c9876715",
+        "tenantId": "118439687992895018187",
+        "name": "Zona D"
+      },
+      {
+        "id": "8b0c230d-e651-4dff-8c24-fc3c3045ea55",
+        "tenantId": "118439687992895018187",
+        "name": "Zona C"
+      },
+      {
+        "id": "f591f21c-dda9-4030-bb30-1dfbb8b39885",
+        "tenantId": "118439687992895018187",
+        "name": "Zona B"
+      },
+      {
+        "id": "ef407630-5cb7-4704-9ec8-147a55f85b32",
+        "tenantId": "118439687992895018187",
+        "name": "Zona A"
+      }
+    ],
+    "createdAt": "2026-02-27T21:23:38.319Z",
+    "updatedAt": "2026-02-27T21:23:38.319Z"
+  },
+  {
+    "id": "5b4dc4e9-96db-4a94-ba7d-1e9909faf571",
+    "tenantId": "118439687992895018187",
+    "name": "primer torneo de prueba",
+    "startDate": "2026-04-23",
+    "endDate": "2026-04-24",
+    "registrationDeadline": "2026-03-23",
+    "type": "regular",
+    "format": "single_elimination",
+    "sumLimit": null,
+    "givesPoints": true,
+    "status": "registration",
+    "maxTeams": null,
+    "groupsCount": null,
+    "qualifyPerGroup": null,
+    "playoffSize": null,
+    "categories": [
+      {
+        "id": "6f1b9382-9185-48dc-9da9-d7c3da94c846",
+        "tenantId": "118439687992895018187",
+        "categoryLevel": 7,
+        "gender": "male",
+        "categoryFemale": null
+      }
+    ],
+    "teams": [],
+    "matches": [],
+    "pointsConfig": [],
+    "groups": [],
+    "createdAt": "2026-02-24T08:38:24.213Z",
+    "updatedAt": "2026-02-24T08:38:24.213Z"
+  },
+  {
+    "id": "8c76d8ca-badd-4e84-9779-334f6b75181c",
+    "tenantId": "118439687992895018187",
+    "name": "loros",
+    "startDate": "2026-03-19",
+    "endDate": "2026-03-18",
+    "registrationDeadline": "2026-02-28",
+    "type": "regular",
+    "format": "group_stage",
+    "sumLimit": null,
+    "givesPoints": true,
+    "status": "registration",
+    "maxTeams": 2,
+    "groupsCount": 2,
+    "qualifyPerGroup": 3,
+    "playoffSize": 8,
+    "categories": [
+      {
+        "id": "152d4e1d-8506-4be4-b676-218d5c8ec48f",
+        "tenantId": "118439687992895018187",
+        "categoryLevel": 7,
+        "gender": "mixed-only",
+        "categoryFemale": 7
+      }
+    ],
+    "teams": [
+      {
+        "id": "21f5e192-d5c8-4797-81e3-e711c0b525bb",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "37f3a978-540a-472c-b88b-a7a3c26f3165",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "7b81aeba-d33f-4423-9f3a-6100ed7ba6a0",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "40d7cea4-65d5-4d3d-8c07-3d438c770fb1",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "a602b362-be85-433e-88d5-d4fc24bbf391",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "24098e81-d9b2-4916-a79f-b3d125bc601b",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "f249a4a9-0708-47d8-8b3c-f1bb9a33b2de",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "7858fe96-ada0-4936-abad-dc8eea22ad9e",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "97431997-077f-4ea1-b795-fd7b42caf8c4",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "0f12e9d4-7394-4af9-8fcb-04de9b0d9d8f",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      }
+    ],
+    "matches": [],
+    "pointsConfig": [],
+    "groups": [],
+    "createdAt": "2026-02-27T21:29:53.047Z",
+    "updatedAt": "2026-02-27T21:29:53.047Z"
+  },
+  {
+    "id": "69a5dac0-4a04-4cb8-a5e8-4b08c38d1081",
+    "tenantId": "118439687992895018187",
+    "name": "torneo ",
+    "startDate": "2026-03-11",
+    "endDate": "2026-03-14",
+    "registrationDeadline": "2026-02-27",
+    "type": "regular",
+    "format": "single_elimination",
+    "sumLimit": null,
+    "givesPoints": true,
+    "status": "group_stage",
+    "maxTeams": null,
+    "groupsCount": null,
+    "qualifyPerGroup": null,
+    "playoffSize": null,
+    "categories": [
+      {
+        "id": "9f4ed1de-257e-425e-b6ba-279e6f214046",
+        "tenantId": "118439687992895018187",
+        "categoryLevel": 7,
+        "gender": "mixed-only",
+        "categoryFemale": 5
+      }
+    ],
+    "teams": [
+      {
+        "id": "a7e538ef-591f-483f-88ea-4a7eafb22511",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "84cd60ec-6266-4860-aa77-5f32733e404a",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "d53b8b86-11de-4c12-89a5-3029a7102346",
+        "tenantId": "118439687992895018187",
+        "approved": false,
+        "finalPosition": null
+      },
+      {
+        "id": "e31c2e04-052e-40ee-8c55-7d9490201b3c",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "39fcbd6a-2e63-4fc6-bcff-568767a9571d",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "3de069a9-5446-429f-863c-363e49f43b1b",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "f9384a3d-0ac2-40b4-a84b-1b7de9d0c0f0",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "a9f6145e-261f-49bb-9303-1d4e8176be15",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "ca9b71ab-d32c-4e25-95ad-fcd91e5aad88",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "df82ffc3-544d-41d3-8527-26d2816a001b",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "a3778123-7ded-4987-ba48-e1603e7cbbc7",
+        "tenantId": "118439687992895018187",
+        "approved": true,
+        "finalPosition": null
+      },
+      {
+        "id": "2161b85c-c750-44c0-a912-f62b6b20377e",
+        "tenantId": "118439687992895018187",
+        "approved": false,
+        "finalPosition": null
+      }
+    ],
+    "matches": [
+      {
+        "id": "bffc8c21-cccb-4958-a7e7-0ade33d224f4",
+        "tenantId": "118439687992895018187",
+        "round": 2,
+        "score": null,
+        "matchNumber": 1,
+        "finished": false
+      },
+      {
+        "id": "25a50ae8-3ca3-4c2e-908f-b9a341b9d331",
+        "tenantId": "118439687992895018187",
+        "round": 4,
+        "score": null,
+        "matchNumber": 2,
+        "finished": false
+      },
+      {
+        "id": "f72db144-f4e3-4ce1-b09c-4752dd7a6b64",
+        "tenantId": "118439687992895018187",
+        "round": 4,
+        "score": null,
+        "matchNumber": 1,
+        "finished": false
+      },
+      {
+        "id": "4dab9b84-38ed-4644-a1b4-34f75d41d515",
+        "tenantId": "118439687992895018187",
+        "round": 8,
+        "score": null,
+        "matchNumber": 4,
+        "finished": false
+      },
+      {
+        "id": "6a3ee1f5-2060-4d11-ae3c-7298826d46ea",
+        "tenantId": "118439687992895018187",
+        "round": 8,
+        "score": null,
+        "matchNumber": 3,
+        "finished": false
+      },
+      {
+        "id": "c22b6bfa-16c2-4456-80c6-707b516070e5",
+        "tenantId": "118439687992895018187",
+        "round": 8,
+        "score": null,
+        "matchNumber": 2,
+        "finished": false
+      },
+      {
+        "id": "58d1c311-7777-4af1-b205-bf24e9608e0e",
+        "tenantId": "118439687992895018187",
+        "round": 8,
+        "score": null,
+        "matchNumber": 1,
+        "finished": false
+      },
+      {
+        "id": "8b273acf-3ca6-4785-906a-0288ba0b5a62",
+        "tenantId": "118439687992895018187",
+        "round": 16,
+        "score": null,
+        "matchNumber": 2,
+        "finished": false
+      },
+      {
+        "id": "ce9fe6a5-e6e1-424c-873b-3b5d82c89628",
+        "tenantId": "118439687992895018187",
+        "round": 16,
+        "score": null,
+        "matchNumber": 1,
+        "finished": false
+      }
+    ],
+    "pointsConfig": [],
+    "groups": [],
+    "createdAt": "2026-02-27T21:18:14.910Z",
+    "updatedAt": "2026-03-03T05:43:34.895Z"
+  }
+]

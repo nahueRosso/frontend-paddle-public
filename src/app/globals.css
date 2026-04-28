@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  color-scheme: light;
+}
+
+@layer base {
+  body {
+    @apply bg-[#F9FAFB] text-[#111827] antialiased transition-colors duration-300;
+    font-family: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont,
+      "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-semibold text-[#111827] tracking-tight;
+  }
+
+  p {
+    @apply leading-relaxed text-[#4B5563];
+  }
+
+  a {
+    @apply text-slate-700 underline-offset-2 transition-all duration-200 hover:text-emerald-700;
+  }
+
+  strong {
+    @apply text-[#111827];
+  }
+
+  :focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    @apply bg-emerald-500/20 text-[#111827];
+  }
+}
+
+@keyframes generation-scan {
+  0% {
+    transform: translateY(-100%);
+  }
+
+  55%,
+  100% {
+    transform: translateY(100%);
+  }
+}
