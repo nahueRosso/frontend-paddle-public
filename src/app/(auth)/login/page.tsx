@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -10,6 +10,14 @@ import { company } from "@/config/company";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signIn, status } = useAuth();
@@ -116,6 +124,16 @@ export default function LoginPage() {
             {company.email}
           </Link>
         </p>
+      </div>
+    </main>
+  );
+}
+
+function LoginPageFallback() {
+  return (
+    <main className="flex min-h-[calc(100vh-6rem)] items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.16),_transparent_38%),linear-gradient(180deg,_#f8fafc_0%,_#ecfdf5_48%,_#f8fafc_100%)] px-4 py-16 sm:px-6 dark:bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_30%),linear-gradient(180deg,_#020617_0%,_#052e2b_45%,_#020617_100%)]">
+      <div className="flex w-full max-w-md items-center justify-center rounded-3xl border border-emerald-100 bg-white/85 p-8 shadow-lg shadow-emerald-100 backdrop-blur-sm dark:border-emerald-900/70 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
+        <Loader2 className="h-5 w-5 animate-spin text-emerald-600 dark:text-emerald-300" />
       </div>
     </main>
   );

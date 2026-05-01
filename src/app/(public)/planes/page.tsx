@@ -579,7 +579,7 @@ console.log("-------------------");
           <>
             {planStatus?.active && (
               <div className="rounded-3xl border border-emerald-100 bg-white/70 p-6 text-center text-sm text-[#4B5563] dark:border-emerald-900/60 dark:bg-slate-950/80 dark:text-slate-400">
-                "Seleccioná el nuevo plan que querés activar."
+                &quot;Seleccioná el nuevo plan que querés activar.&quot;
               </div>
             )}
 

@@ -212,7 +212,6 @@ export function ClubSidebar({
 
       <SidebarFooter className="mt-auto border-t border-emerald-100 bg-white p-3 dark:border-emerald-900/70 dark:bg-slate-950">
         <ThemeToggle
-          compact
           className="mx-auto h-10 w-10 border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/70 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-slate-800"
         />
         <div className="px-1 py-1 group-data-[collapsible=icon]:hidden">

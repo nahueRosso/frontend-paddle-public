@@ -71,5 +71,6 @@ export interface TimeSlot {
   startTime: string;
   endTime: string;
   status: "available" | "occupied" | "pending";
+  bookingId?: string;
   data?: SlotBookingData;
 }

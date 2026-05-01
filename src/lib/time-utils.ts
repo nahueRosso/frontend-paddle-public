@@ -76,9 +76,18 @@ export function generateTimeSlots(ranges: DailyTimeRange[], durationMinutes: num
         .toString()
         .padStart(2, "0");
       const minutes = (current % 60).toString().padStart(2, "0");
+      const startTime = `${hours}:${minutes}`;
+      const nextMinutes = current + durationMinutes;
+      const endHours = Math.floor(nextMinutes / 60)
+        .toString()
+        .padStart(2, "0");
+      const endMinutes = (nextMinutes % 60).toString().padStart(2, "0");
+      const endTime = `${endHours}:${endMinutes}`;
 
       slots.push({
-        time: `${hours}:${minutes}`,
+        time: startTime,
+        startTime,
+        endTime,
         status: "available",
       });
     }

@@ -87,9 +87,9 @@ import type {
 
 type TournamentView = "upcoming" | "ongoing" | "finished" | "ranking";
 type EligiblePlayer = {
-  category: number;
+  category: number | null;
   gender: string;
-  status: "pending" | "verified" | "rejected";
+  status: "pending" | "verified" | "rejected" | null;
 };
 type FinishedTournamentRow = {
   id: string;
@@ -952,6 +952,7 @@ function TournamentRegisterDialog({
 }) {
   const { config } = useClub();
   const { playerId } = usePlayerSafe();
+  const resolvedPlayerId = playerId ?? undefined;
   const queryClient = useQueryClient();
   const [selectedCategoryId, setSelectedCategoryId] = React.useState("");
   const [flow, setFlow] = React.useState<"partner" | "available" | null>(null);
@@ -998,14 +999,14 @@ function TournamentRegisterDialog({
     queryKey: tournamentKeys.registrationOptions(
       config.tenantId,
       tournament?.id,
-      playerId,
+      resolvedPlayerId,
       apiCategoryId,
     ),
     queryFn: () =>
       fetchTournamentRegistrationOptions({
         tenantId: config.tenantId,
         tournamentId: tournament!.id,
-        playerId: playerId!,
+        playerId: resolvedPlayerId!,
         categoryId: apiCategoryId,
       }),
     enabled: canRunTournamentQueries,
@@ -1015,14 +1016,14 @@ function TournamentRegisterDialog({
     queryKey: tournamentKeys.eligiblePartners(
       config.tenantId,
       tournament?.id,
-      playerId,
+      resolvedPlayerId,
       apiCategoryId,
     ),
     queryFn: () =>
       fetchEligibleTournamentPartners({
         tenantId: config.tenantId,
         tournamentId: tournament!.id,
-        playerId: playerId!,
+        playerId: resolvedPlayerId!,
         categoryId: apiCategoryId,
       }),
     enabled: canRunTournamentQueries && flow === "partner",
@@ -1044,25 +1045,25 @@ function TournamentRegisterDialog({
   });
 
   const partnerRequestsQuery = useQuery({
-    queryKey: tournamentKeys.partnerRequests(config.tenantId, playerId),
+    queryKey: tournamentKeys.partnerRequests(config.tenantId, resolvedPlayerId),
     queryFn: () =>
       fetchTournamentPartnerRequests({
         tenantId: config.tenantId,
-        playerId: playerId!,
+        playerId: resolvedPlayerId!,
       }),
-    enabled: Boolean(open && config.tenantId && playerId),
+    enabled: Boolean(open && config.tenantId && resolvedPlayerId),
   });
 
   const invalidateRegistrationState = React.useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: tournamentKeys.list(config.tenantId) }),
-      queryClient.invalidateQueries({ queryKey: tournamentKeys.partnerRequests(config.tenantId, playerId) }),
-      queryClient.invalidateQueries({ queryKey: tournamentKeys.registrationOptions(config.tenantId, tournament?.id, playerId, apiCategoryId) }),
+      queryClient.invalidateQueries({ queryKey: tournamentKeys.partnerRequests(config.tenantId, resolvedPlayerId) }),
+      queryClient.invalidateQueries({ queryKey: tournamentKeys.registrationOptions(config.tenantId, tournament?.id, resolvedPlayerId, apiCategoryId) }),
       queryClient.invalidateQueries({ queryKey: tournamentKeys.availablePlayers(config.tenantId, tournament?.id, apiCategoryId) }),
-      queryClient.invalidateQueries({ queryKey: tournamentKeys.eligiblePartners(config.tenantId, tournament?.id, playerId, apiCategoryId) }),
+      queryClient.invalidateQueries({ queryKey: tournamentKeys.eligiblePartners(config.tenantId, tournament?.id, resolvedPlayerId, apiCategoryId) }),
       queryClient.invalidateQueries({ queryKey: playerKeys.all }),
     ]);
-  }, [apiCategoryId, config.tenantId, playerId, queryClient, tournament?.id]);
+  }, [apiCategoryId, config.tenantId, queryClient, resolvedPlayerId, tournament?.id]);
 
   const createRequestMutation = useMutation({
     mutationFn: (requestedPlayerId: string) =>
@@ -1901,10 +1902,12 @@ function canPlayerJoinTournament(
   fixedPartner?: Pick<EligiblePlayer, "category" | "gender">,
 ) {
   if (player.status !== "verified") return false;
+  if (player.category == null) return false;
 
   if (tournament.type === "sum") {
     if (typeof tournament.sumLimit !== "number") return false;
     if (!fixedPartner) return true;
+    if (fixedPartner.category == null) return false;
 
     return player.category + fixedPartner.category >= tournament.sumLimit;
   }
@@ -1920,6 +1923,8 @@ function isCategoryAllowed(
   player: Pick<EligiblePlayer, "category" | "gender">,
   category: TournamentCategory,
 ) {
+  if (player.category == null) return false;
+
   const tournamentCategory =
     player.gender === "female" && category.categoryFemale
       ? category.categoryFemale

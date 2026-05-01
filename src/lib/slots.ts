@@ -30,6 +30,7 @@ export function generateTimeSlots(
 
     if (matchingBooking) {
       slots.push({
+        time: startTime,
         startTime,
         endTime,
         status: matchingBooking.status === "pending" ? "pending" : "occupied",
@@ -37,6 +38,7 @@ export function generateTimeSlots(
       })
     } else {
       slots.push({
+        time: startTime,
         startTime,
         endTime,
         status: "available",

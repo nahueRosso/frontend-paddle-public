@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { CircleOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -17,7 +18,7 @@ export function ClubNotFound() {
         </p>
       </div>
       <Button variant="outline" asChild className="rounded-full border-emerald-300 bg-white/80 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500/40 dark:bg-slate-950/80 dark:text-emerald-300 dark:hover:bg-emerald-500/10">
-        <a href="/">Volver al inicio</a>
+        <Link href="/">Volver al inicio</Link>
       </Button>
     </div>
   )

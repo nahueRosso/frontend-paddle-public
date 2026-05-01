@@ -13,6 +13,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useClub } from "@/context/club-context";
 import { useCreateMatchRequestMutation } from "@/hooks/mutations/match";
+import type { CreateMatchRequestPayload } from "@/lib/api/match";
 import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
 import { usePlayer } from "@/providers/player-provider";
 import VerifyClubPlayerDialog from "./verify-club-player-dialog";
@@ -176,9 +177,6 @@ export function ClubMatch() {
   const formatHour = (hour: number) => {
     return `${hour.toString().padStart(2, "0")}:00`;
   };
-  const parseCategory = (category: string): number => {
-    return parseInt(category);
-  };
   const pendingProposal = useMemo(
     () => proposals.find((proposal) => proposal.status === "pending") ?? null,
     [proposals],
@@ -193,6 +191,16 @@ export function ClubMatch() {
   const proposalCountdown = pendingProposal
     ? formatCountdown(pendingProposal.expiresAt, now)
     : "";
+  const playerCategoryLabel =
+    player?.category != null ? String(player.category) : "Sin categoria";
+  const playerGenderLabel =
+    player?.gender === "male"
+      ? "Masculino"
+      : player?.gender === "female"
+        ? "Femenino"
+        : player?.gender === "mixed"
+          ? "Mixto"
+          : "No definido";
 
   const refreshMatchFlow = useCallback(
     async (options?: { silent?: boolean }) => {
@@ -292,10 +300,15 @@ export function ClubMatch() {
       return;
     }
 
+    if (player.category == null) {
+      setError("Tu perfil no tiene una categoria asignada para buscar partido.");
+      return;
+    }
+
     setError("");
 
     try {
-      const dto = {
+      const dto: CreateMatchRequestPayload = {
         tenantId: config.tenantId,
         userName: player.firstName + " " + player.lastName,
         userPhone: player.phoneNumber,
@@ -305,12 +318,12 @@ export function ClubMatch() {
           player.gender === "male"
             ? "male"
             : player.gender === "female"
-              ? "female"
+            ? "female"
               : "mixed",
 
         // categoría fija (mismo valor min y max)
-        categoryMin: parseCategory(player.category),
-        categoryMax: parseCategory(player.category),
+        categoryMin: player.category,
+        categoryMax: player.category,
 
         preferredStart: formatHour(timeRange[0]),
         preferredEnd: formatHour(timeRange[1]),
@@ -488,15 +501,13 @@ export function ClubMatch() {
               <div className="flex items-center gap-6">
                 <div className="text-center">
                   <p className="text-xs text-slate-500 dark:text-slate-400">Categoria</p>
-                  <p className="font-medium text-slate-900 dark:text-slate-100">{player.category}</p>
+                  <p className="font-medium text-slate-900 dark:text-slate-100">{playerCategoryLabel}</p>
                 </div>
                 <div className="h-6 w-px bg-emerald-200 dark:bg-emerald-900/60" />
                 <div className="text-center">
                   <p className="text-xs text-slate-500 dark:text-slate-400">Modalidad</p>
                   <p className="font-medium text-slate-900 dark:text-slate-100">
-                    {player.gender === "male" && "Masculino"}
-                    {player.gender === "female" && "Femenino"}
-                    {player.gender === "mixed" && "Mixto"}
+                    {playerGenderLabel}
                   </p>
                 </div>
                 <div className="h-6 w-px bg-emerald-200 dark:bg-emerald-900/60" />

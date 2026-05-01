@@ -176,7 +176,7 @@ const onSubmit = async (data: FormValues) => {
                   <Select
                     defaultValue="male"
                     onValueChange={(value) =>
-                      setValue("gender", value as any)
+                      setValue("gender", value as FormValues["gender"])
                     }
                   >
                     <SelectTrigger>

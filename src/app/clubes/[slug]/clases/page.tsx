@@ -1,5 +1,5 @@
-import { ClubClases } from "@/components/club-clases";
+import { ClubProfessors } from "@/components/club-clases";
 
 export default function Page() {
-  return <ClubClases />
+  return <ClubProfessors />;
 }

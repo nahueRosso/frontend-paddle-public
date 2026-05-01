@@ -29,18 +29,19 @@ import { usePlayer } from "@/providers/player-provider";
 export function ClubPartnerRequestsDialog() {
   const { config } = useClub();
   const { player, playerId } = usePlayer();
+  const resolvedPlayerId = playerId ?? undefined;
   const queryClient = useQueryClient();
   const [open, setOpen] = React.useState(false);
   const [dismissedSignature, setDismissedSignature] = React.useState("");
 
   const partnerRequestsQuery = useQuery({
-    queryKey: tournamentKeys.partnerRequests(config.tenantId, playerId),
+    queryKey: tournamentKeys.partnerRequests(config.tenantId, resolvedPlayerId),
     queryFn: () =>
       fetchTournamentPartnerRequests({
         tenantId: config.tenantId,
-        playerId: playerId!,
+        playerId: resolvedPlayerId!,
       }),
-    enabled: Boolean(config.tenantId && playerId),
+    enabled: Boolean(config.tenantId && resolvedPlayerId),
   });
 
   const receivedRequests = React.useMemo(
@@ -75,14 +76,14 @@ export function ClubPartnerRequestsDialog() {
   const invalidateRequests = React.useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({
-        queryKey: tournamentKeys.partnerRequests(config.tenantId, playerId),
+        queryKey: tournamentKeys.partnerRequests(config.tenantId, resolvedPlayerId),
       }),
       queryClient.invalidateQueries({
         queryKey: tournamentKeys.list(config.tenantId),
       }),
       queryClient.invalidateQueries({ queryKey: playerKeys.all }),
     ]);
-  }, [config.tenantId, playerId, queryClient]);
+  }, [config.tenantId, queryClient, resolvedPlayerId]);
 
   const acceptRequestMutation = useMutation({
     mutationFn: (requestId: string) =>

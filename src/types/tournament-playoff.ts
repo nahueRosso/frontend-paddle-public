@@ -41,12 +41,12 @@ export interface Team {
 
 export interface Match {
   // actualmente viene vacío en el backend
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface PointsConfig {
   // actualmente viene vacío en el backend
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 
