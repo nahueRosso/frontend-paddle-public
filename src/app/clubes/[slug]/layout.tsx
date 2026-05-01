@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
 import { normalizePublicPlayerSession } from "@/lib/public-player-session";
 import { PlayerProvider } from "@/providers/player-provider";
