@@ -66,6 +66,7 @@ import type { TenantPlayer } from "@/lib/api/player";
 import { playerKeys } from "@/lib/queryKeys/player";
 import { tournamentKeys } from "@/lib/queryKeys/tournament";
 import { usePlayer } from "@/providers/player-provider";
+import VerifyClubPlayerDialog from "./verify-club-player-dialog";
 import type {
   GroupMatchSummary,
   GroupTeamStanding,
@@ -182,6 +183,7 @@ function TournamentList({
     useTournamentFixtureQuery(config.tenantId);
   const [selectedRegisterTournament, setSelectedRegisterTournament] =
     React.useState<Tournament | null>(null);
+  const [verifyClubPlayerOpen, setVerifyClubPlayerOpen] = React.useState(false);
   const [selectedOngoingTournament, setSelectedOngoingTournament] =
     React.useState<Tournament | null>(null);
   const [selectedFinishedTournament, setSelectedFinishedTournament] =
@@ -219,6 +221,7 @@ function TournamentList({
             tournament={tournament}
             status={status}
             onRegister={() => setSelectedRegisterTournament(tournament)}
+            onRequireClubVerification={() => setVerifyClubPlayerOpen(true)}
             onOpenDetails={
               status === "ongoing"
                 ? () => setSelectedOngoingTournament(tournament)
@@ -238,6 +241,12 @@ function TournamentList({
             setSelectedRegisterTournament(null);
           }
         }}
+      />
+
+      <VerifyClubPlayerDialog
+        slug={config.slug}
+        open={verifyClubPlayerOpen}
+        onOpenChange={setVerifyClubPlayerOpen}
       />
 
       <OngoingTournamentDialog
@@ -269,11 +278,13 @@ function PlayerTournamentCard({
   tournament,
   status,
   onRegister,
+  onRequireClubVerification,
   onOpenDetails,
 }: {
   tournament: Tournament;
   status: "upcoming" | "ongoing" | "finished";
   onRegister: () => void;
+  onRequireClubVerification: () => void;
   onOpenDetails?: () => void;
 }) {
   const eligibility = useTournamentEligibility(tournament);
@@ -344,7 +355,7 @@ function PlayerTournamentCard({
               </p>
             </div>
 
-            {!eligibility.canRegister ? (
+            {!eligibility.canRegister && !eligibility.requiresClubVerification ? (
               <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
                 {eligibility.reason}
               </p>
@@ -352,8 +363,8 @@ function PlayerTournamentCard({
 
             <Button
               className="w-full bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
-              disabled={!eligibility.canRegister}
-              onClick={onRegister}
+              disabled={!eligibility.canRegister && !eligibility.requiresClubVerification}
+              onClick={eligibility.requiresClubVerification ? onRequireClubVerification : onRegister}
             >
               Inscribirme
             </Button>
@@ -940,7 +951,7 @@ function TournamentRegisterDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { config } = useClub();
-  const { player } = usePlayerSafe();
+  const { playerId } = usePlayerSafe();
   const queryClient = useQueryClient();
   const [selectedCategoryId, setSelectedCategoryId] = React.useState("");
   const [flow, setFlow] = React.useState<"partner" | "available" | null>(null);
@@ -959,7 +970,7 @@ function TournamentRegisterDialog({
   const apiCategoryId =
     tournament?.type === "sum" ? undefined : selectedCategoryId || undefined;
   const canRunTournamentQueries = Boolean(
-    open && tournament?.id && config.tenantId && player?.id && categoryReady,
+    open && tournament?.id && config.tenantId && playerId && categoryReady,
   );
 
   React.useEffect(() => {
@@ -987,14 +998,14 @@ function TournamentRegisterDialog({
     queryKey: tournamentKeys.registrationOptions(
       config.tenantId,
       tournament?.id,
-      player?.id,
+      playerId,
       apiCategoryId,
     ),
     queryFn: () =>
       fetchTournamentRegistrationOptions({
         tenantId: config.tenantId,
         tournamentId: tournament!.id,
-        playerId: player!.id,
+        playerId: playerId!,
         categoryId: apiCategoryId,
       }),
     enabled: canRunTournamentQueries,
@@ -1004,14 +1015,14 @@ function TournamentRegisterDialog({
     queryKey: tournamentKeys.eligiblePartners(
       config.tenantId,
       tournament?.id,
-      player?.id,
+      playerId,
       apiCategoryId,
     ),
     queryFn: () =>
       fetchEligibleTournamentPartners({
         tenantId: config.tenantId,
         tournamentId: tournament!.id,
-        playerId: player!.id,
+        playerId: playerId!,
         categoryId: apiCategoryId,
       }),
     enabled: canRunTournamentQueries && flow === "partner",
@@ -1033,32 +1044,32 @@ function TournamentRegisterDialog({
   });
 
   const partnerRequestsQuery = useQuery({
-    queryKey: tournamentKeys.partnerRequests(config.tenantId, player?.id),
+    queryKey: tournamentKeys.partnerRequests(config.tenantId, playerId),
     queryFn: () =>
       fetchTournamentPartnerRequests({
         tenantId: config.tenantId,
-        playerId: player!.id,
+        playerId: playerId!,
       }),
-    enabled: Boolean(open && config.tenantId && player?.id),
+    enabled: Boolean(open && config.tenantId && playerId),
   });
 
   const invalidateRegistrationState = React.useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: tournamentKeys.list(config.tenantId) }),
-      queryClient.invalidateQueries({ queryKey: tournamentKeys.partnerRequests(config.tenantId, player?.id) }),
-      queryClient.invalidateQueries({ queryKey: tournamentKeys.registrationOptions(config.tenantId, tournament?.id, player?.id, apiCategoryId) }),
+      queryClient.invalidateQueries({ queryKey: tournamentKeys.partnerRequests(config.tenantId, playerId) }),
+      queryClient.invalidateQueries({ queryKey: tournamentKeys.registrationOptions(config.tenantId, tournament?.id, playerId, apiCategoryId) }),
       queryClient.invalidateQueries({ queryKey: tournamentKeys.availablePlayers(config.tenantId, tournament?.id, apiCategoryId) }),
-      queryClient.invalidateQueries({ queryKey: tournamentKeys.eligiblePartners(config.tenantId, tournament?.id, player?.id, apiCategoryId) }),
+      queryClient.invalidateQueries({ queryKey: tournamentKeys.eligiblePartners(config.tenantId, tournament?.id, playerId, apiCategoryId) }),
       queryClient.invalidateQueries({ queryKey: playerKeys.all }),
     ]);
-  }, [apiCategoryId, config.tenantId, player?.id, queryClient, tournament?.id]);
+  }, [apiCategoryId, config.tenantId, playerId, queryClient, tournament?.id]);
 
   const createRequestMutation = useMutation({
     mutationFn: (requestedPlayerId: string) =>
       createTournamentPartnerRequest({
         tenantId: config.tenantId,
         tournamentId: tournament!.id,
-        requesterPlayerId: player!.id,
+        requesterPlayerId: playerId!,
         requestedPlayerId,
         categoryId: apiCategoryId,
       }),
@@ -1087,7 +1098,7 @@ function TournamentRegisterDialog({
       addTournamentAvailablePlayer({
         tenantId: config.tenantId,
         tournamentId: tournament!.id,
-        playerId: player!.id,
+        playerId: playerId!,
         categoryId: apiCategoryId,
       }),
     onSuccess: async (response) => {
@@ -1121,7 +1132,7 @@ function TournamentRegisterDialog({
       pickTournamentAvailablePlayer({
         tenantId: config.tenantId,
         tournamentId: tournament!.id,
-        pickerPlayerId: player!.id,
+        pickerPlayerId: playerId!,
         availablePlayerId,
       }),
     onSuccess: async (response) => {
@@ -1138,7 +1149,7 @@ function TournamentRegisterDialog({
 
   const acceptRequestMutation = useMutation({
     mutationFn: (requestId: string) =>
-      acceptTournamentPartnerRequest({ requestId, playerId: player!.id }),
+      acceptTournamentPartnerRequest({ requestId, playerId: playerId! }),
     onSuccess: async (response) => {
       toast.success(response.message);
       setSuccess(response.message);
@@ -1153,7 +1164,7 @@ function TournamentRegisterDialog({
 
   const rejectRequestMutation = useMutation({
     mutationFn: (requestId: string) =>
-      rejectTournamentPartnerRequest({ requestId, playerId: player!.id }),
+      rejectTournamentPartnerRequest({ requestId, playerId: playerId! }),
     onSuccess: async (response) => {
       toast.success(response.message);
       setSuccess(response.message);
@@ -1180,7 +1191,7 @@ function TournamentRegisterDialog({
   const alreadyHasPartner = Boolean(options?.alreadyHasPartner || options?.hasPartner);
   const availablePlayers = (availablePlayersQuery.data ?? []).filter((available) => {
     if (available.status && available.status !== "available") return false;
-    return getAvailablePlayerSourceId(available) !== player?.id;
+    return getAvailablePlayerSourceId(available) !== playerId;
   });
   const currentAvailablePlayer =
     options?.availablePlayer ??
@@ -1190,20 +1201,20 @@ function TournamentRegisterDialog({
     (availablePlayersQuery.data ?? []).find(
       (available) =>
         (!available.status || available.status === "available") &&
-        getAvailablePlayerSourceId(available) === player?.id,
+        getAvailablePlayerSourceId(available) === playerId,
     ) ??
     null;
   const receivedRequests = (
     options?.receivedRequests?.length
       ? options.receivedRequests
       : partnerRequestsQuery.data ?? []
-  ).filter((request) => player?.id && isReceivedPartnerRequest(request, player.id));
+  ).filter((request) => playerId && isReceivedPartnerRequest(request, playerId));
   const sentRequests = (
     options?.sentRequests?.length
       ? options.sentRequests
       : partnerRequestsQuery.data ?? []
   ).filter(
-    (request) => player?.id && isSentPartnerRequest(request, player.id),
+    (request) => playerId && isSentPartnerRequest(request, playerId),
   );
   const filteredPartners = (eligiblePartnersQuery.data ?? []).filter((partner) =>
     getRegistrationPlayerName(partner)
@@ -1846,37 +1857,42 @@ function PlayerRanking({
 }
 
 function useTournamentEligibility(tournament: Tournament) {
-  const { player } = usePlayerSafe();
+  const { clubPlayer, playerId } = usePlayerSafe();
 
   return React.useMemo(() => {
-    if (!player) {
+    if (!clubPlayer) {
       return {
         canRegister: false,
-        reason: "Necesitás iniciar sesión para inscribirte.",
+        requiresClubVerification: true,
+        reason: playerId
+          ? "Necesitás iniciar sesión para inscribirte."
+          : "Primero verificá tu jugador en este club.",
       };
     }
 
-    if (player.status !== "verified") {
+    if (clubPlayer.status !== "verified") {
       return {
         canRegister: false,
+        requiresClubVerification: false,
         reason: "Tu cuenta tiene que estar verificada para inscribirte.",
       };
     }
 
-    if (canPlayerJoinTournament(player, tournament)) {
-      return { canRegister: true, reason: "" };
+    if (canPlayerJoinTournament(clubPlayer, tournament)) {
+      return { canRegister: true, requiresClubVerification: false, reason: "" };
     }
 
     return {
       canRegister: false,
+      requiresClubVerification: false,
       reason: "Este torneo no corresponde a tu categoria o genero.",
     };
-  }, [player, tournament]);
+  }, [clubPlayer, playerId, tournament]);
 }
 
 function usePlayerSafe() {
-  const { player } = usePlayer();
-  return { player };
+  const { player, playerId } = usePlayer();
+  return { clubPlayer: player, playerId };
 }
 
 function canPlayerJoinTournament(

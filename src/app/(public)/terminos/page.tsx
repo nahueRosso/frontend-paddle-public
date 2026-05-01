@@ -19,10 +19,9 @@ export default function TermsPage() {
           Términos y Condiciones
         </h1>
         <p>
-          El presente documento regula el uso de la plataforma provista por{" "}
-          {company.legalName} (CUIT {company.cuit}), con domicilio en{" "}
-          {company.address}. Al utilizar nuestros servicios, aceptás estos
-          términos en representación propia o de la organización que representás.
+          Este documento describe de forma general las condiciones de uso de
+          {` ${company.brandName}`}. Al utilizar nuestros servicios, aceptás
+          estas condiciones básicas.
         </p>
       </header>
 
@@ -34,8 +33,8 @@ export default function TermsPage() {
           Proveemos una plataforma SaaS para la gestión operativa y comunicación
           automatizada de clubes y complejos deportivos, incluyendo integraciones
           con WhatsApp Business y proveedores de pago. El acceso se brinda bajo
-          un modelo de suscripción y se limita a los módulos y volúmenes
-          previstos en la propuesta comercial.
+          un modelo de suscripción, según el alcance definido en cada propuesta
+          comercial.
         </p>
       </section>
 
@@ -67,8 +66,8 @@ export default function TermsPage() {
           {company.brandName} mantiene la titularidad sobre el software, marcas y
           desarrollos. El cliente obtiene una licencia limitada, no exclusiva e
           intransferible para utilizar la plataforma mientras dure la
-          suscripción. Los datos generados por el cliente se mantienen como de su
-          exclusiva propiedad.
+          suscripción. Los datos cargados por cada cliente siguen siendo de ese
+          cliente.
         </p>
       </section>
 
@@ -77,12 +76,9 @@ export default function TermsPage() {
           4. Limitación de responsabilidad
         </h2>
         <p>
-          Hacemos nuestros mejores esfuerzos para garantizar disponibilidad y
-          seguridad. Sin embargo, no nos responsabilizamos por interrupciones
-          derivadas de terceros (ej. proveedores de internet, APIs externas) ni
-          por usos indebidos de la plataforma. La responsabilidad total de{" "}
-          {company.brandName} se limita al monto efectivamente abonado por el
-          cliente durante los últimos 12 meses.
+          Buscamos ofrecer un servicio estable, pero puede haber interrupciones
+          o limitaciones derivadas de terceros o integraciones externas. Cada
+          implementación también depende del uso correcto por parte del cliente.
         </p>
       </section>
 
@@ -93,8 +89,8 @@ export default function TermsPage() {
         <p>
           Podemos suspender o terminar el servicio ante incumplimientos de
           pagos, violaciones a estas condiciones o al detectar usos contrarios a
-          la ley o a las políticas de Meta. El cliente puede solicitar la baja
-          enviando un aviso con 30 días corridos de anticipación.
+          las políticas de los proveedores integrados. El cliente también puede
+          solicitar la baja según lo acordado comercialmente.
         </p>
       </section>
 
@@ -103,16 +99,15 @@ export default function TermsPage() {
           6. Modificaciones
         </h2>
         <p>
-          Podemos actualizar estos términos para reflejar cambios legales o de
-          servicio. Las modificaciones se notificarán a través de email o dentro
-          de la plataforma y regirán a los 10 días de comunicadas.
+          Podemos actualizar estos términos a medida que evolucione el servicio.
+          La versión vigente será la publicada en el sitio.
         </p>
       </section>
 
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">7. Contacto</h2>
         <p>
-          Para consultas legales o solicitudes relacionadas con este documento,
+          Para consultas sobre este documento o sobre el servicio,
           comunicate al correo{" "}
           <a
             href={`mailto:${company.email}`}
@@ -125,9 +120,7 @@ export default function TermsPage() {
       </section>
 
       <footer className="rounded-3xl border border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400">
-        Última actualización: {currentYear} — {company.brandName}. Cualquier
-        controversia se someterá a los tribunales de la Ciudad Autónoma de
-        Buenos Aires.
+        Última actualización: {currentYear} — {company.brandName}.
       </footer>
     </LegalPageLayout>
   );

@@ -1,4 +1,5 @@
 import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin"
+import type { PublicPlayerSession } from "@/lib/public-player-session"
 
 type CreatePlayerPayload = Record<string, unknown>
 export type PlayerStatus = "pending" | "verified" | "rejected"
@@ -59,6 +60,10 @@ export type TenantPlayer = {
   updatedAt: string
 }
 
+export type CreatePlayerResponse = PublicPlayerSession & {
+  [key: string]: unknown
+}
+
 export async function createPlayer(slug: string, payload: CreatePlayerPayload) {
   const response = await fetchWithTenantAdmin(`/player/${slug}`, {
     method: "POST",
@@ -71,7 +76,7 @@ export async function createPlayer(slug: string, payload: CreatePlayerPayload) {
     throw new Error(error?.message || "No se pudo crear el jugador.")
   }
 
-  return response.json()
+  return response.json() as Promise<CreatePlayerResponse>
 }
 
 export async function updatePlayer(playerId: string, payload: UpdatePlayerPayload) {
@@ -83,6 +88,21 @@ export async function updatePlayer(playerId: string, payload: UpdatePlayerPayloa
 
   if (!response.ok) {
     throw new Error("No se pudo actualizar el jugador.")
+  }
+
+  return response.json()
+}
+
+export async function verifyPlayerInClub(personId: string, slug: string) {
+  const response = await fetchWithTenantAdmin(`/player/${personId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slug }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null)
+    throw new Error(error?.message || "No se pudo verificar el jugador en este club.")
   }
 
   return response.json()

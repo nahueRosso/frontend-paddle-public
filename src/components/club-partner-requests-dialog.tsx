@@ -28,27 +28,27 @@ import { usePlayer } from "@/providers/player-provider";
 
 export function ClubPartnerRequestsDialog() {
   const { config } = useClub();
-  const { player } = usePlayer();
+  const { player, playerId } = usePlayer();
   const queryClient = useQueryClient();
   const [open, setOpen] = React.useState(false);
   const [dismissedSignature, setDismissedSignature] = React.useState("");
 
   const partnerRequestsQuery = useQuery({
-    queryKey: tournamentKeys.partnerRequests(config.tenantId, player?.id),
+    queryKey: tournamentKeys.partnerRequests(config.tenantId, playerId),
     queryFn: () =>
       fetchTournamentPartnerRequests({
         tenantId: config.tenantId,
-        playerId: player.id,
+        playerId: playerId!,
       }),
-    enabled: Boolean(config.tenantId && player?.id),
+    enabled: Boolean(config.tenantId && playerId),
   });
 
   const receivedRequests = React.useMemo(
     () =>
       (partnerRequestsQuery.data ?? []).filter((request) =>
-        isReceivedPartnerRequest(request, player.id),
+        playerId ? isReceivedPartnerRequest(request, playerId) : false,
       ),
-    [partnerRequestsQuery.data, player.id],
+    [partnerRequestsQuery.data, playerId],
   );
 
   const requestsSignature = React.useMemo(
@@ -75,18 +75,18 @@ export function ClubPartnerRequestsDialog() {
   const invalidateRequests = React.useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({
-        queryKey: tournamentKeys.partnerRequests(config.tenantId, player.id),
+        queryKey: tournamentKeys.partnerRequests(config.tenantId, playerId),
       }),
       queryClient.invalidateQueries({
         queryKey: tournamentKeys.list(config.tenantId),
       }),
       queryClient.invalidateQueries({ queryKey: playerKeys.all }),
     ]);
-  }, [config.tenantId, player.id, queryClient]);
+  }, [config.tenantId, playerId, queryClient]);
 
   const acceptRequestMutation = useMutation({
     mutationFn: (requestId: string) =>
-      acceptTournamentPartnerRequest({ requestId, playerId: player.id }),
+      acceptTournamentPartnerRequest({ requestId, playerId: playerId! }),
     onSuccess: async (response) => {
       toast.success(response.message);
       await invalidateRequests();
@@ -98,7 +98,7 @@ export function ClubPartnerRequestsDialog() {
 
   const rejectRequestMutation = useMutation({
     mutationFn: (requestId: string) =>
-      rejectTournamentPartnerRequest({ requestId, playerId: player.id }),
+      rejectTournamentPartnerRequest({ requestId, playerId: playerId! }),
     onSuccess: async (response) => {
       toast.success(response.message);
       await invalidateRequests();
@@ -110,6 +110,10 @@ export function ClubPartnerRequestsDialog() {
 
   const isActionPending =
     acceptRequestMutation.isPending || rejectRequestMutation.isPending;
+
+  if (!player || !playerId) {
+    return null;
+  }
 
   if (receivedRequests.length === 0 && !partnerRequestsQuery.isLoading) {
     return null;

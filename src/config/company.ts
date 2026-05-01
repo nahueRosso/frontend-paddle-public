@@ -19,22 +19,20 @@ export interface CompanyInfo {
 
 export const company: CompanyInfo = {
   brandName: "Mi Club Pádel",
-  legalName: "ROJO RUBEN ARIEL",
-  cuit: "20-25397719-2",
+  legalName: "Mi Club Pádel",
+  cuit: "",
   email: "contacto@miclubpadel.com",
   phone: "+54 9 11 2345-6789",
-  legalPhone: "+54 9 2923 507531",
-  address: "Huanguelén, Provincia de Buenos Aires, Argentina",
+  legalPhone: "",
+  address: "Argentina",
   province: "Buenos Aires",
-  locality: "Huanguelén",
+  locality: "Argentina",
   domain: "miclubpadel.com",
   relatedDomains: ["admin.miclubpadel.com", "api.miclubpadel.com"],
   shortDescription:
     "Plataforma de gestión, reservas y cobros online para clubes de pádel.",
-  fiscalCondition:
-    "Responsable Inscripto (IVA Inscripto, Ganancias Personas Físicas)",
-  activity:
-    "Fabricación de productos metálicos de tornería y/o matricería (Industria manufacturera)",
+  fiscalCondition: "",
+  activity: "Software y servicios digitales para clubes de pádel",
   foundingDate: "2013",
   sameAs: [],
 };

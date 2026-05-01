@@ -45,7 +45,7 @@ export default function ContactPage() {
             </li>
             <li>
               <span className="block font-semibold text-[#111827] dark:text-slate-100">
-                Dirección comercial
+                Base operativa
               </span>
               {company.address}
             </li>
@@ -59,25 +59,12 @@ export default function ContactPage() {
         </div>
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-600">
-            Identidad legal
+            Antes de contratar
           </h2>
           <ul className="mt-4 space-y-3 text-sm leading-relaxed">
             <li>
-              <span className="font-semibold text-[#111827] dark:text-slate-100">Titular legal</span>
-              <br />
-              {company.legalName}
-            </li>
-            <li>
-              <span className="font-semibold text-[#111827] dark:text-slate-100">CUIT</span>
-              <br />
-              {company.cuit}
-            </li>
-            <li>
-              <span className="font-semibold text-[#111827] dark:text-slate-100">
-                Condición fiscal
-              </span>
-              <br />
-              {company.fiscalCondition}
+              Coordinamos una demo, validamos tu caso de uso y te pasamos una
+              propuesta simple para empezar.
             </li>
           </ul>
         </div>

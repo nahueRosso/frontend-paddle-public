@@ -26,17 +26,9 @@ const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: company.brandName,
-  legalName: company.legalName,
-  url: "https://miclubpadel.com",
+  url: siteUrl,
   email: company.email,
   telephone: company.phone,
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: company.locality,
-    addressRegion: company.province,
-    addressCountry: "AR",
-  },
-  identifier: `CUIT ${company.cuit}`,
   foundingDate: company.foundingDate,
   sameAs: company.sameAs,
 };

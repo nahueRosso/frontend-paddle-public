@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { useClub } from "@/context/club-context";
 import { toast } from "@/hooks/use-toast";
 import { usePlayer } from "@/providers/player-provider";
+import VerifyClubPlayerDialog from "./verify-club-player-dialog";
 import VerifyPlayerDialog from "./verify-player-dialog";
 
 function formatCourtEnvironment(environment?: CourtConfig["environment"]) {
@@ -71,6 +72,7 @@ export function ClubTurnos() {
   const [selectedCourt, setSelectedCourt] = useState<number | null>(null);
   const [submittingSlot, setSubmittingSlot] = useState<string | null>(null);
   const [verifyPlayer, setVerifyPlayer] = useState<boolean>(false);
+  const [verifyClubPlayer, setVerifyClubPlayer] = useState(false);
   const activeCourts = config.courts.filter((c) => c.active);
   const allowUnverifiedPlayers =
     config.bookingRules?.allowUnverifiedPlayers ?? false;
@@ -127,6 +129,11 @@ export function ClubTurnos() {
   };
 
   const handleBooking = async (courtNumber: number, slot: TimeSlot) => {
+    if (!player) {
+      setVerifyClubPlayer(true);
+      return;
+    }
+
     if (!player.verified && !allowUnverifiedPlayers) {
       setVerifyPlayer(true);
       return;
@@ -316,9 +323,14 @@ export function ClubTurnos() {
             })}
         </div>
       )}
-       <VerifyPlayerDialog
+      <VerifyPlayerDialog
         open={verifyPlayer}
         onClose={() => setVerifyPlayer(false)}
+      />
+      <VerifyClubPlayerDialog
+        slug={config.slug}
+        open={verifyClubPlayer}
+        onOpenChange={setVerifyClubPlayer}
       />
     </div>
   );

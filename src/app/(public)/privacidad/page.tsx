@@ -17,11 +17,10 @@ export default function PrivacyPage() {
           Política de Privacidad
         </h1>
         <p>
-          En {company.brandName} ({company.legalName}, CUIT {company.cuit})
-          valoramos la confianza que depositás en nosotros. Esta política explica
-          cómo recopilamos, usamos y protegemos los datos personales que nos
-          brindan clientes, potenciales clientes y usuarios finales de nuestros
-          servicios.
+          En {company.brandName} valoramos la confianza que depositás en
+          nosotros. Esta política resume de forma general cómo recopilamos,
+          usamos y cuidamos la información que nos comparten clientes y
+          potenciales clientes.
         </p>
       </header>
 
@@ -43,9 +42,8 @@ export default function PrivacyPage() {
             clubes, incluyendo agendas, preferencias y métodos de pago.
           </li>
           <li>
-            Información técnica y analítica: dispositivo, navegador, direcciones
-            IP y actividad dentro de nuestra plataforma para garantizar seguridad
-            y mejorar la experiencia de uso.
+            Información técnica básica de uso, necesaria para operar la
+            plataforma y resolver problemas.
           </li>
         </ul>
       </section>
@@ -65,10 +63,6 @@ export default function PrivacyPage() {
             Responder consultas comerciales o de soporte y enviar información
             relevante sobre el servicio.
           </li>
-          <li>
-            Cumplir obligaciones legales y prevenir actividades ilícitas o no
-            autorizadas.
-          </li>
         </ul>
       </section>
 
@@ -77,33 +71,28 @@ export default function PrivacyPage() {
           3. Conservación y seguridad
         </h2>
         <p>
-          Almacenamos los datos durante la vigencia de la relación contractual y
-          por los plazos necesarios para cumplir obligaciones legales. Aplicamos
-          controles técnicos y organizativos para resguardar la confidencialidad,
-          integridad y disponibilidad de la información.
+          Buscamos limitar el acceso a la información y utilizar herramientas
+          razonables para protegerla. A medida que el servicio crezca,
+          actualizaremos procesos, políticas y controles de seguridad.
         </p>
       </section>
 
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-          4. Derechos de los titulares (ARCO)
+          4. Actualización o eliminación de datos
         </h2>
         <p>
-          Las personas pueden ejercer sus derechos de acceso, rectificación,
-          actualización y supresión (ARCO) conforme a la Ley 25.326 de Protección
-          de Datos Personales. También pueden solicitar la revocación del
-          consentimiento u oponerse al tratamiento.
+          Si querés corregir o eliminar información compartida con nosotros,
+          podés escribirnos y revisaremos el pedido a la brevedad.
         </p>
         <p>
-          Para ejercerlos, escribinos a{" "}
+          Para hacerlo, escribinos a{" "}
           <a
             href={`mailto:${company.email}`}
             className="font-semibold text-slate-900 underline underline-offset-4 dark:text-slate-100"
           >
             {company.email}
-          </a>{" "}
-          o comunicate al {company.phone}. Deberás acreditar tu identidad y
-          describir el pedido con la mayor precisión posible.
+          </a>.
         </p>
       </section>
 
@@ -125,8 +114,7 @@ export default function PrivacyPage() {
         <p>
           En caso de compartir datos con proveedores (ej. infraestructura en la
           nube, herramientas de soporte o comunicaciones), lo haremos bajo
-          acuerdos de confidencialidad y estándares de seguridad equivalentes a
-          los nuestros.
+          criterios operativos razonables para prestar el servicio.
         </p>
       </section>
 
@@ -135,16 +123,14 @@ export default function PrivacyPage() {
           7. Cambios y contacto
         </h2>
         <p>
-          Podemos actualizar esta política para reflejar cambios normativos o de
-          operación. La versión vigente estará siempre disponible en
-          https://{company.domain}. Ante dudas o reclamos, escribinos a{" "}
-          {company.email}.
+          Podemos actualizar esta política a medida que evolucione el servicio.
+          La versión vigente estará disponible en https://{company.domain}. Ante
+          dudas, escribinos a {company.email}.
         </p>
       </section>
 
       <footer className="rounded-3xl border border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400">
-        Última actualización: {new Date().getFullYear()} —{" "}
-        {company.brandName}, {company.address}.
+        Última actualización: {new Date().getFullYear()} — {company.brandName}.
       </footer>
     </LegalPageLayout>
   );

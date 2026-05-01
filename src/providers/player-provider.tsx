@@ -1,48 +1,46 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo, useState } from "react"
 
-export interface Player {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  tenantId: string;
-  phoneNumber:string;
-  status: "pending" | "verified" | "rejected";
-  verified:boolean;
-  category:number;
-  gender:string;
+import {
+  normalizePublicPlayerSession,
+  type PublicPlayerSession,
+} from "@/lib/public-player-session"
+
+interface PlayerContextType extends PublicPlayerSession {
+  setPlayerSession: (payload: unknown) => void
 }
 
-
-
-interface PlayerContextType {
-  player: Player;
-}
-
-const PlayerContext = createContext<PlayerContextType | null>(null);
+const PlayerContext = createContext<PlayerContextType | null>(null)
 
 export function PlayerProvider({
-  player,
+  initialSession,
   children,
 }: {
-  player: Player;
-  children: React.ReactNode;
+  initialSession: PublicPlayerSession
+  children: React.ReactNode
 }) {
-  return (
-    <PlayerContext.Provider value={{ player }}>
-      {children}
-    </PlayerContext.Provider>
-  );
+  const [playerSession, setPlayerSessionState] = useState(initialSession)
+
+  const value = useMemo<PlayerContextType>(
+    () => ({
+      ...playerSession,
+      setPlayerSession: (payload) => {
+        setPlayerSessionState(normalizePublicPlayerSession(payload))
+      },
+    }),
+    [playerSession],
+  )
+
+  return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>
 }
 
 export function usePlayer() {
-  const context = useContext(PlayerContext);
+  const context = useContext(PlayerContext)
 
   if (!context) {
-    throw new Error("usePlayer debe usarse dentro de PlayerProvider");
+    throw new Error("usePlayer debe usarse dentro de PlayerProvider")
   }
 
-  return context;
+  return context
 }

@@ -16,9 +16,7 @@ export function Footer() {
           </p>
         </div>
         <p className="text-xs text-slate-900 dark:text-slate-400">
-          © {currentYear} {company.brandName} — {company.legalName} — CUIT{" "}
-          {company.cuit} — Responsable Inscripto — Huanguelén, Buenos Aires —{" "}
-          {company.email}
+          © {currentYear} {company.brandName} — {company.email}
         </p>
       </div>
     </footer>

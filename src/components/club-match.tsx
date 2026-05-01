@@ -15,6 +15,7 @@ import { useClub } from "@/context/club-context";
 import { useCreateMatchRequestMutation } from "@/hooks/mutations/match";
 import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
 import { usePlayer } from "@/providers/player-provider";
+import VerifyClubPlayerDialog from "./verify-club-player-dialog";
 import { Slider } from "./ui/slider";
 import VerifyPlayerDialog from "./verify-player-dialog";
 
@@ -151,6 +152,7 @@ const formatCountdown = (expiresAt: string, now: number) => {
 export function ClubMatch() {
   const { config } = useClub();
   const [verifyPlayer, setVerifyPlayer] = useState(false);
+  const [verifyClubPlayer, setVerifyClubPlayer] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [matchRequest, setMatchRequest] = useState<MatchRequestResponse | null>(
@@ -279,11 +281,11 @@ export function ClubMatch() {
     refreshedExpiredProposalId,
   ]);
 
-  console.log('player::',player);
-  
-
   const handleSubmit = async () => {
-    if (!player) return;
+    if (!player) {
+      setVerifyClubPlayer(true);
+      return;
+    }
 
     if (player.status !== "verified") {
       setVerifyPlayer(true);
@@ -575,7 +577,7 @@ export function ClubMatch() {
           <div className="space-y-2">
             <Label className="dark:text-slate-100">Categoría</Label>
             <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-sm font-medium text-slate-800 dark:border-emerald-900/60 dark:bg-slate-900/70 dark:text-slate-100">
-              {player.category} categoría
+              {player ? `${player.category} categoría` : "Disponible al verificar en este club"}
             </div>
           </div>
 
@@ -583,9 +585,13 @@ export function ClubMatch() {
           <div className="space-y-2">
             <Label className="dark:text-slate-100">Modalidad</Label>
             <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-sm font-medium text-slate-800 dark:border-emerald-900/60 dark:bg-slate-900/70 dark:text-slate-100">
-              {player.gender === "male" && "Masculino"}
-              {player.gender === "female" && "Femenino"}
-              {player.gender === "mixed" && "Mixto"}
+              {player
+                ? player.gender === "male"
+                  ? "Masculino"
+                  : player.gender === "female"
+                    ? "Femenino"
+                    : "Mixto"
+                : "Se habilita al verificar tu jugador del club"}
             </div>
           </div>
 
@@ -671,9 +677,14 @@ export function ClubMatch() {
         </CardContent>
       </Card>
         <VerifyPlayerDialog
-                open={verifyPlayer}
-                onClose={() => setVerifyPlayer(false)}
-              />
+          open={verifyPlayer}
+          onClose={() => setVerifyPlayer(false)}
+        />
+        <VerifyClubPlayerDialog
+          slug={config.slug}
+          open={verifyClubPlayer}
+          onOpenChange={setVerifyClubPlayer}
+        />
     </div>
   );
 }

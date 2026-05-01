@@ -7,7 +7,6 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Field,
   FieldDescription,
@@ -52,7 +51,6 @@ export default function CreatePlayer({ slug }: { slug: string }) {
     register,
     handleSubmit,
     setValue,
-    watch,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -218,12 +216,12 @@ const onSubmit = async (data: FormValues) => {
           </FieldGroup>
         </form>
         <AlertDialog open={open} onOpenChange={setOpen}>
-  <AlertDialogContent>
+  <AlertDialogContent className="border-emerald-100 bg-white text-slate-900 shadow-2xl shadow-emerald-100/70 dark:border-emerald-900/60 dark:bg-slate-950 dark:text-slate-100 dark:shadow-emerald-950/30">
     <AlertDialogHeader>
-      <AlertDialogTitle>
+      <AlertDialogTitle className="text-slate-900 dark:text-slate-100">
         ¿Confirmar creación de perfil?
       </AlertDialogTitle>
-      <AlertDialogDescription>
+      <AlertDialogDescription className="text-slate-600 dark:text-slate-400">
         Una vez enviados los datos, solo el dueño del club podrá
         modificarlos.
 
@@ -240,7 +238,9 @@ const onSubmit = async (data: FormValues) => {
     </AlertDialogHeader>
 
     <AlertDialogFooter>
-      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+      <AlertDialogCancel className="border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-emerald-500/10">
+        Cancelar
+      </AlertDialogCancel>
 
       <AlertDialogAction
         onClick={handleSubmit(async (data) => {
@@ -248,6 +248,7 @@ const onSubmit = async (data: FormValues) => {
           await onSubmit(data);
         })}
         disabled={isSubmitting}
+        className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
       >
         {isSubmitting ? "Creando..." : "Confirmar y crear"}
       </AlertDialogAction>
