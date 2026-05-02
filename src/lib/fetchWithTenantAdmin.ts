@@ -1,5 +1,9 @@
 // const apiUrl = process.env.NEXT_PUBLIC_API_URL!;
-const apiDemoUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+const isDev = process.env.NEXT_PUBLIC_DEV === "true";
+
+export const API_URL = isDev
+  ? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000"
+  : "https://api.miclubpadel.com";
 const defaultTenant = process.env.NEXT_PUBLIC_TENANT_SCHEMA ?? "public";
 
 export async function fetchWithTenantAdmin(
@@ -15,7 +19,7 @@ export async function fetchWithTenantAdmin(
   };
 
   try {
-    const response = await fetch(`${apiDemoUrl}${input}`, {
+    const response = await fetch(`${API_URL}${input}`, {
       ...init,
       headers,
     });
