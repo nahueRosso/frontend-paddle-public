@@ -13,6 +13,14 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -78,7 +86,38 @@ const plans: Plan[] = [
     ],
     highlight: true,
   },
+  {
+    id: "WhatsApp",
+    title: "WhatsApp",
+    description:
+      "Incluye todo lo del plan Web y suma un chatbot automatizado para gestionar reservas, pagos y consultas desde WhatsApp.",
+    price: 80000,
+    currency: "ARS",
+    frequency: "mensuales",
+    features: [
+      "Todo lo del plan Web",
+      "Chatbot automatizado en WhatsApp",
+      "Gestión de reservas y pagos desde WhatsApp",
+      "Funcionalidad Match",
+    ],
+  },
+  {
+    id: "IA",
+    title: "IA",
+    description:
+      "Incluye todo lo del plan WhatsApp y agrega automatización avanzada con inteligencia artificial para optimizar la gestión del club.",
+    price: 122000,
+    currency: "ARS",
+    frequency: "mensuales",
+    features: [
+      "Todo lo del plan WhatsApp",
+      "Automatización completa con IA",
+      "Optimización operativa del club",
+      "Atención y gestión avanzada automatizada",
+    ],
+  },
 ];
+
 
 type ConfigFormState = {
   clubName: string;
@@ -119,6 +158,9 @@ const defaultConfig: ConfigFormState = {
 export default function PlansPage() {
   const router = useRouter();
   const { session, planStatus } = useAuth();
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
+  const [carouselSnapCount, setCarouselSnapCount] = useState(0);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [redirecting, setRedirecting] = useState(false);
@@ -201,6 +243,26 @@ export default function PlansPage() {
       }
     );
   }, [planStatus]);
+
+  useEffect(() => {
+    if (!carouselApi) {
+      return;
+    }
+
+    const updateCurrentPlan = () => {
+      setCurrentPlanIndex(carouselApi.selectedScrollSnap());
+      setCarouselSnapCount(carouselApi.scrollSnapList().length);
+    };
+
+    updateCurrentPlan();
+    carouselApi.on("select", updateCurrentPlan);
+    carouselApi.on("reInit", updateCurrentPlan);
+
+    return () => {
+      carouselApi.off("select", updateCurrentPlan);
+      carouselApi.off("reInit", updateCurrentPlan);
+    };
+  }, [carouselApi]);
 
   // async function uploadLogo(file: File) {
   //   const formData = new FormData();
@@ -583,93 +645,134 @@ console.log("-------------------");
               </div>
             )}
 
-            <div
-              ref={planGridRef}
-              className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2"
-            >
-              {plans.map((plan) => {
-                const isSelected = selectedPlanId === plan.id;
-                const isChangeFlow = Boolean(
-                  planStatus?.active && isChangingPlan,
-                );
-                return (
-                  <article
-                    key={plan.id}
-                    className={cn(
-                      "flex flex-col gap-6 rounded-3xl border border-emerald-100 bg-white/80 p-6 shadow-sm shadow-emerald-50 transition hover:shadow-md dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20",
-                      plan.highlight &&
-                        "border-emerald-200 ring-1 ring-emerald-200 dark:border-emerald-700/60 dark:ring-emerald-800/60",
-                      plan.locked && "opacity-70",
-                      isSelected &&
-                        !isChangeFlow &&
-                        "border-emerald-500 ring-2 dark:border-emerald-400",
-                    )}
-                  >
-                    <div>
-                      <h2 className="text-2xl font-semibold text-[#111827] dark:text-slate-100">
-                        {plan.title}
-                      </h2>
-                      <p className="mt-2 text-sm text-[#4B5563] dark:text-slate-400">
-                        {plan.description}
-                      </p>
-                    </div>
+            <div ref={planGridRef} className="space-y-5">
+              <Carousel
+                setApi={setCarouselApi}
+                opts={{
+                  align: "start",
+                  containScroll: "trimSnaps",
+                }}
+                className="mx-auto w-full max-w-6xl"
+              >
+                <CarouselContent className="items-stretch">
+                  {plans.map((plan) => {
+                    const isSelected = selectedPlanId === plan.id;
+                    const isChangeFlow = Boolean(
+                      planStatus?.active && isChangingPlan,
+                    );
 
-                    <ul className="space-y-2 text-sm text-[#4B5563] dark:text-slate-300">
-                      {plan.features.map((feature) => (
-                        <li key={feature} className="flex items-center gap-2">
-                          <Check className="h-4 w-4 text-emerald-500" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <div>
-                      <span className="text-4xl font-bold text-[#111827] dark:text-slate-100">
-                        {plan.currency} {plan.price}
-                      </span>
-                      <span className="ml-1 text-sm text-[#4B5563]/80 dark:text-slate-500">
-                        / {plan.frequency}
-                      </span>
-                    </div>
-
-                    <div className="mt-auto pt-2">
-                      <Button
-                        type="button"
-                        disabled={plan.locked || redirecting}
-                        className={cn(
-                          "w-full justify-center rounded-xl px-4 py-3 font-medium transition-all",
-                          plan.highlight
-                            ? "bg-emerald-500 text-white shadow-md hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
-                            : "border border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:border-emerald-500/60 dark:text-emerald-300 dark:hover:bg-emerald-500/10",
-                        )}
-                        onClick={() => {
-                          if (plan.locked) {
-                            return;
-                          }
-                          if (isChangeFlow) {
-                            void submitPlanChange(plan.id);
-                            return;
-                          }
-                          handlePlanSelection(plan);
-                        }}
+                    return (
+                      <CarouselItem
+                        key={plan.id}
+                        className="md:basis-1/2"
                       >
-                        {plan.locked ? (
-                          <>
-                            <Lock className="mr-2 h-4 w-4" />
-                            Disponible próximamente
-                          </>
-                        ) : isChangeFlow ? (
-                          "Cambiar a este plan"
-                        ) : isSelected ? (
-                          "Plan seleccionado"
-                        ) : (
-                          "Elegir este plan"
-                        )}
-                      </Button>
-                    </div>
-                  </article>
-                );
-              })}
+                        <article
+                          className={cn(
+                            "flex h-full flex-col gap-6 rounded-3xl border border-emerald-100 bg-white/80 p-6 shadow-sm shadow-emerald-50 transition hover:shadow-md dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20",
+                            plan.highlight &&
+                              "border-emerald-200 ring-1 ring-emerald-200 dark:border-emerald-700/60 dark:ring-emerald-800/60",
+                            plan.locked && "opacity-70",
+                            isSelected &&
+                              !isChangeFlow &&
+                              "border-emerald-500 ring-2 dark:border-emerald-400",
+                          )}
+                        >
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <h2 className="text-2xl font-semibold text-[#111827] dark:text-slate-100">
+                                {plan.title}
+                              </h2>
+                              {plan.highlight ? (
+                                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                  Recomendado
+                                </span>
+                              ) : null}
+                            </div>
+                            <p className="text-sm text-[#4B5563] dark:text-slate-400">
+                              {plan.description}
+                            </p>
+                          </div>
+
+                          <ul className="space-y-2 text-sm text-[#4B5563] dark:text-slate-300">
+                            {plan.features.map((feature) => (
+                              <li key={feature} className="flex items-center gap-2">
+                                <Check className="h-4 w-4 text-emerald-500" />
+                                <span>{feature}</span>
+                              </li>
+                            ))}
+                          </ul>
+
+                          <div className="mt-auto">
+                            <span className="text-4xl font-bold text-[#111827] dark:text-slate-100">
+                              {plan.currency} {plan.price}
+                            </span>
+                            <span className="ml-1 text-sm text-[#4B5563]/80 dark:text-slate-500">
+                              / {plan.frequency}
+                            </span>
+                          </div>
+
+                          <div className="pt-2">
+                            <Button
+                              type="button"
+                              disabled={plan.locked || redirecting}
+                              className={cn(
+                                "w-full justify-center rounded-xl px-4 py-3 font-medium transition-all",
+                                plan.highlight
+                                  ? "bg-emerald-500 text-white shadow-md hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                                  : "border border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:border-emerald-500/60 dark:text-emerald-300 dark:hover:bg-emerald-500/10",
+                              )}
+                              onClick={() => {
+                                if (plan.locked) {
+                                  return;
+                                }
+                                if (isChangeFlow) {
+                                  void submitPlanChange(plan.id);
+                                  return;
+                                }
+                                handlePlanSelection(plan);
+                              }}
+                            >
+                              {plan.locked ? (
+                                <>
+                                  <Lock className="mr-2 h-4 w-4" />
+                                  Disponible próximamente
+                                </>
+                              ) : isChangeFlow ? (
+                                "Cambiar a este plan"
+                              ) : isSelected ? (
+                                "Plan seleccionado"
+                              ) : (
+                                "Elegir este plan"
+                              )}
+                            </Button>
+                          </div>
+                        </article>
+                      </CarouselItem>
+                    );
+                  })}
+                </CarouselContent>
+
+                <CarouselPrevious className="left-3 top-auto bottom-3 hidden h-10 w-10 -translate-y-0 border-emerald-200 bg-white/90 text-emerald-700 shadow-sm hover:bg-white disabled:opacity-40 md:flex" />
+                <CarouselNext className="right-3 top-auto bottom-3 hidden h-10 w-10 -translate-y-0 border-emerald-200 bg-white/90 text-emerald-700 shadow-sm hover:bg-white disabled:opacity-40 md:flex" />
+              </Carousel>
+
+              <div className="flex items-center justify-center gap-2">
+                {Array.from({ length: carouselSnapCount || 1 }, (_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    aria-label={`Ir a la página ${index + 1} del carrusel`}
+                    aria-current={currentPlanIndex === index}
+                    className={cn(
+                      "h-2.5 rounded-full transition-all",
+                      currentPlanIndex === index
+                        ? "w-8 bg-emerald-500"
+                        : "w-2.5 bg-emerald-200 hover:bg-emerald-300 dark:bg-emerald-900/70 dark:hover:bg-emerald-800",
+                    )}
+                    onClick={() => carouselApi?.scrollTo(index)}
+                  />
+                ))}
+              </div>
             </div>
           </>
         ) : null}
