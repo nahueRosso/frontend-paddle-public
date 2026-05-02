@@ -79,6 +79,16 @@ function formatCountdown(expiresAt: string, now: number) {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
+type PendingBookingPayment = {
+  bookingId: string;
+  tenantId: string;
+  courtNumber: number;
+  date: string;
+  startTime: string;
+  checkoutUrl: string;
+  expiresAt: string;
+};
+
 export function ClubTurnos() {
   const { config } = useClub();
   const queryClient = useQueryClient();
@@ -89,10 +99,7 @@ export function ClubTurnos() {
   const [verifyPlayer, setVerifyPlayer] = useState<boolean>(false);
   const [verifyReason, setVerifyReason] = useState<string | null>(null);
   const [verifyClubPlayer, setVerifyClubPlayer] = useState(false);
-  const [paymentIntent, setPaymentIntent] = useState<Extract<
-    PublicBookingIntentResponse,
-    { mode: "payment_required" }
-  > | null>(null);
+  const [pendingPayment, setPendingPayment] = useState<PendingBookingPayment | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const activeCourts = config.courts.filter((c) => c.active);
   const showCourtPrice = config.bookingRules?.showCourtPrice ?? true;
@@ -105,6 +112,7 @@ export function ClubTurnos() {
     config.tenantId,
     bookingDate,
   );
+  const pendingPaymentStorageKey = `pending-booking:${config.tenantId}`;
 
   // useEffect(() => {
   //   console.log("[ClubTurnos] state", {
@@ -133,7 +141,7 @@ export function ClubTurnos() {
   });
 
   useEffect(() => {
-    if (!paymentIntent) {
+    if (!pendingPayment) {
       return;
     }
 
@@ -143,15 +151,84 @@ export function ClubTurnos() {
       setNow(Date.now());
     }, 1000);
 
-    const redirectId = window.setTimeout(() => {
-      window.location.href = paymentIntent.checkoutUrl;
-    }, 500);
-
     return () => {
       window.clearInterval(intervalId);
-      window.clearTimeout(redirectId);
     };
-  }, [paymentIntent]);
+  }, [pendingPayment]);
+
+  useEffect(() => {
+    const rawValue = window.localStorage.getItem(pendingPaymentStorageKey);
+
+    if (!rawValue) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(rawValue) as PendingBookingPayment;
+      if (new Date(parsed.expiresAt).getTime() <= Date.now()) {
+        window.localStorage.removeItem(pendingPaymentStorageKey);
+        return;
+      }
+
+      setPendingPayment(parsed);
+      setSelectedDate(new Date(`${parsed.date}T00:00:00`));
+      if (typeof parsed.courtNumber === "number") {
+        setSelectedCourt(parsed.courtNumber);
+      }
+    } catch {
+      window.localStorage.removeItem(pendingPaymentStorageKey);
+    }
+  }, [pendingPaymentStorageKey]);
+
+  useEffect(() => {
+    if (!pendingPayment) {
+      window.localStorage.removeItem(pendingPaymentStorageKey);
+      return;
+    }
+
+    window.localStorage.setItem(
+      pendingPaymentStorageKey,
+      JSON.stringify(pendingPayment),
+    );
+  }, [pendingPayment, pendingPaymentStorageKey]);
+
+  useEffect(() => {
+    if (!pendingPayment) {
+      return;
+    }
+
+    if (new Date(pendingPayment.expiresAt).getTime() <= now) {
+      setPendingPayment(null);
+      void queryClient.invalidateQueries({
+        queryKey: bookingKeys.availabilityByTenant(config.tenantId, pendingPayment.date),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: bookingKeys.list(config.tenantId, pendingPayment.date),
+      });
+    }
+  }, [config.tenantId, now, pendingPayment, queryClient]);
+
+  useEffect(() => {
+    if (!pendingPayment || pendingPayment.date !== bookingDate) {
+      return;
+    }
+
+    const matchingBooking = bookings.find((booking) => {
+      if (pendingPayment.bookingId) {
+        return booking.id === pendingPayment.bookingId;
+      }
+
+      return (
+        booking.courtNumber === pendingPayment.courtNumber &&
+        booking.date === pendingPayment.date &&
+        booking.startTime === pendingPayment.startTime
+      );
+    });
+
+    if (matchingBooking && matchingBooking.status !== "pending") {
+      setPendingPayment(null);
+    }
+  }, [bookingDate, bookings, pendingPayment]);
 
   const goToPreviousDay = () => {
     const prev = new Date(selectedDate);
@@ -214,15 +291,27 @@ export function ClubTurnos() {
       }
 
       if (response.mode === "direct_reservation") {
+        setPendingPayment(null);
         toast({
           title: response.message || "Turno reservado",
         });
         return;
       }
 
-      setPaymentIntent(response);
+      const nextPendingPayment: PendingBookingPayment = {
+        bookingId: response.bookingId ?? slotKey,
+        tenantId: config.tenantId,
+        courtNumber,
+        date: bookingDate,
+        startTime: slot.startTime,
+        checkoutUrl: response.checkoutUrl,
+        expiresAt: response.expiresAt,
+      };
+
+      setPendingPayment(nextPendingPayment);
+      setSelectedCourt(courtNumber);
       toast({
-        title: response.message || "Redirigiendo al checkout",
+        title: response.message || "Tu turno quedo pendiente de pago por 10 minutos.",
       });
     } catch (err) {
       toast({
@@ -236,9 +325,22 @@ export function ClubTurnos() {
 
   const isToday =
     format(selectedDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
-  const paymentCountdown = paymentIntent
-    ? formatCountdown(paymentIntent.expiresAt, now)
+  const paymentCountdown = pendingPayment
+    ? formatCountdown(pendingPayment.expiresAt, now)
     : null;
+  const isPendingPaymentExpired = pendingPayment
+    ? new Date(pendingPayment.expiresAt).getTime() <= now
+    : false;
+  const pendingCourtLabel = pendingPayment
+    ? `Cancha ${pendingPayment.courtNumber}`
+    : null;
+  const handleContinuePayment = () => {
+    if (!pendingPayment) {
+      return;
+    }
+
+    window.location.href = pendingPayment.checkoutUrl;
+  };
 
   return (
     <div className="space-y-6">
@@ -252,9 +354,40 @@ export function ClubTurnos() {
         <p className="mt-2 max-w-2xl text-slate-600 dark:text-slate-400">
           Selecciona una fecha y cancha para ver la disponibilidad.
         </p>
-        {paymentIntent ? (
-          <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-800 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
-            Tu pago esta pendiente. Expira en {paymentCountdown} y te estamos redirigiendo al checkout.
+        {pendingPayment ? (
+          <div className="mt-4 rounded-[1.5rem] border border-amber-200 bg-amber-50/90 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <p className="font-semibold">
+                  Tenes una reserva pendiente para {pendingCourtLabel} a las {pendingPayment.startTime}.
+                </p>
+                <p className="text-amber-800/90 dark:text-amber-200/90">
+                  {isPendingPaymentExpired
+                    ? "El tiempo de pago vencio. La disponibilidad se va a refrescar."
+                    : `Te quedan ${paymentCountdown} para completar el pago.`}
+                </p>
+                <p className="text-xs text-amber-700/80 dark:text-amber-300/80">
+                  Fecha: {pendingPayment.date}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {!isPendingPaymentExpired ? (
+                  <Button
+                    onClick={handleContinuePayment}
+                    className="bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                  >
+                    Continuar pago
+                  </Button>
+                ) : null}
+                <Button
+                  variant="outline"
+                  onClick={() => setPendingPayment(null)}
+                  className="border-amber-300 bg-white/80 text-amber-900 hover:bg-amber-100 dark:border-amber-900/60 dark:bg-slate-950/50 dark:text-amber-100 dark:hover:bg-amber-500/10"
+                >
+                  Cerrar
+                </Button>
+              </div>
+            </div>
           </div>
         ) : null}
       </section>
