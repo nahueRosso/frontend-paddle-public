@@ -136,7 +136,7 @@ export function ClubTurnos() {
   const showCourtPrice = config.bookingRules?.showCourtPrice ?? true;
   const defaultCourtPrice = config.basePrice ?? 0;
 
-  const { player, person, playerId, personId } = usePlayer();
+  const { player, person, playerId, personId, personExists } = usePlayer();
   const bookingActor = player ?? person;
   const pendingPaymentOwnerIdentity = buildPendingPaymentOwnerIdentity({
     playerId,
@@ -335,8 +335,11 @@ export function ClubTurnos() {
   };
 
   const handleBooking = async (courtNumber: number, slot: TimeSlot) => {
-    if (!bookingActor) {
-      setVerifyClubPlayer(true);
+    if (!personExists || !bookingActor) {
+      toast({
+        title: "Completa tu perfil antes de reservar.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -349,6 +352,27 @@ export function ClubTurnos() {
     }
 
     const slotKey = `${courtNumber}-${bookingDate}-${slot.startTime}`;
+    const userName = `${bookingActor.firstName} ${bookingActor.lastName}`.trim();
+    const payerEmail = bookingActor.email?.trim() || undefined;
+    const userPhone = bookingActor.phoneNumber?.trim() || undefined;
+    const hasBookingIdentity = Boolean(playerId || personId || userPhone || payerEmail);
+
+    if (!userName) {
+      toast({
+        title: "Completa tu nombre y apellido antes de reservar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!hasBookingIdentity) {
+      toast({
+        title: "Falta completar tu identidad de reserva. Verificá tu perfil antes de continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSubmittingSlot(slotKey);
 
     try {
@@ -357,8 +381,11 @@ export function ClubTurnos() {
         courtNumber,
         date: bookingDate,
         startTime: slot.startTime,
-        userName: `${bookingActor.firstName} ${bookingActor.lastName}`.trim(),
-        userPhone: bookingActor.phoneNumber,
+        userName,
+        userPhone,
+        playerId: playerId ?? undefined,
+        personId: personId ?? undefined,
+        payerEmail,
         reservedBy: "usuario",
         source: "web",
       });

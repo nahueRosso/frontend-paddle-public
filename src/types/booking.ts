@@ -49,7 +49,12 @@ export type PublicBookingIntentMode =
   | "direct_reservation"
   | "payment_required";
 
-export type PublicBookingIntentPayload = CreateBooking;
+export type PublicBookingIntentPayload = Omit<CreateBooking, "userPhone"> & {
+  userPhone?: string;
+  playerId?: string;
+  personId?: string;
+  payerEmail?: string;
+};
 
 export type PublicBookingIntentResponse =
   | {

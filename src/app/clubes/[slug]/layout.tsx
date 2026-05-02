@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
 import { normalizePublicPlayerSession } from "@/lib/public-player-session";
+import { fetchPublicPlayerLookup } from "@/lib/api/player";
 import { PlayerProvider } from "@/providers/player-provider";
 import CreatePlayer from "@/components/create-player";
 import VerifyClubPlayerDialog from "@/components/verify-club-player-dialog";
@@ -22,43 +22,20 @@ export default async function ClubesLayout({
     redirect("/login");
   }
 
+  const userEmail = session.user?.email?.trim();
+
+  if (!userEmail) {
+    redirect("/login");
+  }
+
   try {
-    const playerLookupPath = `/player/${slug}?email=${session.user?.email}`;
-    console.log("[ClubesLayout] Fetching player session", {
-      slug,
-      email: session.user?.email,
-      path: playerLookupPath,
-    });
-
-    const response = await fetchWithTenantAdmin(
-      playerLookupPath,
-      { method: "GET" }
-    );
-
-    console.log("[ClubesLayout] Player session response", {
-      slug,
-      email: session.user?.email,
-      status: response.status,
-      ok: response.ok,
-    });
-
-    if (response.status === 404) {
-      console.log("[ClubesLayout] Player session not found, rendering CreatePlayer", {
-        slug,
-        email: session.user?.email,
-      });
-      return <CreatePlayer slug={slug} />;
-    }
-
-    if (!response.ok) {
-      throw new Error("No se pudo obtener el perfil del jugador.");
-    }
-
-    const rawPlayerSession = await response.json();
-    console.log("[ClubesLayout] Raw player session payload", rawPlayerSession);
+    const rawPlayerSession = await fetchPublicPlayerLookup(slug, userEmail);
 
     const playerSession = normalizePublicPlayerSession(rawPlayerSession);
-    console.log("[ClubesLayout] Normalized player session", playerSession);
+
+    if (!playerSession.personExists) {
+      return <CreatePlayer slug={slug} />;
+    }
 
     return (
       <PlayerProvider initialSession={playerSession}>

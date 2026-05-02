@@ -64,6 +64,49 @@ export type CreatePlayerResponse = PublicPlayerSession & {
   [key: string]: unknown
 }
 
+export type PublicPlayerLookupResponse = Partial<PublicPlayerSession> & {
+  personExists?: boolean
+  playerExists?: boolean
+  verifiedInClub?: boolean
+  playerStatus?: PlayerStatus | null
+  personId?: string | null
+  playerId?: string | null
+  email?: string | null
+  firstName?: string | null
+  lastName?: string | null
+  phoneNumber?: string | null
+  [key: string]: unknown
+}
+
+export async function fetchPublicPlayerLookup(slug: string, email: string) {
+  const response = await fetchWithTenantAdmin(
+    `/player/${slug}?email=${encodeURIComponent(email)}`,
+    {
+      method: "GET",
+      cache: "no-store",
+    },
+  )
+
+  if (response.status === 404) {
+    return {
+      personExists: false,
+      playerExists: false,
+      verifiedInClub: false,
+      playerStatus: null,
+      personId: null,
+      playerId: null,
+      email,
+    } satisfies PublicPlayerLookupResponse
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null)
+    throw new Error(error?.message || "No se pudo obtener el perfil del jugador.")
+  }
+
+  return response.json() as Promise<PublicPlayerLookupResponse>
+}
+
 export async function createPlayer(slug: string, payload: CreatePlayerPayload) {
   const response = await fetchWithTenantAdmin(`/player/${slug}`, {
     method: "POST",

@@ -33,7 +33,7 @@ export default function VerifyClubPlayerDialog({
   onOpenChange,
   autoOpen = false,
 }: VerifyClubPlayerDialogProps) {
-  const { personId, verifiedInClub, person, setPlayerSession } = usePlayer()
+  const { personId, playerExists, person, setPlayerSession } = usePlayer()
   const queryClient = useQueryClient()
   const [internalOpen, setInternalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -53,13 +53,13 @@ export default function VerifyClubPlayerDialog({
   )
 
   useEffect(() => {
-    if (autoOpen && !verifiedInClub && personId && !hasAutoOpenedRef.current) {
+    if (autoOpen && !playerExists && personId && !hasAutoOpenedRef.current) {
       hasAutoOpenedRef.current = true
       setOpen(true)
     }
-  }, [autoOpen, personId, setOpen, verifiedInClub])
+  }, [autoOpen, personId, playerExists, setOpen])
 
-  if (verifiedInClub || !personId) {
+  if (playerExists || !personId) {
     return null
   }
 

@@ -17,9 +17,12 @@ export type PublicClubPlayer = PublicPlayerProfile & {
 }
 
 export type PublicPlayerSession = {
+  personExists: boolean
+  playerExists: boolean
   personId: string | null
   playerId: string | null
   verifiedInClub: boolean
+  playerStatus: PlayerStatus | null
   person: PublicPlayerProfile | null
   player: PublicClubPlayer | null
 }
@@ -79,22 +82,50 @@ export function normalizePublicPlayerSession(payload: unknown): PublicPlayerSess
     asRecord(root?.player) ??
     asRecord(root?.tenantPlayer) ??
     (root && (asString(root.tenantId) || asString(root.phoneNumber) || asString(root.status)) ? root : null)
-
-  const person = normalizeProfile(embeddedPerson ?? embeddedClubPlayer ?? root)
-  const player = normalizeClubPlayer(embeddedClubPlayer)
-  const explicitPlayerId = asString(root?.playerId) ?? player?.id ?? null
-  const verifiedInClub = asBoolean(root?.verifiedInClub) ?? Boolean(explicitPlayerId)
-  const personId =
+  const explicitPersonExists = asBoolean(root?.personExists)
+  const explicitPlayerExists = asBoolean(root?.playerExists)
+  const explicitPersonId =
     asString(root?.personId) ??
     asString(embeddedPerson?.id) ??
-    (verifiedInClub ? null : asString(root?.id)) ??
     null
+  const explicitPlayerId =
+    asString(root?.playerId) ??
+    asString(embeddedClubPlayer?.id) ??
+    null
+  const playerStatus =
+    (asString(root?.playerStatus) as PlayerStatus | null) ??
+    (asString(root?.status) as PlayerStatus | null) ??
+    (asString(embeddedClubPlayer?.status) as PlayerStatus | null) ??
+    null
+  const personExists =
+    explicitPersonExists ??
+    Boolean(explicitPersonId || embeddedPerson || root?.person || root?.globalPerson)
+  const playerExists =
+    explicitPlayerExists ??
+    Boolean(explicitPlayerId || root?.player || root?.tenantPlayer)
+  const verifiedInClub =
+    asBoolean(root?.verifiedInClub) ??
+    asBoolean(root?.verified) ??
+    asBoolean(embeddedClubPlayer?.verified) ??
+    playerStatus === "verified"
+
+  const person = personExists
+    ? normalizeProfile(embeddedPerson ?? embeddedClubPlayer ?? root)
+    : null
+  const normalizedPlayer = normalizeClubPlayer(embeddedClubPlayer ?? root)
+  const player =
+    playerExists && explicitPlayerId
+      ? normalizedPlayer ?? (person ? { id: explicitPlayerId, ...person } : null)
+      : null
 
   return {
-    personId,
-    playerId: verifiedInClub ? explicitPlayerId : null,
+    personExists,
+    playerExists,
+    personId: personExists ? explicitPersonId : null,
+    playerId: playerExists ? explicitPlayerId : null,
     verifiedInClub,
+    playerStatus,
     person,
-    player: verifiedInClub ? player : null,
+    player,
   }
 }
