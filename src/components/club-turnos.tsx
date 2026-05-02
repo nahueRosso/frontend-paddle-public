@@ -82,12 +82,43 @@ function formatCountdown(expiresAt: string, now: number) {
 type PendingBookingPayment = {
   bookingId: string;
   tenantId: string;
+  ownerIdentity: string;
   courtNumber: number;
   date: string;
   startTime: string;
   checkoutUrl: string;
   expiresAt: string;
 };
+
+function buildPendingPaymentOwnerIdentity({
+  playerId,
+  personId,
+  phoneNumber,
+  email,
+}: {
+  playerId?: string | null;
+  personId?: string | null;
+  phoneNumber?: string | null;
+  email?: string | null;
+}) {
+  if (playerId) {
+    return `player:${playerId}`;
+  }
+
+  if (personId) {
+    return `person:${personId}`;
+  }
+
+  if (phoneNumber) {
+    return `phone:${phoneNumber}`;
+  }
+
+  if (email) {
+    return `email:${email.toLowerCase()}`;
+  }
+
+  return null;
+}
 
 export function ClubTurnos() {
   const { config } = useClub();
@@ -105,19 +136,31 @@ export function ClubTurnos() {
   const showCourtPrice = config.bookingRules?.showCourtPrice ?? true;
   const defaultCourtPrice = config.basePrice ?? 0;
 
-  const { player, person } = usePlayer();
+  const { player, person, playerId, personId } = usePlayer();
   const bookingActor = player ?? person;
+  const pendingPaymentOwnerIdentity = buildPendingPaymentOwnerIdentity({
+    playerId,
+    personId,
+    phoneNumber: bookingActor?.phoneNumber ?? null,
+    email: bookingActor?.email ?? null,
+  });
   const bookingDate = format(selectedDate, "yyyy-MM-dd");
   const { data: bookings = [], isLoading: isBookingsLoading } = useBookingsQuery(
     config.tenantId,
     bookingDate,
   );
-  const pendingPaymentStorageKey = `pending-booking:${config.tenantId}`;
+  const legacyPendingPaymentStorageKey = `pending-booking:${config.tenantId}`;
+  const pendingPaymentStorageKey = pendingPaymentOwnerIdentity
+    ? `pending-booking:${config.tenantId}:${pendingPaymentOwnerIdentity}`
+    : null;
 
   const clearPendingPayment = useCallback(() => {
     setPendingPayment(null);
-    window.localStorage.removeItem(pendingPaymentStorageKey);
-  }, [pendingPaymentStorageKey]);
+    window.localStorage.removeItem(legacyPendingPaymentStorageKey);
+    if (pendingPaymentStorageKey) {
+      window.localStorage.removeItem(pendingPaymentStorageKey);
+    }
+  }, [legacyPendingPaymentStorageKey, pendingPaymentStorageKey]);
 
   const reconcilePendingPayment = useCallback(
     (nextBookings: Booking[]) => {
@@ -139,14 +182,17 @@ export function ClubTurnos() {
         });
 
         if (!matchingBooking || matchingBooking.status !== "pending") {
-          window.localStorage.removeItem(pendingPaymentStorageKey);
+          window.localStorage.removeItem(legacyPendingPaymentStorageKey);
+          if (pendingPaymentStorageKey) {
+            window.localStorage.removeItem(pendingPaymentStorageKey);
+          }
           return null;
         }
 
         return currentPendingPayment;
       });
     },
-    [bookingDate, pendingPaymentStorageKey],
+    [bookingDate, legacyPendingPaymentStorageKey, pendingPaymentStorageKey],
   );
 
   // useEffect(() => {
@@ -193,6 +239,13 @@ export function ClubTurnos() {
   }, [pendingPayment]);
 
   useEffect(() => {
+    window.localStorage.removeItem(legacyPendingPaymentStorageKey);
+
+    if (!pendingPaymentStorageKey || !pendingPaymentOwnerIdentity) {
+      setPendingPayment(null);
+      return;
+    }
+
     const rawValue = window.localStorage.getItem(pendingPaymentStorageKey);
 
     if (!rawValue) {
@@ -201,6 +254,12 @@ export function ClubTurnos() {
 
     try {
       const parsed = JSON.parse(rawValue) as PendingBookingPayment;
+      if (parsed.ownerIdentity !== pendingPaymentOwnerIdentity) {
+        window.localStorage.removeItem(pendingPaymentStorageKey);
+        setPendingPayment(null);
+        return;
+      }
+
       if (new Date(parsed.expiresAt).getTime() <= Date.now()) {
         clearPendingPayment();
         return;
@@ -214,9 +273,18 @@ export function ClubTurnos() {
     } catch {
       clearPendingPayment();
     }
-  }, [clearPendingPayment, pendingPaymentStorageKey]);
+  }, [
+    clearPendingPayment,
+    legacyPendingPaymentStorageKey,
+    pendingPaymentOwnerIdentity,
+    pendingPaymentStorageKey,
+  ]);
 
   useEffect(() => {
+    if (!pendingPaymentStorageKey) {
+      return;
+    }
+
     if (!pendingPayment) {
       window.localStorage.removeItem(pendingPaymentStorageKey);
       return;
@@ -323,6 +391,7 @@ export function ClubTurnos() {
       const nextPendingPayment: PendingBookingPayment = {
         bookingId: response.bookingId ?? slotKey,
         tenantId: config.tenantId,
+        ownerIdentity: pendingPaymentOwnerIdentity ?? `phone:${bookingActor.phoneNumber}`,
         courtNumber,
         date: bookingDate,
         startTime: slot.startTime,
