@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,12 +15,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { TimeSlot } from "@/types/booking";
+import type { PublicBookingIntentResponse, TimeSlot } from "@/types/booking";
 import type { CourtConfig } from "@/types/tenant-config";
-import { useCreateBookingMutation } from "@/hooks/mutations/booking";
 import { useBookingsQuery } from "@/hooks/queries/booking";
 import { useCurrentTime } from "@/hooks/use-current-time";
 import { useBookingsSocket } from "@/hooks/use-bookings-socket";
+import { createPublicBookingIntent } from "@/lib/api/booking";
+import { bookingKeys } from "@/lib/queryKeys/booking";
 import { generateTimeSlots } from "@/lib/slots";
 import { isSlotPast } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
@@ -65,28 +67,44 @@ function formatCourtSurface(surface?: CourtConfig["surface"]) {
   return null;
 }
 
+function formatCountdown(expiresAt: string, now: number) {
+  const remaining = new Date(expiresAt).getTime() - now;
+
+  if (remaining <= 0) return "0:00";
+
+  const totalSeconds = Math.ceil(remaining / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
 export function ClubTurnos() {
   const { config } = useClub();
+  const queryClient = useQueryClient();
   const currentTime = useCurrentTime();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedCourt, setSelectedCourt] = useState<number | null>(null);
   const [submittingSlot, setSubmittingSlot] = useState<string | null>(null);
   const [verifyPlayer, setVerifyPlayer] = useState<boolean>(false);
+  const [verifyReason, setVerifyReason] = useState<string | null>(null);
   const [verifyClubPlayer, setVerifyClubPlayer] = useState(false);
+  const [paymentIntent, setPaymentIntent] = useState<Extract<
+    PublicBookingIntentResponse,
+    { mode: "payment_required" }
+  > | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const activeCourts = config.courts.filter((c) => c.active);
-  const allowUnverifiedPlayers =
-    config.bookingRules?.allowUnverifiedPlayers ?? false;
   const showCourtPrice = config.bookingRules?.showCourtPrice ?? true;
-  const defaultCourtPrice =
-    config.pricing?.booking?.totalPrice ?? config.basePrice ?? 0;
+  const defaultCourtPrice = config.basePrice ?? 0;
 
-  const { player } = usePlayer();
+  const { player, person } = usePlayer();
+  const bookingActor = player ?? person;
   const bookingDate = format(selectedDate, "yyyy-MM-dd");
   const { data: bookings = [], isLoading: isBookingsLoading } = useBookingsQuery(
     config.tenantId,
     bookingDate,
   );
-  const { mutateAsync: createBooking } = useCreateBookingMutation();
 
   // useEffect(() => {
   //   console.log("[ClubTurnos] state", {
@@ -113,7 +131,28 @@ export function ClubTurnos() {
     tenantId: config.tenantId,
     bookingDate,
   });
-  
+
+  useEffect(() => {
+    if (!paymentIntent) {
+      return;
+    }
+
+    setNow(Date.now());
+
+    const intervalId = window.setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    const redirectId = window.setTimeout(() => {
+      window.location.href = paymentIntent.checkoutUrl;
+    }, 500);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.clearTimeout(redirectId);
+    };
+  }, [paymentIntent]);
+
   const goToPreviousDay = () => {
     const prev = new Date(selectedDate);
     prev.setDate(prev.getDate() - 1);
@@ -129,13 +168,8 @@ export function ClubTurnos() {
   };
 
   const handleBooking = async (courtNumber: number, slot: TimeSlot) => {
-    if (!player) {
+    if (!bookingActor) {
       setVerifyClubPlayer(true);
-      return;
-    }
-
-    if (!player.verified && !allowUnverifiedPlayers) {
-      setVerifyPlayer(true);
       return;
     }
 
@@ -148,35 +182,47 @@ export function ClubTurnos() {
     }
 
     const slotKey = `${courtNumber}-${bookingDate}-${slot.startTime}`;
-    const alreadyBookedByPlayer = bookings.find(
-      (booking) =>
-        booking.date === bookingDate &&
-        booking.status !== "cancelled" &&
-        booking.userPhone === player.phoneNumber,
-    );
-
-    if (alreadyBookedByPlayer) {
-      toast({
-        title: "Ya tenes una cancha reservada para esta fecha.",
-      });
-      return;
-    }
-
     setSubmittingSlot(slotKey);
 
     try {
-      const response = await createBooking({
+      const response = await createPublicBookingIntent({
         tenantId: config.tenantId,
         courtNumber,
         date: bookingDate,
         startTime: slot.startTime,
-        userName: `${player.firstName} ${player.lastName}`.trim(),
-        userPhone: player.phoneNumber,
+        userName: `${bookingActor.firstName} ${bookingActor.lastName}`.trim(),
+        userPhone: bookingActor.phoneNumber,
         reservedBy: "usuario",
         source: "web",
       });
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: bookingKeys.availabilityByTenant(config.tenantId, bookingDate),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: bookingKeys.list(config.tenantId, bookingDate),
+        }),
+      ]);
+
+      if (response.mode === "verification_required") {
+        setVerifyReason(
+          response.reason?.trim() || "Tu cuenta debe ser verificada.",
+        );
+        setVerifyPlayer(true);
+        return;
+      }
+
+      if (response.mode === "direct_reservation") {
+        toast({
+          title: response.message || "Turno reservado",
+        });
+        return;
+      }
+
+      setPaymentIntent(response);
       toast({
-        title: response.message,
+        title: response.message || "Redirigiendo al checkout",
       });
     } catch (err) {
       toast({
@@ -190,6 +236,9 @@ export function ClubTurnos() {
 
   const isToday =
     format(selectedDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
+  const paymentCountdown = paymentIntent
+    ? formatCountdown(paymentIntent.expiresAt, now)
+    : null;
 
   return (
     <div className="space-y-6">
@@ -203,6 +252,11 @@ export function ClubTurnos() {
         <p className="mt-2 max-w-2xl text-slate-600 dark:text-slate-400">
           Selecciona una fecha y cancha para ver la disponibilidad.
         </p>
+        {paymentIntent ? (
+          <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-800 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+            Tu pago esta pendiente. Expira en {paymentCountdown} y te estamos redirigiendo al checkout.
+          </div>
+        ) : null}
       </section>
 
       <Card className="rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
@@ -325,7 +379,11 @@ export function ClubTurnos() {
       )}
       <VerifyPlayerDialog
         open={verifyPlayer}
-        onClose={() => setVerifyPlayer(false)}
+        onClose={() => {
+          setVerifyPlayer(false);
+          setVerifyReason(null);
+        }}
+        reason={verifyReason}
       />
       <VerifyClubPlayerDialog
         slug={config.slug}

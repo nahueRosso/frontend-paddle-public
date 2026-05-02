@@ -1,6 +1,6 @@
 export type SlotStatus = "available" | "pending" | "occupied";
 export type ManualSlotStatus = "available" | "occupied";
-export type BookingStatus = "pending" | "confirmed" | "cancelled";
+export type BookingStatus = "pending" | "confirmed" | "cancelled" | "expired";
 export type BookingSource = "whatsapp" | "web" | "mobile";
 export type BookingReservedBy = "usuario" | "administrador" | "match" | "torneo";
 
@@ -43,6 +43,33 @@ export interface CreateBooking {
   source?: "whatsapp" | "web" | "mobile";
   status?: BookingStatus;
 }
+
+export type PublicBookingIntentMode =
+  | "verification_required"
+  | "direct_reservation"
+  | "payment_required";
+
+export interface PublicBookingIntentPayload extends CreateBooking {}
+
+export type PublicBookingIntentResponse =
+  | {
+      mode: "verification_required";
+      reason?: string;
+      message?: string;
+    }
+  | {
+      mode: "direct_reservation";
+      message?: string;
+      bookingId?: string;
+    }
+  | {
+      mode: "payment_required";
+      message?: string;
+      bookingId?: string;
+      billingPaymentId?: string;
+      checkoutUrl: string;
+      expiresAt: string;
+    };
 
 export type BookingResponse = {
   id?: string;

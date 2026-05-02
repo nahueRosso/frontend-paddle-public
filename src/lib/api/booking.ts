@@ -4,6 +4,8 @@ import {
   BookingStatus,
   CourtSchedule,
   CreateBooking,
+  PublicBookingIntentPayload,
+  PublicBookingIntentResponse,
 } from "@/types/booking";
 import { fetchWithTenantAdmin } from "../fetchWithTenantAdmin";
  
@@ -94,6 +96,39 @@ export async function CreatePaddleBooking(
   };
 }
 
+export async function createPublicBookingIntent(
+  data: PublicBookingIntentPayload,
+): Promise<PublicBookingIntentResponse> {
+  const response = await fetch("/api/bookings/public/intent", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  const text = await response.text();
+  let payload: Record<string, unknown> | null = null;
+
+  if (text) {
+    try {
+      payload = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      payload = null;
+    }
+  }
+
+  if (!response.ok) {
+    const message =
+      typeof payload?.message === "string"
+        ? payload.message
+        : typeof payload?.error === "string"
+          ? payload.error
+          : "Error al iniciar la reserva publica";
+    throw new Error(message);
+  }
+
+  return payload as PublicBookingIntentResponse;
+}
+
 export async function updateBookingStatus({
   bookingId,
   status,
@@ -129,5 +164,4 @@ export async function generateBookingStoryImage(tenantId: string): Promise<Blob>
 
   return await res.blob();
 }
-
 
