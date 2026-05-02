@@ -13,11 +13,13 @@ const SOCKET_URL =
 type UseBookingsSocketOptions = {
   tenantId?: string | null;
   bookingDate?: string;
+  onBookingsList?: (bookings: Booking[]) => void;
 };
 
 export function useBookingsSocket({
   tenantId,
   bookingDate,
+  onBookingsList,
 }: UseBookingsSocketOptions) {
   const queryClient = useQueryClient();
   const socketRef = useRef<Socket | null>(null);
@@ -38,12 +40,18 @@ export function useBookingsSocket({
     });
 
     socket.on("bookings:list", (bookings: Booking[]) => {
+      const filteredBookings = bookingDate
+        ? bookings.filter((booking) => booking.date === bookingDate)
+        : bookings;
+
       if (bookingDate) {
         queryClient.setQueryData(
           bookingKeys.list(tenantId, bookingDate),
-          bookings.filter((booking) => booking.date === bookingDate),
+          filteredBookings,
         );
       }
+
+      onBookingsList?.(filteredBookings);
 
       queryClient.invalidateQueries({
         queryKey: bookingKeys.availabilityByTenant(tenantId, bookingDate),
@@ -54,5 +62,5 @@ export function useBookingsSocket({
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [bookingDate, queryClient, tenantId]);
+  }, [bookingDate, onBookingsList, queryClient, tenantId]);
 }

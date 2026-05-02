@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,7 +15,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { PublicBookingIntentResponse, TimeSlot } from "@/types/booking";
+import type { Booking, PublicBookingIntentResponse, TimeSlot } from "@/types/booking";
 import type { CourtConfig } from "@/types/tenant-config";
 import { useBookingsQuery } from "@/hooks/queries/booking";
 import { useCurrentTime } from "@/hooks/use-current-time";
@@ -114,6 +114,41 @@ export function ClubTurnos() {
   );
   const pendingPaymentStorageKey = `pending-booking:${config.tenantId}`;
 
+  const clearPendingPayment = useCallback(() => {
+    setPendingPayment(null);
+    window.localStorage.removeItem(pendingPaymentStorageKey);
+  }, [pendingPaymentStorageKey]);
+
+  const reconcilePendingPayment = useCallback(
+    (nextBookings: Booking[]) => {
+      setPendingPayment((currentPendingPayment) => {
+        if (!currentPendingPayment || currentPendingPayment.date !== bookingDate) {
+          return currentPendingPayment;
+        }
+
+        const matchingBooking = nextBookings.find((booking) => {
+          if (currentPendingPayment.bookingId) {
+            return booking.id === currentPendingPayment.bookingId;
+          }
+
+          return (
+            booking.courtNumber === currentPendingPayment.courtNumber &&
+            booking.date === currentPendingPayment.date &&
+            booking.startTime === currentPendingPayment.startTime
+          );
+        });
+
+        if (!matchingBooking || matchingBooking.status !== "pending") {
+          window.localStorage.removeItem(pendingPaymentStorageKey);
+          return null;
+        }
+
+        return currentPendingPayment;
+      });
+    },
+    [bookingDate, pendingPaymentStorageKey],
+  );
+
   // useEffect(() => {
   //   console.log("[ClubTurnos] state", {
   //     tenantId: config.tenantId,
@@ -138,6 +173,7 @@ export function ClubTurnos() {
   useBookingsSocket({
     tenantId: config.tenantId,
     bookingDate,
+    onBookingsList: reconcilePendingPayment,
   });
 
   useEffect(() => {
@@ -166,7 +202,7 @@ export function ClubTurnos() {
     try {
       const parsed = JSON.parse(rawValue) as PendingBookingPayment;
       if (new Date(parsed.expiresAt).getTime() <= Date.now()) {
-        window.localStorage.removeItem(pendingPaymentStorageKey);
+        clearPendingPayment();
         return;
       }
 
@@ -176,9 +212,9 @@ export function ClubTurnos() {
         setSelectedCourt(parsed.courtNumber);
       }
     } catch {
-      window.localStorage.removeItem(pendingPaymentStorageKey);
+      clearPendingPayment();
     }
-  }, [pendingPaymentStorageKey]);
+  }, [clearPendingPayment, pendingPaymentStorageKey]);
 
   useEffect(() => {
     if (!pendingPayment) {
@@ -198,7 +234,7 @@ export function ClubTurnos() {
     }
 
     if (new Date(pendingPayment.expiresAt).getTime() <= now) {
-      setPendingPayment(null);
+      clearPendingPayment();
       void queryClient.invalidateQueries({
         queryKey: bookingKeys.availabilityByTenant(config.tenantId, pendingPayment.date),
       });
@@ -206,29 +242,15 @@ export function ClubTurnos() {
         queryKey: bookingKeys.list(config.tenantId, pendingPayment.date),
       });
     }
-  }, [config.tenantId, now, pendingPayment, queryClient]);
+  }, [clearPendingPayment, config.tenantId, now, pendingPayment, queryClient]);
 
   useEffect(() => {
     if (!pendingPayment || pendingPayment.date !== bookingDate) {
       return;
     }
 
-    const matchingBooking = bookings.find((booking) => {
-      if (pendingPayment.bookingId) {
-        return booking.id === pendingPayment.bookingId;
-      }
-
-      return (
-        booking.courtNumber === pendingPayment.courtNumber &&
-        booking.date === pendingPayment.date &&
-        booking.startTime === pendingPayment.startTime
-      );
-    });
-
-    if (matchingBooking && matchingBooking.status !== "pending") {
-      setPendingPayment(null);
-    }
-  }, [bookingDate, bookings, pendingPayment]);
+    reconcilePendingPayment(bookings);
+  }, [bookingDate, bookings, pendingPayment, reconcilePendingPayment]);
 
   const goToPreviousDay = () => {
     const prev = new Date(selectedDate);
@@ -291,7 +313,7 @@ export function ClubTurnos() {
       }
 
       if (response.mode === "direct_reservation") {
-        setPendingPayment(null);
+        clearPendingPayment();
         toast({
           title: response.message || "Turno reservado",
         });
@@ -381,7 +403,7 @@ export function ClubTurnos() {
                 ) : null}
                 <Button
                   variant="outline"
-                  onClick={() => setPendingPayment(null)}
+                  onClick={clearPendingPayment}
                   className="border-amber-300 bg-white/80 text-amber-900 hover:bg-amber-100 dark:border-amber-900/60 dark:bg-slate-950/50 dark:text-amber-100 dark:hover:bg-amber-500/10"
                 >
                   Cerrar
