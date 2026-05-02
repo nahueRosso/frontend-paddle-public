@@ -49,7 +49,7 @@ export type PublicBookingIntentMode =
   | "direct_reservation"
   | "payment_required";
 
-export interface PublicBookingIntentPayload extends CreateBooking {}
+export type PublicBookingIntentPayload = CreateBooking;
 
 export type PublicBookingIntentResponse =
   | {
