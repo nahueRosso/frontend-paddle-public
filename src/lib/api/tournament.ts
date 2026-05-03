@@ -30,6 +30,46 @@ export type TournamentActionResponse = {
   [key: string]: unknown;
 };
 
+export type TournamentBillingPaymentLinkPayload = {
+  tenantId: string;
+  tournamentTeamId: string;
+  playerName: string;
+  playerPhone: string;
+  playerEmail: string;
+  tournamentId: string;
+};
+
+export type TournamentBillingPaymentLinkResponse = {
+  alreadyPaid?: boolean;
+  checkoutUrl?: string;
+  reusable?: boolean;
+  externalReference?: string;
+  message?: string;
+  [key: string]: unknown;
+};
+
+export type BillingTournamentStatusResponse = {
+  paymentStatus?: string;
+  status?: string;
+  externalReference?: string;
+  billingPayment?: {
+    status?: string;
+    externalReference?: string;
+    [key: string]: unknown;
+  } | null;
+  tournamentTeam?: {
+    id?: string;
+    approved?: boolean;
+    [key: string]: unknown;
+  } | null;
+  team?: {
+    id?: string;
+    approved?: boolean;
+    [key: string]: unknown;
+  } | null;
+  [key: string]: unknown;
+};
+
 export type TournamentAvailablePlayer = {
   id: string;
   playerId?: string;
@@ -372,4 +412,72 @@ export async function rejectTournamentPartnerRequest({
     response,
     "No se pudo rechazar la solicitud.",
   );
+}
+
+export async function createTournamentPaymentLink(
+  payload: TournamentBillingPaymentLinkPayload,
+) {
+  const response = await fetch("/api/billing/tournaments/payment-link", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await response.text();
+  let body: Record<string, unknown> | null = null;
+
+  if (text) {
+    try {
+      body = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      body = null;
+    }
+  }
+
+  if (!response.ok) {
+    const message =
+      typeof body?.message === "string"
+        ? body.message
+        : typeof body?.error === "string"
+          ? body.error
+          : "No se pudo generar el link de pago del torneo.";
+    throw new Error(message);
+  }
+
+  return (body ?? {}) as TournamentBillingPaymentLinkResponse;
+}
+
+export async function fetchBillingTournamentStatus(
+  externalReference: string,
+): Promise<BillingTournamentStatusResponse> {
+  const response = await fetch(
+    `/api/billing/tournaments/${encodeURIComponent(externalReference)}`,
+    {
+      method: "GET",
+      cache: "no-store",
+    },
+  );
+
+  const text = await response.text();
+  let body: Record<string, unknown> | null = null;
+
+  if (text) {
+    try {
+      body = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      body = null;
+    }
+  }
+
+  if (!response.ok) {
+    const message =
+      typeof body?.message === "string"
+        ? body.message
+        : typeof body?.error === "string"
+          ? body.error
+          : "No se pudo obtener el estado del pago del torneo.";
+    throw new Error(message);
+  }
+
+  return (body ?? {}) as BillingTournamentStatusResponse;
 }

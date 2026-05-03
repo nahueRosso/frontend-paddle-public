@@ -43,13 +43,17 @@ import {
 import {
   acceptTournamentPartnerRequest,
   addTournamentAvailablePlayer,
+  createTournamentPaymentLink,
   createTournamentPartnerRequest,
   fetchEligibleTournamentPartners,
+  fetchBillingTournamentStatus,
   fetchTournamentAvailablePlayers,
   fetchTournamentPartnerRequests,
   fetchTournamentRegistrationOptions,
   pickTournamentAvailablePlayer,
   rejectTournamentPartnerRequest,
+  type BillingTournamentStatusResponse,
+  type TournamentActionResponse,
   withdrawTournamentAvailablePlayer,
   type TournamentAvailablePlayer,
   type TournamentPartnerRequest,
@@ -63,6 +67,12 @@ import {
   isSentPartnerRequest,
 } from "@/components/club-partner-requests-dialog";
 import type { TenantPlayer } from "@/lib/api/player";
+import {
+  clearPendingTournamentPayments,
+  listPendingTournamentPayments,
+  setPendingTournamentPayment,
+  type PendingTournamentPayment,
+} from "@/lib/pending-tournament-payment";
 import { playerKeys } from "@/lib/queryKeys/player";
 import { tournamentKeys } from "@/lib/queryKeys/tournament";
 import { usePlayer } from "@/providers/player-provider";
@@ -113,9 +123,138 @@ const CATEGORIES = ["Todas", "1ra", "2da", "3ra", "4ta", "5ta", "6ta", "7ma", "8
 
 export function ClubTorneos() {
   const { config } = useClub();
+  const queryClient = useQueryClient();
   const { data: players = [], isLoading: isLoadingPlayers } =
     usePlayersByTenantQuery(config.tenantId);
   const [activeView, setActiveView] = React.useState<TournamentView>("upcoming");
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    const externalReference = url.searchParams.get("external_reference");
+    const paymentStatus = url.searchParams.get("status");
+    const paymentId = url.searchParams.get("payment_id");
+    const hasMercadoPagoReturn =
+      Boolean(externalReference) || Boolean(paymentStatus) || Boolean(paymentId);
+
+    if (!hasMercadoPagoReturn) {
+      return;
+    }
+
+    const clearMercadoPagoParams = () => {
+      const nextUrl = new URL(window.location.href);
+      [
+        "collection_id",
+        "collection_status",
+        "payment_id",
+        "status",
+        "external_reference",
+        "merchant_order_id",
+        "preference_id",
+        "site_id",
+        "processing_mode",
+        "merchant_account_id",
+        "mp_result",
+      ].forEach((param) => nextUrl.searchParams.delete(param));
+      nextUrl.searchParams.set("section", "torneos");
+      window.history.replaceState(null, "", nextUrl.toString());
+    };
+
+    if (!externalReference) {
+      toast.error("No recibimos una referencia valida del pago del torneo.");
+      clearMercadoPagoParams();
+      return;
+    }
+
+    let cancelled = false;
+    let attempts = 0;
+
+    const refreshTournamentState = async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: tournamentKeys.all }),
+        queryClient.invalidateQueries({ queryKey: playerKeys.all }),
+      ]);
+    };
+
+    const finalize = async (
+      uiState: "approved" | "pending" | "rejected" | "unknown",
+      response?: BillingTournamentStatusResponse | null,
+    ) => {
+      if (cancelled) {
+        return true;
+      }
+
+      if (uiState === "approved" || uiState === "rejected") {
+        clearPendingTournamentPayments((pending) =>
+          matchesTournamentPendingPayment(pending, externalReference, response),
+        );
+      }
+
+      if (uiState === "approved") {
+        await refreshTournamentState();
+        toast.success("Inscripcion paga. El equipo fue actualizado.");
+      } else if (uiState === "pending") {
+        toast("El pago sigue pendiente. Volve a intentar en unos segundos.");
+      } else if (uiState === "rejected") {
+        toast.error("Mercado Pago no aprobo el pago del torneo.");
+      } else {
+        toast("Recibimos el retorno del pago. Actualiza la seccion si no ves cambios.");
+      }
+
+      clearMercadoPagoParams();
+      return true;
+    };
+
+    const pollStatus = async () => {
+      while (!cancelled && attempts < 10) {
+        attempts += 1;
+
+        try {
+          const response = await fetchBillingTournamentStatus(externalReference);
+          const resolvedStatus = getTournamentBillingState(response, paymentStatus);
+
+          if (resolvedStatus === "approved") {
+            await finalize("approved", response);
+            return;
+          }
+
+          if (resolvedStatus === "rejected") {
+            await finalize("rejected", response);
+            return;
+          }
+
+          if (resolvedStatus === "pending" && attempts < 10) {
+            await new Promise((resolve) => window.setTimeout(resolve, 3000));
+            continue;
+          }
+
+          await finalize(resolvedStatus, response);
+          return;
+        } catch (error) {
+          if (attempts >= 3) {
+            toast.error(
+              error instanceof Error
+                ? error.message
+                : "No pudimos validar el pago del torneo.",
+            );
+            clearMercadoPagoParams();
+            return;
+          }
+
+          await new Promise((resolve) => window.setTimeout(resolve, 2000));
+        }
+      }
+    };
+
+    void pollStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [queryClient]);
 
   return (
     <div className="space-y-6">
@@ -951,7 +1090,7 @@ function TournamentRegisterDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { config } = useClub();
-  const { playerId } = usePlayerSafe();
+  const { clubPlayer, person, playerId } = usePlayerSafe();
   const resolvedPlayerId = playerId ?? undefined;
   const queryClient = useQueryClient();
   const [selectedCategoryId, setSelectedCategoryId] = React.useState("");
@@ -960,6 +1099,9 @@ function TournamentRegisterDialog({
   const [selectedPartnerId, setSelectedPartnerId] = React.useState("");
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
+  const [pendingTournamentPayment, setPendingTournamentPaymentState] =
+    React.useState<PendingTournamentPayment | null>(null);
+  const [paymentResolved, setPaymentResolved] = React.useState(false);
 
   const categories = React.useMemo(
     () => tournament?.categories ?? [],
@@ -985,6 +1127,8 @@ function TournamentRegisterDialog({
     setSelectedPartnerId("");
     setError("");
     setSuccess("");
+    setPendingTournamentPaymentState(null);
+    setPaymentResolved(false);
   }, [tournament?.id]);
 
   React.useEffect(() => {
@@ -993,6 +1137,8 @@ function TournamentRegisterDialog({
     setSelectedPartnerId("");
     setError("");
     setSuccess("");
+    setPendingTournamentPaymentState(null);
+    setPaymentResolved(false);
   }, [selectedCategoryId]);
 
   const registrationOptionsQuery = useQuery({
@@ -1057,6 +1203,7 @@ function TournamentRegisterDialog({
   const invalidateRegistrationState = React.useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: tournamentKeys.list(config.tenantId) }),
+      queryClient.invalidateQueries({ queryKey: tournamentKeys.fixture(config.tenantId) }),
       queryClient.invalidateQueries({ queryKey: tournamentKeys.partnerRequests(config.tenantId, resolvedPlayerId) }),
       queryClient.invalidateQueries({ queryKey: tournamentKeys.registrationOptions(config.tenantId, tournament?.id, resolvedPlayerId, apiCategoryId) }),
       queryClient.invalidateQueries({ queryKey: tournamentKeys.availablePlayers(config.tenantId, tournament?.id, apiCategoryId) }),
@@ -1064,6 +1211,125 @@ function TournamentRegisterDialog({
       queryClient.invalidateQueries({ queryKey: playerKeys.all }),
     ]);
   }, [apiCategoryId, config.tenantId, queryClient, resolvedPlayerId, tournament?.id]);
+
+  const syncPendingTournamentPayment = React.useCallback(
+    (teamId?: string | null) => {
+      if (typeof window === "undefined" || !tournament?.id) {
+        setPendingTournamentPaymentState(null);
+        return;
+      }
+
+      const matchingPayment =
+        listPendingTournamentPayments().find(({ value }) => {
+          if (value.tournamentId !== tournament.id) {
+            return false;
+          }
+
+          if (teamId && value.tournamentTeamId !== teamId) {
+            return false;
+          }
+
+          return true;
+        })?.value ?? null;
+
+      setPendingTournamentPaymentState(matchingPayment);
+    },
+    [tournament?.id],
+  );
+
+  const handleTeamPayment = React.useCallback(
+    async (response: TournamentActionResponse) => {
+      const teamId = extractTournamentTeamId(response);
+      const actionMessage =
+        typeof response.message === "string" && response.message.trim()
+          ? response.message
+          : "La pareja fue creada correctamente.";
+
+      setSuccess(actionMessage);
+      await invalidateRegistrationState();
+      syncPendingTournamentPayment(teamId);
+
+      if (!teamId || !tournament?.id) {
+        toast.success(actionMessage);
+        return;
+      }
+
+      const billingContact = getTournamentBillingContact(clubPlayer, person);
+
+      if (
+        !billingContact.playerName ||
+        !billingContact.playerPhone ||
+        !billingContact.playerEmail
+      ) {
+        const message =
+          "La pareja se creo, pero faltan tus datos de contacto para iniciar el pago.";
+        setError(message);
+        toast.error(message);
+        return;
+      }
+
+      try {
+        const paymentResponse = await createTournamentPaymentLink({
+          tenantId: config.tenantId,
+          tournamentTeamId: teamId,
+          playerName: billingContact.playerName,
+          playerPhone: billingContact.playerPhone,
+          playerEmail: billingContact.playerEmail,
+          tournamentId: tournament.id,
+        });
+
+        if (paymentResponse.alreadyPaid) {
+          clearPendingTournamentPayments(
+            (pending) =>
+              pending.tenantId === config.tenantId &&
+              pending.tournamentTeamId === teamId,
+          );
+          setPendingTournamentPaymentState(null);
+          setPaymentResolved(true);
+          setSuccess("Inscripcion paga.");
+          toast.success("Inscripcion paga.");
+          await invalidateRegistrationState();
+          return;
+        }
+
+        if (paymentResponse.checkoutUrl) {
+          const nextPendingPayment: PendingTournamentPayment = {
+            tenantId: config.tenantId,
+            slug: config.slug,
+            tournamentId: tournament.id,
+            tournamentTeamId: teamId,
+            checkoutUrl: paymentResponse.checkoutUrl,
+            externalReference: getStringValue(paymentResponse.externalReference),
+          };
+
+          setPendingTournamentPayment(nextPendingPayment);
+          setPendingTournamentPaymentState(nextPendingPayment);
+          setPaymentResolved(false);
+          window.location.href = paymentResponse.checkoutUrl;
+          return;
+        }
+      } catch (paymentError) {
+        const message =
+          paymentError instanceof Error
+            ? paymentError.message
+            : "La pareja se creo, pero no pudimos iniciar el pago del torneo.";
+        setError(message);
+        toast.error(message);
+        return;
+      }
+
+      toast.success(actionMessage);
+    },
+    [
+      clubPlayer,
+      config.slug,
+      config.tenantId,
+      invalidateRegistrationState,
+      person,
+      syncPendingTournamentPayment,
+      tournament?.id,
+    ],
+  );
 
   const createRequestMutation = useMutation({
     mutationFn: (requestedPlayerId: string) =>
@@ -1137,9 +1403,7 @@ function TournamentRegisterDialog({
         availablePlayerId,
       }),
     onSuccess: async (response) => {
-      toast.success(response.message);
-      setSuccess(response.message);
-      await invalidateRegistrationState();
+      await handleTeamPayment(response);
     },
     onError: (err) => {
       const message = getTournamentActionErrorMessage(err);
@@ -1152,9 +1416,7 @@ function TournamentRegisterDialog({
     mutationFn: (requestId: string) =>
       acceptTournamentPartnerRequest({ requestId, playerId: playerId! }),
     onSuccess: async (response) => {
-      toast.success(response.message);
-      setSuccess(response.message);
-      await invalidateRegistrationState();
+      await handleTeamPayment(response);
     },
     onError: (err) => {
       const message = getTournamentActionErrorMessage(err);
@@ -1205,6 +1467,7 @@ function TournamentRegisterDialog({
         getAvailablePlayerSourceId(available) === playerId,
     ) ??
     null;
+  const currentTeamId = extractTournamentTeamId(options);
   const receivedRequests = (
     options?.receivedRequests?.length
       ? options.receivedRequests
@@ -1222,6 +1485,10 @@ function TournamentRegisterDialog({
       .toLowerCase()
       .includes(partnerSearch.trim().toLowerCase()),
   );
+
+  React.useEffect(() => {
+    syncPendingTournamentPayment(currentTeamId);
+  }, [currentTeamId, syncPendingTournamentPayment]);
 
   const handleCreateRequest = () => {
     if (!selectedPartnerId || isActionPending) return;
@@ -1307,6 +1574,27 @@ function TournamentRegisterDialog({
             <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300">
               Ya tenés pareja en este torneo.
             </p>
+          ) : null}
+
+          {paymentResolved ? (
+            <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300">
+              Inscripcion paga.
+            </p>
+          ) : null}
+
+          {alreadyHasPartner && pendingTournamentPayment?.checkoutUrl && !paymentResolved ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+              <p>Tu equipo tiene un pago pendiente.</p>
+              <Button
+                type="button"
+                onClick={() => {
+                  window.location.href = pendingTournamentPayment.checkoutUrl;
+                }}
+                className="mt-3 bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+              >
+                Continuar pago
+              </Button>
+            </div>
           ) : null}
 
           {!canRegister ? (
@@ -1892,8 +2180,103 @@ function useTournamentEligibility(tournament: Tournament) {
 }
 
 function usePlayerSafe() {
-  const { player, playerId } = usePlayer();
-  return { clubPlayer: player, playerId };
+  const { person, player, playerId } = usePlayer();
+  return { clubPlayer: player, person, playerId };
+}
+
+function getStringValue(value: unknown) {
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function getTournamentBillingState(
+  response: BillingTournamentStatusResponse | null,
+  queryStatus: string | null,
+) {
+  const paymentStatus = (
+    getStringValue(response?.paymentStatus) ??
+    getStringValue(response?.billingPayment?.status) ??
+    getStringValue(response?.status) ??
+    queryStatus ??
+    ""
+  ).toLowerCase();
+  const teamApproved =
+    response?.tournamentTeam?.approved === true || response?.team?.approved === true;
+
+  if (teamApproved) {
+    return "approved" as const;
+  }
+
+  if (paymentStatus === "approved") {
+    return "approved" as const;
+  }
+
+  if (paymentStatus === "pending" || paymentStatus === "in_process") {
+    return "pending" as const;
+  }
+
+  if (
+    paymentStatus === "rejected" ||
+    paymentStatus === "failure" ||
+    paymentStatus === "failed" ||
+    paymentStatus === "cancelled"
+  ) {
+    return "rejected" as const;
+  }
+
+  return "unknown" as const;
+}
+
+function matchesTournamentPendingPayment(
+  pending: PendingTournamentPayment,
+  externalReference: string,
+  response?: BillingTournamentStatusResponse | null,
+) {
+  const responseExternalReference =
+    getStringValue(response?.externalReference) ??
+    getStringValue(response?.billingPayment?.externalReference);
+  const responseTeamId =
+    getStringValue(response?.tournamentTeam?.id) ??
+    getStringValue(response?.team?.id);
+
+  return Boolean(
+    pending.externalReference === externalReference ||
+      (responseExternalReference &&
+        pending.externalReference === responseExternalReference) ||
+      (responseTeamId && pending.tournamentTeamId === responseTeamId),
+  );
+}
+
+function extractTournamentTeamId(value: unknown) {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+
+  return (
+    getStringValue(record.tournamentTeamId) ??
+    getStringValue(record.teamId) ??
+    getStringValue((record.team as Record<string, unknown> | undefined)?.id) ??
+    getStringValue(
+      (record.tournamentTeam as Record<string, unknown> | undefined)?.id,
+    ) ??
+    null
+  );
+}
+
+function getTournamentBillingContact(
+  clubPlayer: ReturnType<typeof usePlayerSafe>["clubPlayer"],
+  person: ReturnType<typeof usePlayerSafe>["person"],
+) {
+  const firstName = clubPlayer?.firstName || person?.firstName || "";
+  const lastName = clubPlayer?.lastName || person?.lastName || "";
+  const playerName = [firstName, lastName].filter(Boolean).join(" ").trim();
+
+  return {
+    playerName,
+    playerPhone: clubPlayer?.phoneNumber || person?.phoneNumber || "",
+    playerEmail: clubPlayer?.email || person?.email || "",
+  };
 }
 
 function canPlayerJoinTournament(
