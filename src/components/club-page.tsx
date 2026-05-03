@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import {
   SidebarProvider,
   SidebarInset,
@@ -19,6 +20,9 @@ import { ClubProfessors } from "@/components/club-clases";
 import { ClubMatch } from "@/components/club-match";
 import { ClubProvider } from "@/context/club-context";
 import { ClubPartnerRequestsDialog } from "@/components/club-partner-requests-dialog";
+import { fetchBillingBookingStatus } from "@/lib/api/booking";
+import { clearPendingBookingPayments } from "@/lib/pending-booking-payment";
+import type { BillingBookingStatusResponse } from "@/types/booking";
 
 interface ClubPageProps {
   slug: string;
@@ -27,6 +31,7 @@ interface ClubPageProps {
 
 export function ClubPage({ slug }: ClubPageProps) {
   const [activeSection, setActiveSection] = useState<SectionId>("home");
+  const { toast } = useToast();
   const { data, isLoading, isError } = useTenantConfigBySlugQuery(slug);
   const config = useMemo<ClubConfig | null>(() => {
     const tenantConfig = data?.data;
@@ -88,6 +93,212 @@ export function ClubPage({ slug }: ClubPageProps) {
 
     setActiveSection(requestedSection);
   }, [visibleSections]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const externalReference = url.searchParams.get("external_reference");
+    const paymentId = url.searchParams.get("payment_id");
+    const paymentStatus = url.searchParams.get("status");
+    const hasMercadoPagoReturn =
+      Boolean(externalReference) ||
+      Boolean(paymentId) ||
+      Boolean(paymentStatus);
+
+    if (!hasMercadoPagoReturn) {
+      return;
+    }
+
+    const requestedSection = url.searchParams.get("section");
+    if (requestedSection !== "turnos") {
+      url.searchParams.set("section", "turnos");
+      window.history.replaceState(null, "", url.toString());
+      setActiveSection("turnos");
+    }
+
+    const clearMercadoPagoParams = () => {
+      const nextUrl = new URL(window.location.href);
+      [
+        "collection_id",
+        "collection_status",
+        "payment_id",
+        "status",
+        "external_reference",
+        "merchant_order_id",
+        "preference_id",
+        "site_id",
+        "processing_mode",
+        "merchant_account_id",
+        "mp_result",
+      ].forEach((param) => nextUrl.searchParams.delete(param));
+      nextUrl.searchParams.set("section", "turnos");
+      window.history.replaceState(null, "", nextUrl.toString());
+    };
+
+    const paymentToast = toast({
+      title:
+        paymentStatus === "approved"
+          ? "Pago recibido, confirmando reserva..."
+          : paymentStatus === "pending"
+            ? "El pago quedo pendiente."
+            : paymentStatus === "rejected"
+              ? "El pago fue rechazado."
+              : "Procesando resultado del pago...",
+      duration: 6000,
+    });
+
+    if (!externalReference) {
+      paymentToast.update({
+        title: "No recibimos una referencia valida del pago.",
+        variant: "destructive",
+        duration: 7000,
+      });
+      return;
+    }
+
+    let cancelled = false;
+    let attempts = 0;
+
+    const finalize = (
+      nextToast: Parameters<typeof toast>[0],
+      response?: BillingBookingStatusResponse | null,
+    ) => {
+      if (cancelled) {
+        return true;
+      }
+
+      clearPendingBookingPayments((pending) => {
+        const matchesReference =
+          pending.externalReference === externalReference;
+        const matchesBookingId =
+          Boolean(
+            response?.bookingId ||
+              response?.booking?.id,
+          ) &&
+          pending.bookingId ===
+            (response?.bookingId ?? response?.booking?.id);
+
+        return matchesReference || matchesBookingId;
+      });
+
+      paymentToast.update(nextToast);
+      clearMercadoPagoParams();
+      return true;
+    };
+
+    const pollStatus = async () => {
+      while (!cancelled && attempts < 10) {
+        attempts += 1;
+
+        try {
+          const response = await fetchBillingBookingStatus(externalReference);
+          const resolvedPaymentStatus =
+            String(
+              response.paymentStatus ??
+                response.billingPayment?.status ??
+                response.status ??
+                "",
+            ).toLowerCase();
+          const resolvedBookingStatus =
+            String(
+              response.bookingStatus ??
+                response.booking?.status ??
+                response.processedAction ??
+                "",
+            ).toLowerCase();
+
+          if (
+            resolvedBookingStatus === "confirmed" ||
+            resolvedPaymentStatus === "approved_confirmed"
+          ) {
+            finalize(
+              {
+                title: "Reserva confirmada",
+                description: "El backend confirmo el pago y tu turno ya quedo reservado.",
+                duration: 7000,
+              },
+              response,
+            );
+            break;
+          }
+
+          if (
+            resolvedBookingStatus === "expired" ||
+            resolvedBookingStatus === "cancelled"
+          ) {
+            finalize(
+              {
+                title: "La reserva expiro antes de acreditarse el pago.",
+                variant: "destructive",
+                duration: 7000,
+              },
+              response,
+            );
+            break;
+          }
+
+          if (
+            resolvedPaymentStatus === "rejected" ||
+            resolvedPaymentStatus === "failure" ||
+            resolvedPaymentStatus === "failed" ||
+            resolvedPaymentStatus === "cancelled"
+          ) {
+            finalize(
+              {
+                title: "El pago fue rechazado.",
+                variant: "destructive",
+                duration: 7000,
+              },
+              response,
+            );
+            break;
+          }
+
+          if (
+            resolvedPaymentStatus === "pending" ||
+            resolvedPaymentStatus === "in_process"
+          ) {
+            paymentToast.update({
+              title: "El pago quedo pendiente.",
+              description: "Seguimos consultando el estado real con el backend.",
+              duration: 5000,
+            });
+          } else {
+            paymentToast.update({
+              title: "Pago recibido, confirmando reserva...",
+              description: "Estamos esperando que el backend termine de procesarlo.",
+              duration: 5000,
+            });
+          }
+
+          await new Promise((resolve) => window.setTimeout(resolve, 3000));
+        } catch {
+          paymentToast.update({
+            title: "No pudimos verificar el estado final del pago.",
+            description: "Reintenta en unos segundos desde la seccion de turnos.",
+            variant: "destructive",
+            duration: 7000,
+          });
+          clearMercadoPagoParams();
+          break;
+        }
+      }
+
+      if (!cancelled && attempts >= 10) {
+        paymentToast.update({
+          title: "Seguimos esperando la confirmacion final del pago.",
+          description: "Podes revisar el estado desde turnos en unos segundos.",
+          duration: 7000,
+        });
+        clearMercadoPagoParams();
+      }
+    };
+
+    void pollStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, toast]);
 
   useEffect(() => {
     if (!visibleSections.includes(activeSection)) {

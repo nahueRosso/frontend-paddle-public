@@ -21,6 +21,12 @@ import { useBookingsQuery } from "@/hooks/queries/booking";
 import { useCurrentTime } from "@/hooks/use-current-time";
 import { useBookingsSocket } from "@/hooks/use-bookings-socket";
 import { createPublicBookingIntent } from "@/lib/api/booking";
+import {
+  buildPendingPaymentOwnerIdentity,
+  buildPendingPaymentStorageKey,
+  parsePendingBookingPayment,
+  type PendingBookingPayment,
+} from "@/lib/pending-booking-payment";
 import { bookingKeys } from "@/lib/queryKeys/booking";
 import { generateTimeSlots } from "@/lib/slots";
 import { isSlotPast } from "@/lib/schedule";
@@ -78,48 +84,6 @@ function formatCountdown(expiresAt: string, now: number) {
 
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
-
-type PendingBookingPayment = {
-  bookingId: string;
-  tenantId: string;
-  ownerIdentity: string;
-  courtNumber: number;
-  date: string;
-  startTime: string;
-  checkoutUrl: string;
-  expiresAt: string;
-};
-
-function buildPendingPaymentOwnerIdentity({
-  playerId,
-  personId,
-  phoneNumber,
-  email,
-}: {
-  playerId?: string | null;
-  personId?: string | null;
-  phoneNumber?: string | null;
-  email?: string | null;
-}) {
-  if (playerId) {
-    return `player:${playerId}`;
-  }
-
-  if (personId) {
-    return `person:${personId}`;
-  }
-
-  if (phoneNumber) {
-    return `phone:${phoneNumber}`;
-  }
-
-  if (email) {
-    return `email:${email.toLowerCase()}`;
-  }
-
-  return null;
-}
-
 export function ClubTurnos() {
   const { config } = useClub();
   const queryClient = useQueryClient();
@@ -151,7 +115,7 @@ export function ClubTurnos() {
   );
   const legacyPendingPaymentStorageKey = `pending-booking:${config.tenantId}`;
   const pendingPaymentStorageKey = pendingPaymentOwnerIdentity
-    ? `pending-booking:${config.tenantId}:${pendingPaymentOwnerIdentity}`
+    ? buildPendingPaymentStorageKey(config.tenantId, pendingPaymentOwnerIdentity)
     : null;
 
   const clearPendingPayment = useCallback(() => {
@@ -253,7 +217,11 @@ export function ClubTurnos() {
     }
 
     try {
-      const parsed = JSON.parse(rawValue) as PendingBookingPayment;
+      const parsed = parsePendingBookingPayment(rawValue);
+      if (!parsed) {
+        clearPendingPayment();
+        return;
+      }
       if (parsed.ownerIdentity !== pendingPaymentOwnerIdentity) {
         window.localStorage.removeItem(pendingPaymentStorageKey);
         setPendingPayment(null);
@@ -386,6 +354,8 @@ export function ClubTurnos() {
         playerId: playerId ?? undefined,
         personId: personId ?? undefined,
         payerEmail,
+        clubSlug: config.slug,
+        returnSection: "turnos",
         reservedBy: "usuario",
         source: "web",
       });
@@ -418,6 +388,7 @@ export function ClubTurnos() {
       const nextPendingPayment: PendingBookingPayment = {
         bookingId: response.bookingId ?? slotKey,
         tenantId: config.tenantId,
+        slug: config.slug,
         ownerIdentity: pendingPaymentOwnerIdentity ?? `phone:${bookingActor.phoneNumber}`,
         courtNumber,
         date: bookingDate,

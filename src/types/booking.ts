@@ -54,6 +54,8 @@ export type PublicBookingIntentPayload = Omit<CreateBooking, "userPhone"> & {
   playerId?: string;
   personId?: string;
   payerEmail?: string;
+  clubSlug?: string;
+  returnSection?: string;
 };
 
 export type PublicBookingIntentResponse =
@@ -75,6 +77,31 @@ export type PublicBookingIntentResponse =
       checkoutUrl: string;
       expiresAt: string;
     };
+
+export type BillingBookingStatusResponse = {
+  status?: string;
+  paymentStatus?: string;
+  bookingStatus?: BookingStatus | "expired";
+  bookingId?: string;
+  tenantId?: string;
+  externalReference?: string;
+  message?: string;
+  booking?: {
+    id?: string;
+    tenantId?: string;
+    date?: string;
+    startTime?: string;
+    courtNumber?: number;
+    status?: BookingStatus | "expired";
+  };
+  billingPayment?: {
+    id?: string;
+    paymentId?: string;
+    status?: string;
+    externalReference?: string;
+  };
+  [key: string]: unknown;
+};
 
 export type BookingResponse = {
   id?: string;

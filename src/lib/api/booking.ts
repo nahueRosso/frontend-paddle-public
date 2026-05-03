@@ -4,6 +4,7 @@ import {
   BookingStatus,
   CourtSchedule,
   CreateBooking,
+  BillingBookingStatusResponse,
   PublicBookingIntentPayload,
   PublicBookingIntentResponse,
 } from "@/types/booking";
@@ -129,6 +130,41 @@ export async function createPublicBookingIntent(
   return payload as PublicBookingIntentResponse;
 }
 
+export async function fetchBillingBookingStatus(
+  externalReference: string,
+): Promise<BillingBookingStatusResponse> {
+  const response = await fetch(
+    `/api/billing/bookings/${encodeURIComponent(externalReference)}`,
+    {
+      method: "GET",
+      cache: "no-store",
+    },
+  );
+
+  const text = await response.text();
+  let payload: Record<string, unknown> | null = null;
+
+  if (text) {
+    try {
+      payload = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      payload = null;
+    }
+  }
+
+  if (!response.ok) {
+    const message =
+      typeof payload?.message === "string"
+        ? payload.message
+        : typeof payload?.error === "string"
+          ? payload.error
+          : "No se pudo obtener el estado del pago.";
+    throw new Error(message);
+  }
+
+  return payload as BillingBookingStatusResponse;
+}
+
 export async function updateBookingStatus({
   bookingId,
   status,
@@ -164,4 +200,3 @@ export async function generateBookingStoryImage(tenantId: string): Promise<Blob>
 
   return await res.blob();
 }
-
