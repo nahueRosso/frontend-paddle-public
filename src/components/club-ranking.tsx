@@ -1299,7 +1299,8 @@ function TournamentRegisterDialog({
             tournamentId: tournament.id,
             tournamentTeamId: teamId,
             checkoutUrl: paymentResponse.checkoutUrl,
-            externalReference: getStringValue(paymentResponse.externalReference),
+            externalReference:
+              getStringValue(paymentResponse.externalReference) ?? undefined,
           };
 
           setPendingTournamentPayment(nextPendingPayment);
