@@ -98,14 +98,14 @@ function matchPendingPayment(
     getString(response?.externalReference) ??
     getString(response?.billingPayment?.externalReference);
 
-  return (
+  return Boolean(
     (externalReference &&
       pending.externalReference &&
       pending.externalReference === externalReference) ||
     (responseExternalReference &&
       pending.externalReference &&
       pending.externalReference === responseExternalReference) ||
-    (responseBookingId && pending.bookingId === responseBookingId)
+    (responseBookingId && pending.bookingId === responseBookingId),
   );
 }
 
