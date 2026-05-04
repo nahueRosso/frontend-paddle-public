@@ -1212,6 +1212,34 @@ function TournamentRegisterDialog({
     ]);
   }, [apiCategoryId, config.tenantId, queryClient, resolvedPlayerId, tournament?.id]);
 
+  const fetchLatestRegistrationOptions = React.useCallback(async () => {
+    if (!tournament?.id || !resolvedPlayerId) {
+      return null;
+    }
+
+    return queryClient.fetchQuery({
+      queryKey: tournamentKeys.registrationOptions(
+        config.tenantId,
+        tournament.id,
+        resolvedPlayerId,
+        apiCategoryId,
+      ),
+      queryFn: () =>
+        fetchTournamentRegistrationOptions({
+          tenantId: config.tenantId,
+          tournamentId: tournament.id,
+          playerId: resolvedPlayerId,
+          categoryId: apiCategoryId,
+        }),
+    });
+  }, [
+    apiCategoryId,
+    config.tenantId,
+    queryClient,
+    resolvedPlayerId,
+    tournament?.id,
+  ]);
+
   const syncPendingTournamentPayment = React.useCallback(
     (teamId?: string | null) => {
       if (typeof window === "undefined" || !tournament?.id) {
@@ -1239,7 +1267,6 @@ function TournamentRegisterDialog({
 
   const handleTeamPayment = React.useCallback(
     async (response: TournamentActionResponse) => {
-      const teamId = extractTournamentTeamId(response);
       const actionMessage =
         typeof response.message === "string" && response.message.trim()
           ? response.message
@@ -1247,6 +1274,9 @@ function TournamentRegisterDialog({
 
       setSuccess(actionMessage);
       await invalidateRegistrationState();
+      const refreshedOptions = await fetchLatestRegistrationOptions();
+      const teamId =
+        extractTournamentTeamId(response) ?? extractTournamentTeamId(refreshedOptions);
       syncPendingTournamentPayment(teamId);
 
       if (!teamId || !tournament?.id) {
@@ -1325,6 +1355,7 @@ function TournamentRegisterDialog({
       clubPlayer,
       config.slug,
       config.tenantId,
+      fetchLatestRegistrationOptions,
       invalidateRegistrationState,
       person,
       syncPendingTournamentPayment,
