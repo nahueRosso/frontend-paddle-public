@@ -35,32 +35,16 @@ const organizationSchema = {
 
 export const metadata: Metadata = {
   metadataBase: sanitizedDomain ? new URL(siteUrl) : undefined,
-  title: "MiClub Pádel — Reservas y gestión para clubes",
-  description:
-    "Automatizá tus reservas, pagos y operación diaria con MiClub Pádel. Plataforma argentina para clubes con gestión de turnos y cobros online.",
-  openGraph: {
-    title: "MiClub Pádel — Reservas y gestión para clubes",
-    description:
-      "Automatizá tus reservas, pagos y operación diaria con MiClub Pádel. Plataforma argentina para clubes con gestión de turnos y cobros online.",
-    url: siteUrl,
-    siteName: company.brandName,
-    locale: "es_AR",
-    type: "website",
-    images: [
+  icons: {
+    icon: [
+      { url: "/logo-square.ico", type: "image/x-icon" },
       {
-        url: "/og.png",
-        width: 1200,
-        height: 630,
-        alt: `${company.brandName} - Reservas y gestión para clubes`,
+        url: "/mi-padel-club-icon-circulo-negro.svg",
+        type: "image/svg+xml",
       },
     ],
-  },
-  alternates: {
-    canonical: "/",
-  },
-  robots: {
-    index: true,
-    follow: true,
+    shortcut: "/logo-square.ico",
+    apple: "/logo-square.ico",
   },
 };
 
