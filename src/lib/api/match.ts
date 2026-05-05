@@ -31,6 +31,7 @@ export type MatchEntryIntentResponse =
     }
   | {
       mode: "payment_required"
+      reused: boolean
       requestId: string
       status: "awaiting_payment"
       requiredAmount: number
@@ -38,7 +39,7 @@ export type MatchEntryIntentResponse =
       missingAmount: number
       paymentId: string
       externalReference: string
-      checkoutUrl: string
+      checkoutUrl?: string | null
       provider: string
       paymentStatus: string
       credit?: {
@@ -57,7 +58,30 @@ export async function createMatchEntryIntent(payload: CreateMatchRequestPayload)
   })
 
   if (!response.ok) {
-    throw new Error("Hubo un error al enviar tu solicitud.")
+    let message = "Hubo un error al enviar tu solicitud."
+
+    try {
+      const text = await response.text()
+
+      if (response.status === 409) {
+        throw new Error("Ya tenes una solicitud de match activa.")
+      }
+
+      if (text) {
+        try {
+          const data = JSON.parse(text) as { message?: string; error?: string }
+          message = data.message || data.error || message
+        } catch {
+          message = text
+        }
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error
+      }
+    }
+
+    throw new Error(message)
   }
 
   return response.json() as Promise<MatchEntryIntentResponse>

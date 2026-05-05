@@ -455,7 +455,9 @@ export function ClubMatch() {
       requestId: response.requestId,
       status: response.status,
       checkoutUrl:
-        response.mode === "payment_required" ? response.checkoutUrl : undefined,
+        response.mode === "payment_required"
+          ? response.checkoutUrl ?? undefined
+          : undefined,
       paymentId: response.mode === "payment_required" ? response.paymentId : undefined,
       externalReference:
         response.mode === "payment_required"
@@ -517,9 +519,13 @@ export function ClubMatch() {
       applyEntryIntentResponse(response, dto);
       setSubmitted(true);
 
-      if (response.mode === "payment_required") {
+      if (response.mode === "payment_required" && response.checkoutUrl) {
         window.location.href = response.checkoutUrl;
         return;
+      }
+
+      if (response.mode === "payment_required") {
+        throw new Error("No se pudo iniciar el pago.");
       }
 
       const pendingProposals = await fetchPendingMatchProposals({
