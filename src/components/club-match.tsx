@@ -12,15 +12,26 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useClub } from "@/context/club-context";
-import { useCreateMatchRequestMutation } from "@/hooks/mutations/match";
-import type { CreateMatchRequestPayload } from "@/lib/api/match";
+import { useCreateMatchEntryIntentMutation } from "@/hooks/mutations/match";
+import type {
+  CreateMatchRequestPayload,
+  MatchEntryIntentResponse,
+} from "@/lib/api/match";
 import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
+import {
+  clearPendingMatchEntry,
+  getPendingMatchEntry,
+  setPendingMatchEntry,
+  type PendingMatchEntry,
+} from "@/lib/pending-match-entry";
+import { buildPendingPaymentOwnerIdentity } from "@/lib/pending-booking-payment";
 import { usePlayer } from "@/providers/player-provider";
 import VerifyClubPlayerDialog from "./verify-club-player-dialog";
 import { Slider } from "./ui/slider";
 import VerifyPlayerDialog from "./verify-player-dialog";
 
 type MatchRequestStatus =
+  | "awaiting_payment"
   | "pending"
   | "proposal_pending"
   | "confirmed"
@@ -166,9 +177,11 @@ export function ClubMatch() {
   >(null);
   const [refreshedExpiredProposalId, setRefreshedExpiredProposalId] =
     useState<string | null>(null);
+  const [pendingMatchEntry, setPendingMatchEntryState] =
+    useState<PendingMatchEntry | null>(null);
   const [now, setNow] = useState(() => Date.now());
-  const { player } = usePlayer();
-  const createMatchRequestMutation = useCreateMatchRequestMutation();
+  const { player, playerId, personId, person } = usePlayer();
+  const createMatchEntryIntentMutation = useCreateMatchEntryIntentMutation();
   const [timeRange, setTimeRange] = useState<[number, number]>([10, 18]);
   const MIN_HOUR = parseHour(config.openingMorning);
   const MAX_HOUR = config.closingEvening
@@ -191,6 +204,13 @@ export function ClubMatch() {
   const proposalCountdown = pendingProposal
     ? formatCountdown(pendingProposal.expiresAt, now)
     : "";
+  const matchActor = player ?? person;
+  const pendingMatchOwnerIdentity = buildPendingPaymentOwnerIdentity({
+    playerId,
+    personId,
+    phoneNumber: matchActor?.phoneNumber ?? null,
+    email: matchActor?.email ?? null,
+  });
   const playerCategoryLabel =
     player?.category != null ? String(player.category) : "Sin categoria";
   const playerGenderLabel =
@@ -242,6 +262,50 @@ export function ClubMatch() {
     [config.tenantId, matchRequest?.id, player?.phoneNumber],
   );
 
+  const persistPendingMatchEntry = useCallback(
+    ({
+      requestId,
+      status,
+      checkoutUrl,
+      paymentId,
+      externalReference,
+    }: {
+      requestId: string;
+      status: MatchRequestStatus;
+      checkoutUrl?: string;
+      paymentId?: string;
+      externalReference?: string;
+    }) => {
+      if (!pendingMatchOwnerIdentity) {
+        return;
+      }
+
+      const nextEntry: PendingMatchEntry = {
+        tenantId: config.tenantId,
+        slug: config.slug,
+        ownerIdentity: pendingMatchOwnerIdentity,
+        requestId,
+        status,
+        checkoutUrl,
+        paymentId,
+        externalReference,
+      };
+
+      setPendingMatchEntry(nextEntry);
+      setPendingMatchEntryState(nextEntry);
+    },
+    [config.slug, config.tenantId, pendingMatchOwnerIdentity],
+  );
+
+  const clearPersistedPendingMatchEntry = useCallback(() => {
+    if (!pendingMatchOwnerIdentity) {
+      return;
+    }
+
+    clearPendingMatchEntry(config.tenantId, pendingMatchOwnerIdentity);
+    setPendingMatchEntryState(null);
+  }, [config.tenantId, pendingMatchOwnerIdentity]);
+
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setNow(Date.now());
@@ -249,6 +313,54 @@ export function ClubMatch() {
 
     return () => window.clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    if (!pendingMatchOwnerIdentity || submitted) return;
+
+    const storedEntry = getPendingMatchEntry(
+      config.tenantId,
+      pendingMatchOwnerIdentity,
+    );
+
+    if (!storedEntry?.requestId) return;
+
+    setPendingMatchEntryState(storedEntry);
+    setMatchRequest({
+      id: storedEntry.requestId,
+      tenantId: config.tenantId,
+      userName:
+        matchActor?.firstName && matchActor?.lastName
+          ? `${matchActor.firstName} ${matchActor.lastName}`
+          : "",
+      userPhone: matchActor?.phoneNumber ?? "",
+      gender:
+        player?.gender === "male"
+          ? "male"
+          : player?.gender === "female"
+            ? "female"
+            : "mixed",
+      categoryMin: player?.category ?? 0,
+      categoryMax: player?.category ?? 0,
+      preferredStart: formatHour(timeRange[0]),
+      preferredEnd: formatHour(timeRange[1]),
+      matchType: "individual",
+      status: storedEntry.status as MatchRequestStatus,
+      matched: false,
+      matchGroupId: null,
+      createdAt: new Date().toISOString(),
+    });
+    setSubmitted(true);
+  }, [
+    config.tenantId,
+    matchActor?.firstName,
+    matchActor?.lastName,
+    matchActor?.phoneNumber,
+    pendingMatchOwnerIdentity,
+    player?.category,
+    player?.gender,
+    submitted,
+    timeRange,
+  ]);
 
   useEffect(() => {
     if (!submitted || !matchRequest?.id || isFinalStatus) return;
@@ -289,6 +401,69 @@ export function ClubMatch() {
     refreshedExpiredProposalId,
   ]);
 
+  useEffect(() => {
+    if (!matchRequest?.id || !pendingMatchOwnerIdentity) return;
+
+    persistPendingMatchEntry({
+      requestId: matchRequest.id,
+      status: matchRequest.status,
+      checkoutUrl:
+        matchRequest.status === "awaiting_payment"
+          ? pendingMatchEntry?.checkoutUrl
+          : undefined,
+      paymentId: pendingMatchEntry?.paymentId,
+      externalReference: pendingMatchEntry?.externalReference,
+    });
+  }, [
+    matchRequest?.id,
+    matchRequest?.status,
+    pendingMatchEntry?.checkoutUrl,
+    pendingMatchEntry?.externalReference,
+    pendingMatchEntry?.paymentId,
+    pendingMatchOwnerIdentity,
+    persistPendingMatchEntry,
+  ]);
+
+  useEffect(() => {
+    if (!isFinalStatus) return;
+
+    clearPersistedPendingMatchEntry();
+  }, [clearPersistedPendingMatchEntry, isFinalStatus]);
+
+  const applyEntryIntentResponse = (
+    response: MatchEntryIntentResponse,
+    dto: CreateMatchRequestPayload,
+  ) => {
+    setMatchRequest({
+      id: response.requestId,
+      tenantId: dto.tenantId,
+      userName: dto.userName,
+      userPhone: dto.userPhone,
+      gender: dto.gender,
+      categoryMin: dto.categoryMin,
+      categoryMax: dto.categoryMax,
+      preferredStart: dto.preferredStart,
+      preferredEnd: dto.preferredEnd,
+      matchType: dto.matchType as "individual" | "group",
+      status: response.status,
+      matched: false,
+      matchGroupId: null,
+      createdAt: new Date().toISOString(),
+    });
+
+    persistPendingMatchEntry({
+      requestId: response.requestId,
+      status: response.status,
+      checkoutUrl:
+        response.mode === "payment_required" ? response.checkoutUrl : undefined,
+      paymentId: response.mode === "payment_required" ? response.paymentId : undefined,
+      externalReference:
+        response.mode === "payment_required"
+          ? response.externalReference
+          : undefined,
+    });
+  };
+
   const handleSubmit = async () => {
     if (!player) {
       setVerifyClubPlayer(true);
@@ -312,8 +487,9 @@ export function ClubMatch() {
         tenantId: config.tenantId,
         userName: player.firstName + " " + player.lastName,
         userPhone: player.phoneNumber,
+        playerId: player.id,
+        payerEmail: player.email || undefined,
 
-        // map gender
         gender:
           player.gender === "male"
             ? "male"
@@ -321,7 +497,6 @@ export function ClubMatch() {
             ? "female"
               : "mixed",
 
-        // categoría fija (mismo valor min y max)
         categoryMin: player.category,
         categoryMax: player.category,
 
@@ -331,22 +506,27 @@ export function ClubMatch() {
         matchType: "individual", // o dinámico si lo querés
       };
 
-      const response = (await createMatchRequestMutation.mutateAsync(
+      const response = await createMatchEntryIntentMutation.mutateAsync(
         dto,
-      )) as MatchRequestResponse;
+      );
 
-      if (!response?.id) {
+      if (!response?.requestId) {
         throw new Error("No se pudo crear la solicitud.");
       }
 
-      setMatchRequest(response);
+      applyEntryIntentResponse(response, dto);
+      setSubmitted(true);
+
+      if (response.mode === "payment_required") {
+        window.location.href = response.checkoutUrl;
+        return;
+      }
+
       const pendingProposals = await fetchPendingMatchProposals({
         tenantId: config.tenantId,
         userPhone: player.phoneNumber,
       });
       setProposals(pendingProposals);
-
-      setSubmitted(true);
     } catch (err) {
       setError(
         err instanceof Error
@@ -363,6 +543,15 @@ export function ClubMatch() {
     setProposals([]);
     setProposalAction(null);
     setRefreshedExpiredProposalId(null);
+    clearPersistedPendingMatchEntry();
+  };
+
+  const handleContinuePayment = () => {
+    if (!pendingMatchEntry?.checkoutUrl) {
+      return;
+    }
+
+    window.location.href = pendingMatchEntry.checkoutUrl;
   };
 
   const handleProposalAction = async (action: "confirm" | "reject") => {
@@ -402,7 +591,9 @@ export function ClubMatch() {
         <Card className="w-full rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
           <CardContent className="flex flex-col items-center gap-5 py-16">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 animate-in zoom-in-50 duration-300 dark:bg-emerald-500/15 dark:text-emerald-300">
-              {requestStatus === "pending" || requestStatus === "proposal_pending" ? (
+              {requestStatus === "awaiting_payment" ||
+              requestStatus === "pending" ||
+              requestStatus === "proposal_pending" ? (
                 <Loader2 className="h-8 w-8 animate-spin" />
               ) : (
                 <CheckCircle2 className="h-8 w-8" />
@@ -410,7 +601,11 @@ export function ClubMatch() {
             </div>
             <div className="text-center animate-in fade-in slide-in-from-bottom-2 duration-500">
               <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                {requestStatus === "proposal_pending" && pendingProposal
+                {requestStatus === "awaiting_payment"
+                  ? "Pago pendiente de acreditacion"
+                  : requestStatus === "pending"
+                    ? "Ya estas en la lista de espera"
+                  : requestStatus === "proposal_pending" && pendingProposal
                   ? "Propuesta encontrada"
                   : requestStatus === "confirmed"
                     ? "Confirmaste tu lugar"
@@ -423,7 +618,11 @@ export function ClubMatch() {
                           : "Estamos buscando jugadores compatibles"}
               </p>
               <p className="mt-1 max-w-sm text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                {requestStatus === "proposal_pending" && pendingProposal
+                {requestStatus === "awaiting_payment"
+                  ? "Estamos esperando la acreditacion del pago para ingresar a la busqueda de match."
+                  : requestStatus === "pending"
+                    ? "Ya estas en la lista de espera buscando jugadores."
+                  : requestStatus === "proposal_pending" && pendingProposal
                   ? "Confirmá tu lugar antes de que venza la propuesta."
                   : requestStatus === "confirmed"
                     ? "Estamos esperando al resto de los jugadores."
@@ -526,6 +725,23 @@ export function ClubMatch() {
               </p>
             )}
 
+            {requestStatus === "awaiting_payment" && pendingMatchEntry?.checkoutUrl ? (
+              <div className="w-full max-w-md rounded-2xl border border-amber-200 bg-amber-50/70 px-5 py-4 text-sm animate-in fade-in slide-in-from-bottom-3 duration-500 dark:border-amber-900/60 dark:bg-amber-950/30">
+                <p className="font-semibold text-amber-900 dark:text-amber-100">
+                  Falta acreditar el pago para entrar en la busqueda.
+                </p>
+                <p className="mt-1 text-amber-800 dark:text-amber-200">
+                  Si ya pagaste, esta pantalla se actualiza sola. Si no, podés retomar el checkout.
+                </p>
+                <Button
+                  onClick={handleContinuePayment}
+                  className="mt-4 bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                >
+                  Continuar pago
+                </Button>
+              </div>
+            ) : null}
+
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button
                 variant="outline"
@@ -606,40 +822,6 @@ export function ClubMatch() {
             </div>
           </div>
 
-          {/* Time Preference */}
-          {/* <div className="space-y-3">
-            <Label>Horario preferido</Label>
-            <RadioGroup
-              value={timePreference}
-              onValueChange={(v) => setTimePreference(v as MatchTimePreference)}
-              className="grid grid-cols-3 gap-3"
-            >
-              {TIME_OPTIONS.map((opt) => {
-                const Icon = opt.icon
-                return (
-                  <Label
-                    key={opt.value}
-                    htmlFor={`time-${opt.value}`}
-                    className={cn(
-                      "flex cursor-pointer flex-col items-center gap-1.5 rounded-lg border p-3 text-center transition-colors",
-                      timePreference === opt.value
-                        ? "border-primary bg-primary/5 text-primary"
-                        : "border-border hover:bg-muted"
-                    )}
-                  >
-                    <RadioGroupItem
-                      value={opt.value}
-                      id={`time-${opt.value}`}
-                      className="sr-only"
-                    />
-                    <Icon className="h-5 w-5" />
-                    <span className="text-sm font-medium">{opt.label}</span>
-                    <span className="text-[11px] text-muted-foreground">{opt.sub}</span>
-                  </Label>
-                )
-              })}
-            </RadioGroup>
-          </div> */}
           <div className="space-y-4">
             <Label className="dark:text-slate-100">Rango horario preferido</Label>
 
@@ -673,10 +855,10 @@ export function ClubMatch() {
           <Button
             className="w-full dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
             size="lg"
-            disabled={createMatchRequestMutation.isPending}
+            disabled={createMatchEntryIntentMutation.isPending}
             onClick={handleSubmit}
           >
-            {createMatchRequestMutation.isPending ? (
+            {createMatchEntryIntentMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Enviando...

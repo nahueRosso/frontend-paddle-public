@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query"
 
-import { createMatchRequest, type CreateMatchRequestPayload } from "@/lib/api/match"
+import { createMatchEntryIntent, type CreateMatchRequestPayload } from "@/lib/api/match"
 
-export function useCreateMatchRequestMutation() {
+export function useCreateMatchEntryIntentMutation() {
   return useMutation({
-    mutationFn: (payload: CreateMatchRequestPayload) => createMatchRequest(payload),
+    mutationFn: (payload: CreateMatchRequestPayload) => createMatchEntryIntent(payload),
   })
 }
