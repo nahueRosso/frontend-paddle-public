@@ -10,15 +10,16 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useClub } from "@/context/club-context";
 import {
   acceptTournamentPartnerRequest,
+  createTournamentPaymentLink,
   fetchTournamentPartnerRequests,
   rejectTournamentPartnerRequest,
+  type TournamentPartnerRegistration,
   type TournamentPartnerRequest,
   type TournamentRegistrationPlayer,
 } from "@/lib/api/tournament";
@@ -31,8 +32,10 @@ export function ClubPartnerRequestsDialog() {
   const { player, playerId } = usePlayer();
   const resolvedPlayerId = playerId ?? undefined;
   const queryClient = useQueryClient();
-  const [open, setOpen] = React.useState(false);
-  const [dismissedSignature, setDismissedSignature] = React.useState("");
+  const [requestsOpen, setRequestsOpen] = React.useState(false);
+  const [paymentOpen, setPaymentOpen] = React.useState(false);
+  const [dismissedRequestsSignature, setDismissedRequestsSignature] = React.useState("");
+  const [dismissedPaymentSignature, setDismissedPaymentSignature] = React.useState("");
 
   const partnerRequestsQuery = useQuery({
     queryKey: tournamentKeys.partnerRequests(config.tenantId, resolvedPlayerId),
@@ -46,32 +49,61 @@ export function ClubPartnerRequestsDialog() {
 
   const receivedRequests = React.useMemo(
     () =>
-      (partnerRequestsQuery.data ?? []).filter((request) =>
+      (partnerRequestsQuery.data?.requests ?? []).filter((request) =>
         playerId ? isReceivedPartnerRequest(request, playerId) : false,
       ),
-    [partnerRequestsQuery.data, playerId],
+    [partnerRequestsQuery.data?.requests, playerId],
+  );
+
+  const unpaidRegistrations = React.useMemo(
+    () =>
+      (partnerRequestsQuery.data?.tournamentRegistrations ?? []).filter(
+        (registration) => registration.approved === false,
+      ),
+    [partnerRequestsQuery.data?.tournamentRegistrations],
   );
 
   const requestsSignature = React.useMemo(
     () =>
       receivedRequests
-        .map((request) => request.id)
+        .map((request) => `req:${request.id}`)
         .sort()
         .join("|"),
     [receivedRequests],
   );
 
+  const paymentSignature = React.useMemo(
+    () =>
+      unpaidRegistrations
+        .map((registration) => `reg:${registration.teamId}`)
+        .sort()
+        .join("|"),
+    [unpaidRegistrations],
+  );
+
   React.useEffect(() => {
     if (!requestsSignature) {
-      setOpen(false);
-      setDismissedSignature("");
+      setRequestsOpen(false);
+      setDismissedRequestsSignature("");
       return;
     }
 
-    if (requestsSignature !== dismissedSignature) {
-      setOpen(true);
+    if (requestsSignature !== dismissedRequestsSignature) {
+      setRequestsOpen(true);
     }
-  }, [dismissedSignature, requestsSignature]);
+  }, [dismissedRequestsSignature, requestsSignature]);
+
+  React.useEffect(() => {
+    if (!paymentSignature) {
+      setPaymentOpen(false);
+      setDismissedPaymentSignature("");
+      return;
+    }
+
+    if (paymentSignature !== dismissedPaymentSignature) {
+      setPaymentOpen(true);
+    }
+  }, [dismissedPaymentSignature, paymentSignature]);
 
   const invalidateRequests = React.useCallback(async () => {
     await Promise.all([
@@ -112,56 +144,122 @@ export function ClubPartnerRequestsDialog() {
   const isActionPending =
     acceptRequestMutation.isPending || rejectRequestMutation.isPending;
 
+  const createPaymentLinkMutation = useMutation({
+    mutationFn: (registration: TournamentPartnerRegistration) =>
+      createTournamentPaymentLink({
+        tenantId: config.tenantId,
+        tournamentTeamId: registration.teamId,
+      }),
+    onSuccess: (response) => {
+      if (response.checkoutUrl) {
+        window.location.href = response.checkoutUrl;
+        return;
+      }
+
+      toast.error("No recibimos un checkoutUrl para continuar con el pago.");
+    },
+    onError: (err) => {
+      toast.error(getTournamentActionErrorMessage(err));
+    },
+  });
+
   if (!player || !playerId) {
     return null;
   }
 
-  if (receivedRequests.length === 0 && !partnerRequestsQuery.isLoading) {
+  if (
+    receivedRequests.length === 0 &&
+    unpaidRegistrations.length === 0 &&
+    !partnerRequestsQuery.isLoading
+  ) {
     return null;
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        setOpen(nextOpen);
-        if (!nextOpen) {
-          setDismissedSignature(requestsSignature);
-        }
-      }}
-    >
-      <DialogContent className="max-h-[85vh] overflow-y-auto border-emerald-100 bg-white text-slate-900 shadow-xl shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950 dark:text-slate-100 dark:shadow-emerald-950/20 sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Solicitudes de torneo pendientes</DialogTitle>
-          <DialogDescription className="text-slate-500 dark:text-slate-400">
-            Tenés solicitudes para formar pareja. Podés aceptar, rechazar o cerrar este aviso.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog
+        open={requestsOpen}
+        onOpenChange={(nextOpen) => {
+          setRequestsOpen(nextOpen);
+          if (!nextOpen) {
+            setDismissedRequestsSignature(requestsSignature);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto border-emerald-100 bg-white text-slate-900 shadow-xl shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950 dark:text-slate-100 dark:shadow-emerald-950/20 sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Solicitudes de torneo pendientes</DialogTitle>
+            <DialogDescription className="text-slate-500 dark:text-slate-400">
+              Tenés solicitudes para formar pareja. Podés aceptar, rechazar o cerrar este aviso.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-3">
-          {partnerRequestsQuery.isLoading ? (
-            <div className="flex items-center gap-2 rounded-2xl border border-emerald-100 px-4 py-3 text-sm text-slate-500 dark:border-emerald-900/60 dark:text-slate-400">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Cargando solicitudes...
-            </div>
-          ) : (
-            receivedRequests.map((request) => (
-              <GlobalPartnerRequestRow
-                key={request.id}
-                request={request}
-                disabled={isActionPending}
-                onAccept={() => {
-                  acceptRequestMutation.mutate(request.id);
-                }}
-                onReject={() => {
-                  rejectRequestMutation.mutate(request.id);
-                }}
-              />
-            ))
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+          <div className="space-y-3">
+            {partnerRequestsQuery.isLoading ? (
+              <div className="flex items-center gap-2 rounded-2xl border border-emerald-100 px-4 py-3 text-sm text-slate-500 dark:border-emerald-900/60 dark:text-slate-400">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Cargando solicitudes...
+              </div>
+            ) : (
+              <section className="space-y-3">
+                {receivedRequests.map((request) => (
+                  <GlobalPartnerRequestRow
+                    key={request.id}
+                    request={request}
+                    disabled={isActionPending}
+                    onAccept={() => {
+                      acceptRequestMutation.mutate(request.id);
+                    }}
+                    onReject={() => {
+                      rejectRequestMutation.mutate(request.id);
+                    }}
+                  />
+                ))}
+              </section>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={paymentOpen}
+        onOpenChange={(nextOpen) => {
+          setPaymentOpen(nextOpen);
+          if (!nextOpen) {
+            setDismissedPaymentSignature(paymentSignature);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto border-emerald-100 bg-white text-slate-900 shadow-xl shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950 dark:text-slate-100 dark:shadow-emerald-950/20 sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Confirmar inscripción</DialogTitle>
+            <DialogDescription className="text-slate-500 dark:text-slate-400">
+              Para confirmar la inscripción del torneo, necesitás pagar la seña de inscripción.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            {partnerRequestsQuery.isLoading ? (
+              <div className="flex items-center gap-2 rounded-2xl border border-emerald-100 px-4 py-3 text-sm text-slate-500 dark:border-emerald-900/60 dark:text-slate-400">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Cargando inscripción pendiente...
+              </div>
+            ) : (
+              unpaidRegistrations.map((registration) => (
+                <PendingRegistrationRow
+                  key={registration.teamId}
+                  registration={registration}
+                  isLoading={createPaymentLinkMutation.isPending}
+                  onContinuePayment={() => {
+                    createPaymentLinkMutation.mutate(registration);
+                  }}
+                />
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -207,6 +305,53 @@ function GlobalPartnerRequestRow({
       </div>
     </div>
   );
+}
+
+function PendingRegistrationRow({
+  registration,
+  isLoading,
+  onContinuePayment,
+}: {
+  registration: TournamentPartnerRegistration;
+  isLoading: boolean;
+  onContinuePayment: () => void;
+}) {
+  return (
+    <div className="space-y-3 rounded-2xl border border-emerald-100 p-4 text-sm dark:border-emerald-900/60">
+      <div className="space-y-1">
+        <p className="font-medium text-slate-900 dark:text-slate-100">
+          {getTournamentRegistrationName(registration)}
+        </p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {registration.partner
+            ? `Compañero: ${getRegistrationPlayerName(registration.partner)}`
+            : "Sin compañero asignado"}
+        </p>
+        <p className="text-xs text-amber-700 dark:text-amber-300">
+          Estado: pendiente
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <Button
+          type="button"
+          onClick={onContinuePayment}
+          disabled={isLoading}
+          className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+        >
+          {isLoading ? "Generando pago..." : "Pagar inscripción"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function getTournamentRegistrationName(registration: TournamentPartnerRegistration) {
+  if (typeof registration.tournament === "string") {
+    return "Torneo";
+  }
+
+  return registration.tournament?.name ?? "Torneo";
 }
 
 export function isReceivedPartnerRequest(

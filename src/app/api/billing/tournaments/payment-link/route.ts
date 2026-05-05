@@ -5,6 +5,8 @@ import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    console.log("[tournament-payment-link] Incoming request body:", body);
+
     const response = await fetchWithTenantAdmin(
       "/billing/tournaments/payment-link",
       {
@@ -15,6 +17,8 @@ export async function POST(request: Request) {
     );
 
     const text = await response.text();
+    console.log("[tournament-payment-link] Backend response status:", response.status);
+    console.log("[tournament-payment-link] Backend response body:", text || null);
 
     if (!text) {
       return new NextResponse(null, { status: response.status });

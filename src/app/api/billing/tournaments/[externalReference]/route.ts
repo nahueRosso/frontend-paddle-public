@@ -7,6 +7,10 @@ export async function GET(
   { params }: { params: Promise<{ externalReference: string }> },
 ) {
   const { externalReference } = await params;
+  console.log(
+    "[tournament-payment-status] Checking status for externalReference:",
+    externalReference,
+  );
 
   try {
     const response = await fetchWithTenantAdmin(
@@ -18,6 +22,8 @@ export async function GET(
     );
 
     const text = await response.text();
+    console.log("[tournament-payment-status] Backend response status:", response.status);
+    console.log("[tournament-payment-status] Backend response body:", text || null);
 
     if (!text) {
       return new NextResponse(null, { status: response.status });

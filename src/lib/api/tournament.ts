@@ -23,6 +23,36 @@ export type TournamentRegistrationPlayer = {
   gender?: string;
 };
 
+export type TournamentRegistrationStatus = "approved" | "pending";
+
+export type TournamentPartnerRequestPayment = {
+  paymentId: string;
+  externalReference: string;
+  status: string;
+  provider: string;
+  checkoutUrl: string | null;
+  amountGross: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TournamentPartnerRegistration = {
+  teamId: string;
+  registrationStatus?: TournamentRegistrationStatus;
+  approved: boolean;
+  tournament: Tournament | string;
+  category: TournamentCategory | null;
+  partner: TournamentRegistrationPlayer | null;
+  payment: TournamentPartnerRequestPayment | null;
+  canGeneratePaymentLink: boolean;
+  canReusePaymentLink: boolean;
+};
+
+export type PartnerRequestsResponse = {
+  requests: TournamentPartnerRequest[];
+  tournamentRegistrations: TournamentPartnerRegistration[];
+};
+
 export type TournamentActionResponse = {
   ok: boolean;
   code: string;
@@ -33,10 +63,10 @@ export type TournamentActionResponse = {
 export type TournamentBillingPaymentLinkPayload = {
   tenantId: string;
   tournamentTeamId: string;
-  playerName: string;
-  playerPhone: string;
-  playerEmail: string;
-  tournamentId: string;
+  playerName?: string;
+  playerPhone?: string;
+  playerEmail?: string;
+  tournamentId?: string;
 };
 
 export type TournamentBillingPaymentLinkResponse = {
@@ -147,6 +177,26 @@ function normalizeArrayResponse<T>(json: unknown, key: string): T[] {
   }
 
   return [];
+}
+
+function normalizePartnerRequestsResponse(json: unknown): PartnerRequestsResponse {
+  if (!json || typeof json !== "object") {
+    return { requests: [], tournamentRegistrations: [] };
+  }
+
+  const record = json as Record<string, unknown>;
+  const rawRegistrations = record.tournamentRegistrations;
+
+  return {
+    requests: Array.isArray(record.requests)
+      ? (record.requests as TournamentPartnerRequest[])
+      : [],
+    tournamentRegistrations: Array.isArray(rawRegistrations)
+      ? (rawRegistrations as TournamentPartnerRegistration[])
+      : rawRegistrations && typeof rawRegistrations === "object"
+        ? [rawRegistrations as TournamentPartnerRegistration]
+        : [],
+  };
 }
 
 export async function fetchTournament(
@@ -359,7 +409,13 @@ export async function fetchTournamentPartnerRequests({
 }: {
   tenantId: string;
   playerId: string;
-}) {
+}): Promise<PartnerRequestsResponse> {
+  console.log("[partner-requests] Fetching:", {
+    tenantId,
+    playerId,
+    endpoint: `/tournament/${tenantId}/player/${playerId}/partner-requests`,
+  });
+
   const response = await fetchWithTenantAdmin(
     `/tournament/${tenantId}/player/${playerId}/partner-requests`,
     { cache: "no-store" },
@@ -369,7 +425,9 @@ export async function fetchTournamentPartnerRequests({
     "No se pudieron obtener las solicitudes.",
   );
 
-  return normalizeArrayResponse<TournamentPartnerRequest>(json, "requests");
+  console.log("[partner-requests] Raw response:", json);
+
+  return normalizePartnerRequestsResponse(json);
 }
 
 export async function acceptTournamentPartnerRequest({
