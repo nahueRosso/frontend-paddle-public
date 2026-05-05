@@ -149,6 +149,17 @@ const respondToProposal = async (
   }
 };
 
+const cancelMatchRequest = async (matchRequestId: string) => {
+  const response = await fetchWithTenantAdmin(
+    `/match/request/${matchRequestId}/cancel`,
+    { method: "POST" },
+  );
+
+  if (!response.ok) {
+    throw new Error(await getResponseError(response));
+  }
+};
+
 const formatCountdown = (expiresAt: string, now: number) => {
   const remaining = new Date(expiresAt).getTime() - now;
 
@@ -172,6 +183,7 @@ export function ClubMatch() {
   );
   const [proposals, setProposals] = useState<MatchProposal[]>([]);
   const [isRefreshingMatch, setIsRefreshingMatch] = useState(false);
+  const [isCancellingMatch, setIsCancellingMatch] = useState(false);
   const [proposalAction, setProposalAction] = useState<
     "confirm" | "reject" | null
   >(null);
@@ -560,6 +572,28 @@ export function ClubMatch() {
     window.location.href = pendingMatchEntry.checkoutUrl;
   };
 
+  const handleCancelPaymentRequest = async () => {
+    if (!matchRequest?.id) {
+      return;
+    }
+
+    setIsCancellingMatch(true);
+    setError("");
+
+    try {
+      await cancelMatchRequest(matchRequest.id);
+      handleReset();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo cancelar la solicitud de pago.",
+      );
+    } finally {
+      setIsCancellingMatch(false);
+    }
+  };
+
   const handleProposalAction = async (action: "confirm" | "reject") => {
     if (!pendingProposal) return;
 
@@ -752,7 +786,7 @@ export function ClubMatch() {
               <Button
                 variant="outline"
                 onClick={() => void refreshMatchFlow()}
-                disabled={isRefreshingMatch}
+                disabled={isRefreshingMatch || isCancellingMatch}
                 className="border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
               >
                 {isRefreshingMatch ? (
@@ -764,9 +798,27 @@ export function ClubMatch() {
                   "Actualizar estado"
                 )}
               </Button>
+              {requestStatus === "awaiting_payment" ? (
+                <Button
+                  variant="outline"
+                  onClick={() => void handleCancelPaymentRequest()}
+                  disabled={isRefreshingMatch || isCancellingMatch}
+                  className="border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800 dark:border-rose-900/60 dark:bg-slate-900/80 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                >
+                  {isCancellingMatch ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Cancelando...
+                    </>
+                  ) : (
+                    "Cancelar pago"
+                  )}
+                </Button>
+              ) : null}
               <Button
                 variant="outline"
                 onClick={handleReset}
+                disabled={isCancellingMatch}
                 className="border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
               >
                 Enviar otra solicitud
