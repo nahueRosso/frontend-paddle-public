@@ -677,7 +677,7 @@ console.log("-------------------");
                   Vigencia
                 </p>
                 <p className="text-base font-semibold text-[#111827] dark:text-slate-100">
-                  {formatDate(planStatus.validUntil)}
+                  {formatDate(planStatus?.validUntil)}
                 </p>
               </div>
               <div>
@@ -685,7 +685,7 @@ console.log("-------------------");
                   Identificador
                 </p>
                 <p className="text-sm font-mono text-[#111827] dark:text-slate-100">
-                  {planStatus.planId ?? "N/D"}
+                  {planStatus?.planId ?? "N/D"}
                 </p>
               </div>
             </div>
