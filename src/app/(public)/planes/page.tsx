@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
+  CalendarDays,
   Check,
   CreditCard,
   Loader2,
@@ -38,6 +40,7 @@ import {
 import { usePaymentsPlansQuery } from "@/hooks/queries/plan";
 import { useCreateTenantConfigWithAssetsMutation } from "@/hooks/mutations/tenant-config";
 import { useAuth } from "@/hooks/use-auth";
+import { planKeys } from "@/lib/queryKeys/plan";
 import { cn } from "@/lib/utils";
 import { ImageUploader } from "@/components/PageImageUploader";
 import { ARG_PROVINCES } from "@/const/province";
@@ -158,6 +161,7 @@ const defaultConfig: ConfigFormState = {
 
 export default function PlansPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { session, planStatus } = useAuth();
   const {
     data: paymentsPlans,
@@ -225,6 +229,13 @@ export default function PlansPage() {
   const createTenantConfigMutation = useCreateTenantConfigWithAssetsMutation();
   const changePlanMutation = useChangePlanMutation();
   const cancelPlanMutation = useCancelPlanMutation();
+  const currentPlanStatus = planStatus?.status ?? null;
+  const isApprovedPlan = currentPlanStatus === "approved";
+  const isPendingPlan = currentPlanStatus === "pending";
+  const isRejectedPlan = currentPlanStatus === "rejected";
+  const shouldShowStatusCard =
+    (isApprovedPlan || isPendingPlan || isRejectedPlan) &&
+    !isChangingPlan;
   const plans = useMemo(() => {
     const backendPlansById = new Map(
       (paymentsPlans ?? []).map((plan) => [plan.id, plan]),
@@ -247,7 +258,7 @@ export default function PlansPage() {
   }, [paymentsPlans]);
   const selectedPlan = plans.find((plan) => plan.id === selectedPlanId) ?? null;
   const activePlan = useMemo(() => {
-    if (!planStatus?.active) {
+    if (!planStatus?.planId && !planStatus?.planName) {
       return null;
     }
 
@@ -336,6 +347,14 @@ export default function PlansPage() {
       currency,
       maximumFractionDigits: 0,
     }).format(price);
+  };
+
+  const scheduleVideoCall = () => {
+    window.open(
+      "https://calendly.com/enzonahuelrojo000/30min",
+      "_blank",
+      "noopener,noreferrer",
+    );
   };
 
   const handlePlanSelection = (plan: Plan) => {
@@ -503,13 +522,23 @@ console.log("-------------------");
         tenantId: session.user.id,
         formData,
       });
-      
-      router.push("/contacto");
+
+      await queryClient.invalidateQueries({
+        queryKey: planKeys.statusByTenant(session.user.id),
+      });
+      toast.success(
+        "Configuración enviada. Revisá el estado de tu plan desde esta misma pantalla.",
+      );
+      setSelectedPlanId(null);
+      setError(null);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       console.error(err);
       setError("No pudimos guardar la configuración inicial.");
       setRedirecting(false);
+      return;
     }
+    setRedirecting(false);
   };
 
   
@@ -595,21 +624,54 @@ console.log("-------------------");
   return (
     <main className="px-4 pb-16 pt-28 text-[#4B5563] dark:text-slate-300 sm:px-6 sm:pt-32">
       <section className="mx-auto flex max-w-5xl flex-col gap-12">
-        {planStatus?.active && activePlan && !isChangingPlan ? (
-          <div className="rounded-3xl border border-emerald-100 bg-white/70 p-8 text-center shadow-sm dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20 sm:p-10">
-            <span className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-500">
-              Plan activo
+        {shouldShowStatusCard && activePlan ? (
+          <div
+            className={cn(
+              "rounded-3xl p-8 text-center shadow-sm sm:p-10",
+              isApprovedPlan &&
+                "border border-emerald-100 bg-white/70 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20",
+              isPendingPlan &&
+                "border border-amber-200 bg-amber-50/80 dark:border-amber-900/60 dark:bg-amber-950/20",
+              isRejectedPlan &&
+                "border border-rose-200 bg-rose-50/80 dark:border-rose-900/60 dark:bg-rose-950/20",
+            )}
+          >
+            <span
+              className={cn(
+                "text-sm font-semibold uppercase tracking-[0.3em]",
+                isApprovedPlan && "text-emerald-500",
+                isPendingPlan && "text-amber-600 dark:text-amber-300",
+                isRejectedPlan && "text-rose-600 dark:text-rose-300",
+              )}
+            >
+              {isApprovedPlan
+                ? "Plan aprobado"
+                : isPendingPlan
+                  ? "Plan pendiente"
+                  : "Plan rechazado"}
             </span>
             <h1 className="mt-4 text-3xl font-bold text-[#111827] dark:text-slate-100">
               {activePlan.title}
             </h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              {planStatus.status === "pending"
-                ? "Tu suscripción está en verificación. Te avisaremos cuando se confirme el pago."
-                : "Actualmente estás disfrutando de todas las funciones de este plan."}
+              {isApprovedPlan
+                ? "Tu plan ya fue aprobado. Desde acá podés coordinar la videollamada y gestionar tu suscripción."
+                : isPendingPlan
+                  ? "Tu compra está pendiente de aprobación. El siguiente paso es agendar la videollamada para terminar la activación."
+                  : "Tu solicitud no fue aprobada. Podés volver a elegir un plan y reintentar la configuración."}
             </p>
 
-            <div className="mt-6 grid gap-6 rounded-2xl border border-emerald-50 bg-emerald-50/50 p-6 text-left dark:border-emerald-900/50 dark:bg-emerald-950/20 sm:grid-cols-2">
+            <div
+              className={cn(
+                "mt-6 grid gap-6 rounded-2xl p-6 text-left sm:grid-cols-2",
+                isApprovedPlan &&
+                  "border border-emerald-50 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20",
+                isPendingPlan &&
+                  "border border-amber-200 bg-white/70 dark:border-amber-900/60 dark:bg-slate-900/60",
+                isRejectedPlan &&
+                  "border border-rose-200 bg-white/70 dark:border-rose-900/60 dark:bg-slate-900/60",
+              )}
+            >
               <div>
                 <p className="text-xs uppercase tracking-wide text-emerald-600">
                   Vigencia
@@ -631,7 +693,7 @@ console.log("-------------------");
             {activePlan.features.length ? (
               <div className="mt-6 rounded-2xl border border-emerald-100 bg-white p-6 text-left dark:border-emerald-900/60 dark:bg-slate-900/70">
                 <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">
-                  Beneficios incluidos
+                  {isRejectedPlan ? "Plan solicitado" : "Beneficios incluidos"}
                 </p>
                 <ul className="mt-3 space-y-2 text-sm text-[#4B5563] dark:text-slate-300">
                   {activePlan.features.map((feature) => (
@@ -645,19 +707,45 @@ console.log("-------------------");
             ) : null}
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              {(isApprovedPlan || isPendingPlan) ? (
+                <Button
+                  className={cn(
+                    "rounded-xl",
+                    isApprovedPlan
+                      ? "bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                      : "bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400",
+                  )}
+                  onClick={scheduleVideoCall}
+                >
+                  <CalendarDays className="mr-2 h-4 w-4" />
+                  Agendar videollamada
+                </Button>
+              ) : null}
+              {isApprovedPlan ? (
                 <Button
                   variant="outline"
                   className="rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900/60 dark:text-rose-300 dark:hover:bg-rose-950/30"
-                onClick={handleCancelPlan}
-              >
-                Cancelar suscripción
-              </Button>
+                  onClick={handleCancelPlan}
+                >
+                  Cancelar suscripción
+                </Button>
+              ) : null}
+              {isApprovedPlan ? (
                 <Button
-                className="rounded-xl bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
-                onClick={triggerPlanChangeFlow}
-              >
-                Cambiar plan
-              </Button>
+                  className="rounded-xl bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                  onClick={triggerPlanChangeFlow}
+                >
+                  Cambiar plan
+                </Button>
+              ) : null}
+              {isRejectedPlan ? (
+                <Button
+                  className="rounded-xl bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:text-slate-950 dark:hover:bg-rose-400"
+                  onClick={triggerPlanChangeFlow}
+                >
+                  Elegir otro plan
+                </Button>
+              ) : null}
             </div>
           </div>
         ) : (
@@ -680,9 +768,9 @@ console.log("-------------------");
           </div>
         )}
 
-        {(planStatus?.active && isChangingPlan) || !planStatus?.active ? (
+        {isChangingPlan || !currentPlanStatus || isRejectedPlan ? (
           <>
-            {planStatus?.active && (
+            {isChangingPlan && (
               <div className="rounded-3xl border border-emerald-100 bg-white/70 p-6 text-center text-sm text-[#4B5563] dark:border-emerald-900/60 dark:bg-slate-950/80 dark:text-slate-400">
                 &quot;Seleccioná el nuevo plan que querés activar.&quot;
               </div>
@@ -700,9 +788,7 @@ console.log("-------------------");
                 <CarouselContent className="items-stretch">
                   {plans.map((plan) => {
                     const isSelected = selectedPlanId === plan.id;
-                    const isChangeFlow = Boolean(
-                      planStatus?.active && isChangingPlan,
-                    );
+                    const isChangeFlow = Boolean(isApprovedPlan && isChangingPlan);
 
                     return (
                       <CarouselItem

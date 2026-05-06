@@ -6,7 +6,7 @@ import {
   type PaymentsPlan,
   type PlanStatus,
 } from "@/lib/api/plans"
-import { planKeys } from "@/lib/queryKeys/plan"
+import { planKeys } from "@/lib/queryKeys/plan" 
 
 export function usePlanStatusQuery(tenantId?: string) {
   return useQuery<PlanStatus, Error>({

@@ -16,7 +16,7 @@ export type PlanStatus = {
   active: boolean;
   planId?: string | null;
   planName?: string | null;
-  status?: string | null;
+  status?: "pending" | "approved" | "rejected" | null;
   validUntil?: string | null;
 };
 
@@ -92,7 +92,7 @@ export async function getPlanStatus(tenantId: string): Promise<PlanStatus> {
     active:
       typeof data.active === "boolean"
         ? data.active
-        : data.status === "active",
+        : data.status === "approved",
     planId: data.planId ?? null,
     planName: data.planName ?? null,
     status: data.status ?? null,

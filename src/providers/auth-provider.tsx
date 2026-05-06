@@ -37,7 +37,7 @@ interface AuthContextValue {
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
-
+ 
 function AuthContextBridge({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
   const { data: planStatus, isLoading: isPlanStatusLoading } = usePlanStatusQuery(

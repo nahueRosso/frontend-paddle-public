@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 
 import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
 
+type PlanStatus = {
+  active: boolean;
+  planId?: string | null;
+  planName?: string | null;
+  status?: "pending" | "approved" | "rejected" | null;
+  validUntil?: string | null;
+  isTrial?:boolean | null;
+};
+
 function isConnectionRefused(error: unknown): boolean {
   if (!error || typeof error !== "object") {
     return false;
@@ -34,16 +43,15 @@ export async function GET(request: Request) {
       { status: 400 }
     );
   }
-
+ 
   try {
     const response = await fetchWithTenantAdmin(
       `/config/is-plan-active/${encodeURIComponent(tenantId)}`,
       { cache: "no-store" }
     );
 
-    const payload = await response.json();
+    const payload = await response.json() as PlanStatus;
 
-console.log(payload);
 
 
     if (!response.ok) {
