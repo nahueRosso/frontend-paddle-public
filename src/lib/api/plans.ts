@@ -20,6 +20,13 @@ export type PlanStatus = {
   validUntil?: string | null;
 };
 
+export type PaymentsPlan = {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+};
+
 export async function createTenantConfig(payload: CreatePlanTenantConfigPayload) {
   const res = await fetchWithTenantAdmin("/config", {
     method: "POST",
@@ -91,4 +98,17 @@ export async function getPlanStatus(tenantId: string): Promise<PlanStatus> {
     status: data.status ?? null,
     validUntil: data.validUntil ?? null,
   };
+}
+
+export async function getPaymentsPlans(): Promise<PaymentsPlan[]> {
+  const response = await fetchWithTenantAdmin("/payments/plans", {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("No pudimos obtener el catalogo de planes.");
+  }
+
+  return response.json() as Promise<PaymentsPlan[]>;
 }

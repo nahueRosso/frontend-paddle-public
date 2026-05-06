@@ -35,6 +35,7 @@ import {
   useCancelPlanMutation,
   useChangePlanMutation,
 } from "@/hooks/mutations/plan";
+import { usePaymentsPlansQuery } from "@/hooks/queries/plan";
 import { useCreateTenantConfigWithAssetsMutation } from "@/hooks/mutations/tenant-config";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -54,7 +55,7 @@ type Plan = {
   locked?: boolean;
 };
 
-const plans: Plan[] = [
+const basePlans: Plan[] = [
   {
     id: "Administrador",
     title: "Administrador",
@@ -158,6 +159,10 @@ const defaultConfig: ConfigFormState = {
 export default function PlansPage() {
   const router = useRouter();
   const { session, planStatus } = useAuth();
+  const {
+    data: paymentsPlans,
+    error: paymentsPlansError,
+  } = usePaymentsPlansQuery();
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
   const [carouselSnapCount, setCarouselSnapCount] = useState(0);
@@ -220,6 +225,26 @@ export default function PlansPage() {
   const createTenantConfigMutation = useCreateTenantConfigWithAssetsMutation();
   const changePlanMutation = useChangePlanMutation();
   const cancelPlanMutation = useCancelPlanMutation();
+  const plans = useMemo(() => {
+    const backendPlansById = new Map(
+      (paymentsPlans ?? []).map((plan) => [plan.id, plan]),
+    );
+
+    return basePlans.map((plan) => {
+      const backendPlan =
+        backendPlansById.get(plan.id) ?? backendPlansById.get(plan.title);
+
+      if (!backendPlan) {
+        return plan;
+      }
+
+      return {
+        ...plan,
+        price: backendPlan.price,
+        currency: backendPlan.currency,
+      };
+    });
+  }, [paymentsPlans]);
   const selectedPlan = plans.find((plan) => plan.id === selectedPlanId) ?? null;
   const activePlan = useMemo(() => {
     if (!planStatus?.active) {
@@ -242,7 +267,17 @@ export default function PlansPage() {
         features: [],
       }
     );
-  }, [planStatus]);
+  }, [planStatus, plans]);
+
+  useEffect(() => {
+    if (!paymentsPlansError) {
+      return;
+    }
+
+    setError((current) =>
+      current ?? "No pudimos actualizar los precios de los planes.",
+    );
+  }, [paymentsPlansError]);
 
   useEffect(() => {
     if (!carouselApi) {
@@ -293,6 +328,14 @@ export default function PlansPage() {
       month: "long",
       year: "numeric",
     }).format(date);
+  };
+
+  const formatPlanPrice = (currency: string, price: number) => {
+    return new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(price);
   };
 
   const handlePlanSelection = (plan: Plan) => {
@@ -704,7 +747,7 @@ console.log("-------------------");
 
                           <div className="mt-auto">
                             <span className="text-4xl font-bold text-[#111827] dark:text-slate-100">
-                              {plan.currency} {plan.price}
+                              {formatPlanPrice(plan.currency, plan.price)}
                             </span>
                             <span className="ml-1 text-sm text-[#4B5563]/80 dark:text-slate-500">
                               / {plan.frequency}
