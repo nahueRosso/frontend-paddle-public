@@ -1,19 +1,69 @@
+import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
+
 export type ContactPayload = {
-  name: string
-  email: string
-  message: string
+  senderEmail: string;
+  message: string;
+};
+
+export type ContactResponse = {
+  success: boolean;
+  message: string;
+  id: number;
+  status: string;
+  createdAt: string;
+};
+
+type ErrorPayload = {
+  message?: string;
+  statusCode?: number;
+  lastMessageAt?: string;
+};
+
+export class ContactApiError extends Error {
+  status: number;
+  lastMessageAt?: string;
+
+  constructor(message: string, status: number, lastMessageAt?: string) {
+    super(message);
+    this.name = "ContactApiError";
+    this.status = status;
+    this.lastMessageAt = lastMessageAt;
+  }
 }
 
-export async function submitContactForm(payload: ContactPayload) {
-  const response = await fetch("/api/contact", {
+export async function submitContactForm(
+  payload: ContactPayload,
+): Promise<ContactResponse> {
+  const response = await fetchWithTenantAdmin("/message", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  })
+  });
 
-  if (!response.ok) {
-    throw new Error("No se pudo enviar el formulario.")
+  const text = await response.text();
+  let parsed: ContactResponse | ErrorPayload | null = null;
+
+  if (text) {
+    try {
+      parsed = JSON.parse(text) as ContactResponse | ErrorPayload;
+    } catch {
+      parsed = null;
+    }
   }
 
-  return response.json().catch(() => null)
+  if (!response.ok) {
+    const message =
+      typeof (parsed as ErrorPayload | null)?.message === "string"
+        ? (parsed as ErrorPayload).message!
+        : "No se pudo enviar el mensaje.";
+
+    throw new ContactApiError(
+      message,
+      response.status,
+      typeof (parsed as ErrorPayload | null)?.lastMessageAt === "string"
+        ? (parsed as ErrorPayload).lastMessageAt
+        : undefined,
+    );
+  }
+
+  return parsed as ContactResponse;
 }

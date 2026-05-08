@@ -43,6 +43,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { planKeys } from "@/lib/queryKeys/plan";
 import { cn } from "@/lib/utils";
 import { ImageUploader } from "@/components/PageImageUploader";
+import { PublicVideoCallBookingDialog } from "@/components/public-video-call-booking-dialog";
 import { ARG_PROVINCES } from "@/const/province";
 import { normalizeImageFile } from "@/lib/image-normalizer";
 
@@ -347,14 +348,6 @@ export default function PlansPage() {
       currency,
       maximumFractionDigits: 0,
     }).format(price);
-  };
-
-  const scheduleVideoCall = () => {
-    window.open(
-      "https://calendly.com/enzonahuelrojo000/30min",
-      "_blank",
-      "noopener,noreferrer",
-    );
   };
 
   const handlePlanSelection = (plan: Plan) => {
@@ -708,18 +701,16 @@ console.log("-------------------");
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
               {(isApprovedPlan || isPendingPlan) ? (
-                <Button
+                <PublicVideoCallBookingDialog
+                  session={session}
                   className={cn(
                     "rounded-xl",
                     isApprovedPlan
                       ? "bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
                       : "bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400",
                   )}
-                  onClick={scheduleVideoCall}
-                >
-                  <CalendarDays className="mr-2 h-4 w-4" />
-                  Agendar videollamada
-                </Button>
+                  icon={<CalendarDays className="h-4 w-4" />}
+                />
               ) : null}
               {isApprovedPlan ? (
                 <Button
