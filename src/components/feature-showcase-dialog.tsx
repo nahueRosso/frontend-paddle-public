@@ -8,7 +8,6 @@ import {
   CalendarClock,
   CreditCard,
   Crown,
-  Megaphone,
   ShieldCheck,
   Sparkles,
   Swords,

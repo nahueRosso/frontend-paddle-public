@@ -148,12 +148,14 @@ export function ClubSidebar({
           className="
   flex min-h-[92px] items-center gap-3 px-4 py-4
   group-data-[collapsible=icon]:justify-center
-  group-data-[collapsible=icon]:px-0
+          group-data-[collapsible=icon]:px-0
 "
         >
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/15 backdrop-blur">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={icon || "/images.png"}
+              alt={clubName}
               className="h-7 w-7 rounded-xl object-cover"
             />
           </div>

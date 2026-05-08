@@ -200,11 +200,14 @@ export function Header() {
                     className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/70 text-sm font-semibold text-slate-900 transition hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:border-slate-600 dark:focus-visible:ring-slate-600 dark:focus-visible:ring-offset-slate-950"
                   >
                     {userImage ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={userImage}
                         alt={userName}
                         className="h-full w-full rounded-full object-cover"
                       />
+                      </>
                     ) : (
                       <span className="text-xs uppercase">
                         {userName.slice(0, 2)}
@@ -347,11 +350,14 @@ export function Header() {
                     {/* Imagen o iniciales alineadas a la izquierda */}
                     <div className="absolute flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-slate-200 dark:border-slate-700">
                       {userImage ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={userImage}
                           alt={userName}
                           className="h-full w-full rounded-full object-cover"
                         />
+                        </>
                       ) : (
                         <span className="text-xs uppercase">
                           {userName.slice(0, 2)}

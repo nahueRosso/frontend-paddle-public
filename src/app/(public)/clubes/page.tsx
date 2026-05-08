@@ -73,6 +73,7 @@ export default function ComplejosPage() {
                 onClick={() => router.push(`/clubes/${complex.slug}`)}
               >
                 <div className="flex min-h-[7rem] items-center justify-center rounded-2xl bg-slate-50/80 px-4 dark:bg-slate-950/70">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={complex.iconUrl || "/canon.webp"}
                     alt={complex.clubName}

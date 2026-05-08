@@ -6,7 +6,6 @@ import {
   updateProfessor,
 } from "@/lib/api/professor"
 import { professorKeys } from "@/lib/queryKeys/professor"
-import { tenantConfigKeys } from "@/lib/queryKeys/tenant-config"
 
 export function useCreateProfessorMutation(tenantId: string) {
   const queryClient = useQueryClient()

@@ -13,13 +13,15 @@ export function ProfessorCard({ prof }: { prof: Professor }) {
       <div className="relative h-56 w-full bg-emerald-50 dark:bg-slate-900/80">
 
         {prof.imageProfeUrl ? (
-
-          <img
-            src={prof.imageProfeUrl || ""}
-            alt={prof.firstName}
-            // fill
-            className="h-full w-full object-cover"
-          />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={prof.imageProfeUrl || ""}
+              alt={prof.firstName}
+              // fill
+              className="h-full w-full object-cover"
+            />
+          </>
 
         ) : (
 

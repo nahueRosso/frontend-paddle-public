@@ -77,7 +77,7 @@ export async function getTenant(tenant: string): Promise<TenantPublic | null> {
     if (!json.exists) return null;
 
     return json.data;
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -137,7 +137,6 @@ export async function createTenantConfig(
 }
 
 export async function createTenantConfigWithAssets({
-  tenantId,
   formData,
 }: CreateTenantConfigWithAssetsInput) {
   const response = await fetchWithTenantAdmin("/config", {

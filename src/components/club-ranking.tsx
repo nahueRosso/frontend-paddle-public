@@ -1149,11 +1149,14 @@ function TournamentRegisterDialog({
     open && tournament?.id && config.tenantId && playerId && categoryReady,
   );
 
+  const tournamentType = tournament?.type;
+  const firstTournamentCategory = tournament?.categories?.[0];
+
   React.useEffect(() => {
-    if (tournament?.type === "sum") {
+    if (tournamentType === "sum") {
       setSelectedCategoryId("");
     } else {
-      setSelectedCategoryId(getTournamentCategoryId(tournament?.categories?.[0]) ?? "");
+      setSelectedCategoryId(getTournamentCategoryId(firstTournamentCategory) ?? "");
     }
     setFlow(null);
     setPartnerSearch("");
@@ -1162,7 +1165,7 @@ function TournamentRegisterDialog({
     setSuccess("");
     setPendingTournamentPaymentState(null);
     setPaymentResolved(false);
-  }, [tournament?.id]);
+  }, [firstTournamentCategory, tournament?.id, tournamentType]);
 
   React.useEffect(() => {
     setFlow(null);

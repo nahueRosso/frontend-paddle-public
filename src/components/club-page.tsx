@@ -352,6 +352,7 @@ export function ClubPage({ slug }: ClubPageProps) {
               </div>
 
               <div className="mx-auto flex min-h-[4.5rem] items-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={config?.logoUrl || "/canon.webp"}
                   alt={config.clubName}

@@ -15,7 +15,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Booking, PublicBookingIntentResponse, TimeSlot } from "@/types/booking";
+import type { Booking, TimeSlot } from "@/types/booking";
 import type { CourtConfig } from "@/types/tenant-config";
 import { useBookingsQuery } from "@/hooks/queries/booking";
 import { useCurrentTime } from "@/hooks/use-current-time";
