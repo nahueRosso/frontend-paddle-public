@@ -135,7 +135,7 @@ function getClubInitials(clubName: string) {
 //       <SidebarFooter className="border-t border-sidebar-border group-data-[collapsible=icon]:hidden">
 //         <div className="px-2 py-3">
 //           <p className="text-xs text-sidebar-foreground/50">
-//             Powered by MiClub Pádel
+//             Powered by Mi Club Pádel
 //           </p>
 //         </div>
 //       </SidebarFooter>
@@ -243,7 +243,7 @@ export function ClubSidebar({
         />
         <div className="px-1 py-1 group-data-[collapsible=icon]:hidden">
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Powered by Miclub Padel
+            Powered by Mi Club Padel
           </p>
         </div>
       </SidebarFooter>

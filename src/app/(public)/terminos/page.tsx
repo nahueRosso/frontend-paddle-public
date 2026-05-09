@@ -4,9 +4,18 @@ import { company } from "@/config/company";
 import { LegalPageLayout } from "@/components/legal/legal-page-layout";
 
 export const metadata: Metadata = {
-  title: `Términos y Condiciones | ${company.brandName}`,
+  title: `Términos y Condiciones | Mi Club Pádel`,
   description:
     "Condiciones de uso, alcance del servicio y responsabilidades de la plataforma Mi Club Pádel.",
+  icons: {
+    icon: "/logo-square.ico",
+    shortcut: "/logo-square.ico",
+    apple: "/logo-square.ico",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 const currentYear = new Date().getFullYear();
@@ -31,10 +40,10 @@ export default function TermsPage() {
         </h2>
         <p>
           Proveemos una plataforma SaaS para la gestión operativa y comunicación
-          automatizada de clubes y complejos deportivos, incluyendo integraciones
-          con WhatsApp Business y proveedores de pago. El acceso se brinda bajo
-          un modelo de suscripción, según el alcance definido en cada propuesta
-          comercial.
+          automatizada de clubes y complejos deportivos, incluyendo
+          integraciones con WhatsApp Business y proveedores de pago. El acceso
+          se brinda bajo un modelo de suscripción, según el alcance definido en
+          cada propuesta comercial.
         </p>
       </section>
 
@@ -63,9 +72,9 @@ export default function TermsPage() {
           3. Propiedad intelectual
         </h2>
         <p>
-          {company.brandName} mantiene la titularidad sobre el software, marcas y
-          desarrollos. El cliente obtiene una licencia limitada, no exclusiva e
-          intransferible para utilizar la plataforma mientras dure la
+          {company.brandName} mantiene la titularidad sobre el software, marcas
+          y desarrollos. El cliente obtiene una licencia limitada, no exclusiva
+          e intransferible para utilizar la plataforma mientras dure la
           suscripción. Los datos cargados por cada cliente siguen siendo de ese
           cliente.
         </p>
@@ -105,10 +114,12 @@ export default function TermsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">7. Contacto</h2>
+        <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+          7. Contacto
+        </h2>
         <p>
-          Para consultas sobre este documento o sobre el servicio,
-          comunicate al correo{" "}
+          Para consultas sobre este documento o sobre el servicio, comunicate al
+          correo{" "}
           <a
             href={`mailto:${company.email}`}
             className="font-semibold text-slate-900 underline underline-offset-4 dark:text-slate-100"

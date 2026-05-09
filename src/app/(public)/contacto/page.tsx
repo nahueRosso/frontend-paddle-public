@@ -1,13 +1,9 @@
-import type { Metadata } from "next";
+'use client'
 
 import { ContactForm } from "@/components/contact-form";
 import { company } from "@/config/company";
 
-export const metadata: Metadata = {
-  title: `Contacto | ${company.brandName}`,
-  description:
-    "Hablemos sobre cómo automatizar la operación de tu club de pádel con WhatsApp Business.",
-};
+
 
 export default function ContactPage() {
   return (

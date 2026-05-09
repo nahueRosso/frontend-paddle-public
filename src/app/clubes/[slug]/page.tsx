@@ -8,7 +8,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
   return {
-    title: `${slug} - Club de Padel`,
+    title: `${slug.split('-')[0]} - Club de Padel`,
     description: `Reserva tu turno de padel en ${slug}. Consulta disponibilidad y agenda tu cancha.`,
   }
 }

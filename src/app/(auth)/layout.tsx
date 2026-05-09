@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { AppThemeProvider } from "@/components/app-theme-provider";
 
 export const metadata: Metadata = {
-  title: "Login MiClubPadel",
+  title: "Login | Mi Club Pádel",
   icons: {
     icon: "/logo-square.ico",
     shortcut: "/logo-square.ico",

@@ -4,10 +4,20 @@ import { company } from "@/config/company";
 import { LegalPageLayout } from "@/components/legal/legal-page-layout";
 
 export const metadata: Metadata = {
-  title: `Política de Privacidad | ${company.brandName}`,
+  title: `Política de Privacidad  | Mi Club Pádel`,
   description:
     "Política de privacidad y tratamiento de datos personales para usuarios y clientes de la plataforma.",
+  icons: {
+    icon: "/logo-square.ico",
+    shortcut: "/logo-square.ico",
+    apple: "/logo-square.ico",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
+
 
 export default function PrivacyPage() {
   return (
