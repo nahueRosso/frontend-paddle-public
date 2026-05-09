@@ -38,9 +38,12 @@ export function AppThemeProvider({
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const storedTheme = window.localStorage.getItem(APP_THEME_STORAGE_KEY);
+    const rootHasDarkClass = document.documentElement.classList.contains("dark");
 
     if (storedTheme === "dark" || storedTheme === "light") {
       setThemeState(storedTheme);
+    } else if (rootHasDarkClass) {
+      setThemeState("dark");
     } else {
       setThemeState(mediaQuery.matches ? "dark" : "light");
     }
@@ -75,10 +78,12 @@ export function AppThemeProvider({
 
     root.classList.toggle("dark", isDark);
     body.classList.toggle("dark", isDark);
+    root.style.colorScheme = isDark ? "dark" : "light";
 
     return () => {
       root.classList.remove("dark");
       body.classList.remove("dark");
+      root.style.colorScheme = "";
     };
   }, [mounted, theme]);
 

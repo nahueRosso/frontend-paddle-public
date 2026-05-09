@@ -246,7 +246,7 @@ export function Header() {
 
         <button
           type="button"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 bg-white/60 text-slate-900 transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-slate-800 lg:hidden"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/85 text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:bg-white dark:border-slate-700/80 dark:bg-slate-900/90 dark:text-slate-100 dark:hover:bg-slate-800 lg:hidden"
           aria-expanded={isMenuOpen}
           aria-controls="mobile-menu"
           aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
@@ -265,10 +265,25 @@ export function Header() {
         <div
           ref={menuRef}
           id="mobile-menu"
-          className="border-t border-slate-200 bg-white/90 shadow-lg dark:border-slate-800 dark:bg-slate-950/95 lg:hidden"
+          className="border-t border-slate-200/70 bg-white/82 shadow-[0_24px_60px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/92 lg:hidden"
         >
-          <nav className="mx-auto max-w-5xl px-4 py-6 text-sm font-medium text-slate-800 dark:text-slate-200">
-            <ul className="space-y-4">
+          <nav className="mx-auto max-w-5xl px-4 py-5 text-sm font-medium text-slate-800 dark:text-slate-200">
+            <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/72 p-4 shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-slate-800/80 dark:bg-slate-900/72">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">
+                    Navegación
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    Elegí una sección y seguí explorando la plataforma.
+                  </p>
+                </div>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                  <Menu className="h-5 w-5" />
+                </div>
+              </div>
+
+              <ul className="mt-5 space-y-3">
               {navItems.map((item) => {
                 if ("items" in item) {
                   const isGroupOpen = Boolean(expandedGroups[item.label]);
@@ -276,11 +291,11 @@ export function Header() {
                     <li key={item.label} className="space-y-3">
                       <button
                         type="button"
-                        className="flex w-full items-center justify-between rounded-full border border-slate-200 bg-white/70 px-4 py-2 text-left text-slate-900 shadow-sm transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-slate-800"
+                        className="flex w-full items-center justify-between rounded-2xl border border-slate-200/90 bg-white/80 px-4 py-3 text-left text-slate-900 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-100 dark:hover:bg-slate-900"
                         onClick={() => toggleGroup(item.label)}
                         aria-expanded={isGroupOpen}
                       >
-                        <span className="text-sm font-semibold uppercase tracking-wide">
+                        <span className="text-sm font-semibold">
                           {item.label}
                         </span>
                         <ChevronDown
@@ -295,7 +310,7 @@ export function Header() {
                             <li key={subItem.href}>
                               <Link
                                 href={subItem.href}
-                                className="block rounded-lg bg-white/70 px-3 py-2 text-slate-700 shadow-sm transition hover:bg-slate-100/70 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:bg-slate-800"
+                                className="block rounded-xl bg-white/75 px-3 py-3 text-slate-700 shadow-sm transition hover:bg-slate-100/70 dark:bg-slate-950/70 dark:text-slate-200 dark:hover:bg-slate-900"
                                 onClick={closeMenu}
                               >
                                 {subItem.label}
@@ -312,7 +327,7 @@ export function Header() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="block rounded-full border border-slate-200 bg-white/70 px-4 py-2 text-center text-slate-900 shadow-sm transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-slate-800"
+                      className="block rounded-2xl border border-slate-200/90 bg-white/80 px-4 py-3 text-slate-900 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950/70 dark:text-slate-100 dark:hover:bg-slate-900"
                       onClick={closeMenu}
                     >
                       {item.label}
@@ -320,66 +335,72 @@ export function Header() {
                   </li>
                 );
               })}
-            </ul>
+              </ul>
 
-            <div className="mt-6 space-y-3">
-              <Link
-                href="/clubes"
-                className="block rounded-full border border-emerald-400 px-4 py-2 text-center text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-500/60 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
-                onClick={closeMenu}
-              >
-                Canchas
-              </Link>
-              <ThemeToggle className="flex w-full justify-center" />
-
-              {session?.user ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      closeMenu();
-                      void signOut();
-                    }}
-                    className="w-full rounded-full border border-slate-300 bg-white/30 px-4 py-2 text-slate-900 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:hover:bg-slate-800"
-                  >
-                    Cerrar sesión
-                  </button>
-
-                  <div className="-mx-4 mb-6 w-[calc(100%+2rem)] border-t border-slate-200 shadow-lg dark:border-slate-800" />
-                  <div className="relative flex w-full items-center rounded-full text-slate-900 transition dark:text-slate-100">
-                    {/* Imagen o iniciales alineadas a la izquierda */}
-                    <div className="absolute flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-slate-200 dark:border-slate-700">
-                      {userImage ? (
-                        <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={userImage}
-                          alt={userName}
-                          className="h-full w-full rounded-full object-cover"
-                        />
-                        </>
-                      ) : (
-                        <span className="text-xs uppercase">
-                          {userName.slice(0, 2)}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Texto centrado */}
-                    <p className="mx-auto text-center text-base font-semibold text-slate-900 dark:text-slate-100">
-                      {userEmail}
-                    </p>
-                  </div>
-                </>
-              ) : (
+              <div className="mt-5 grid grid-cols-2 gap-3">
                 <Link
-                  href="/login"
-                  className="block rounded-full border border-slate-300 px-4 py-2 text-center text-slate-900 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                  href="/clubes"
+                  className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
                   onClick={closeMenu}
                 >
-                  Iniciar sesión
+                  Canchas
                 </Link>
-              )}
+                <div className="flex items-center justify-center rounded-2xl border border-slate-200/90 bg-white/80 dark:border-slate-800 dark:bg-slate-950/70">
+                  <ThemeToggle className="h-11 w-full rounded-2xl border-0 bg-transparent shadow-none hover:bg-transparent dark:bg-transparent dark:hover:bg-transparent" />
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-[1.5rem] border border-slate-200/80 bg-slate-50/75 p-4 dark:border-slate-800 dark:bg-slate-950/55">
+                {session?.user ? (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+                        {userImage ? (
+                          <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={userImage}
+                              alt={userName}
+                              className="h-full w-full object-cover"
+                            />
+                          </>
+                        ) : (
+                          <span className="text-xs font-semibold uppercase text-slate-900 dark:text-slate-100">
+                            {userName.slice(0, 2)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          {userName}
+                        </p>
+                        <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                          {userEmail}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closeMenu();
+                        void signOut();
+                      }}
+                      className="mt-4 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="block rounded-2xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-medium text-slate-900 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                    onClick={closeMenu}
+                  >
+                    Iniciar sesión
+                  </Link>
+                )}
+              </div>
             </div>
           </nav>
         </div>

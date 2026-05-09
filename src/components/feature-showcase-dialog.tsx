@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import type { ComponentType } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
   Bot,
   CalendarClock,
+  ChevronDown,
   CreditCard,
   Crown,
   ShieldCheck,
@@ -64,7 +66,7 @@ const SHOWCASE_SECTIONS = [
       "Mejor experiencia para el jugador y menos trabajo manual para el club.",
     ],
     accent: "Más ocupación con menos esfuerzo",
-    featured: true,
+    featured: false,
   },
   {
     icon: Trophy,
@@ -120,16 +122,9 @@ const SHOWCASE_SECTIONS = [
   },
 ] as const;
 
-const PROOF_POINTS = [
-  "Reservas claras",
-  "Partidos mejor armados",
-  "Torneos más prolijos",
-  "Cobros más rápidos",
-] as const;
-
 export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
   return (
-    <Dialog>
+    <Dialog >
       <DialogTrigger asChild>
         <button
           type="button"
@@ -142,10 +137,10 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
 
       <DialogContent
         showCloseButton={false}
-        className="top-[5.25rem] left-1/2 h-[calc(100vh-6rem)] w-[min(1180px,calc(100vw-1rem))] max-w-[min(1180px,calc(100vw-1rem))] -translate-x-1/2 translate-y-0 overflow-hidden border-0 bg-transparent p-0 shadow-none sm:top-24 sm:h-[min(86vh,860px)] sm:w-[min(1180px,calc(100vw-2rem))] sm:max-w-[min(1180px,calc(100vw-2rem))]"
+        className="left-1/2 top-[4.75rem] z-[80] h-[calc(100dvh-4.75rem)] w-screen max-w-none -translate-x-1/2 translate-y-0 overflow-hidden border-0 bg-transparent p-0 shadow-none sm:top-24 sm:h-[min(86vh,860px)] sm:w-[min(1180px,calc(100vw-2rem))] sm:max-w-[min(1180px,calc(100vw-2rem))] bg-transparent"
       >
         <div
-          className={`relative h-full overflow-hidden rounded-[2rem] border shadow-[0_32px_100px_rgba(2,6,23,0.22)] ${
+          className={`relative h-full overflow-hidden border shadow-[0_32px_100px_rgba(2,6,23,0.22)] sm:rounded-[2rem] ${
             isDark
               ? "border-white/10 bg-[linear-gradient(180deg,rgba(2,6,23,0.97)_0%,rgba(7,20,35,0.99)_100%)] text-white"
               : "border-slate-200/90 bg-[linear-gradient(180deg,rgba(248,250,252,0.98)_0%,rgba(240,253,250,0.96)_55%,rgba(248,250,252,0.98)_100%)] text-slate-950"
@@ -159,7 +154,7 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
             }`}
           />
 
-          <div className="relative h-full overflow-y-auto">
+          <div className="relative h-full overflow-y-auto overscroll-contain">
             <div
               className={`sticky top-0 z-30 flex items-center justify-between border-b px-4 py-3 backdrop-blur-xl sm:px-6 ${
                 isDark
@@ -179,14 +174,14 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
                 </div>
                 <div className="min-w-0">
                   <p
-                    className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${
+                    className={`text-[10px] font-semibold uppercase tracking-[0.22em] sm:text-[11px] sm:tracking-[0.24em] ${
                       isDark ? "text-emerald-200/80" : "text-emerald-700/80"
                     }`}
                   >
                     Showcase del producto
                   </p>
                   <DialogTitle
-                    className={`truncate text-sm font-semibold sm:text-base ${
+                    className={`pr-2 text-sm font-semibold leading-tight sm:truncate sm:text-base ${
                       isDark ? "text-white" : "text-slate-950"
                     }`}
                   >
@@ -196,15 +191,7 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
               </div>
 
               <div className="flex items-center gap-2">
-                <DialogClose asChild>
-                  <a
-                    href="#comenzar"
-                    className="hidden items-center gap-2 rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-300 md:inline-flex"
-                  >
-                    Probar gratis
-                    <ArrowRight className="h-4 w-4" />
-                  </a>
-                </DialogClose>
+                
 
                 <DialogClose asChild>
                   <button
@@ -222,9 +209,9 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
               </div>
             </div>
 
-            <div className="px-4 pb-24 pt-5 sm:px-6 sm:pt-6 lg:px-8">
+            <div className="px-4 pb-24 pt-4 sm:px-6 sm:pb-24 sm:pt-6 lg:px-8">
               <section
-                className={`rounded-[1.8rem] border p-5 sm:p-7 ${
+                className={`rounded-[1.6rem] border p-4 sm:rounded-[1.8rem] sm:p-7 ${
                   isDark
                     ? "border-white/10 bg-white/[0.045]"
                     : "border-white/80 bg-white/78"
@@ -233,7 +220,7 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                   <div className="max-w-3xl">
                     <div
-                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] ${
+                      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] sm:px-4 sm:py-2 sm:text-[11px] sm:tracking-[0.24em] ${
                         isDark
                           ? "border-emerald-300/18 bg-emerald-400/10 text-emerald-200"
                           : "border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -244,7 +231,7 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
                     </div>
 
                     <h2
-                      className={`mt-4 max-w-4xl text-3xl font-semibold leading-tight sm:text-4xl lg:text-[2.65rem] ${
+                      className={`mt-4 max-w-4xl text-2xl font-semibold leading-tight sm:text-4xl lg:text-[2.65rem] ${
                         isDark ? "text-white" : "text-slate-950"
                       }`}
                     >
@@ -252,7 +239,7 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
                     </h2>
 
                     <DialogDescription
-                      className={`mt-4 max-w-2xl text-base leading-relaxed sm:text-lg ${
+                      className={`mt-3 max-w-2xl text-sm leading-relaxed sm:mt-4 sm:text-lg ${
                         isDark ? "text-slate-300" : "text-slate-600"
                       }`}
                     >
@@ -261,31 +248,31 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
                       profesionalizar la experiencia del jugador.
                     </DialogDescription>
 
-                    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                    {/* <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                       <DialogClose asChild>
                         <a
                           href="#comenzar"
-                          className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-400 px-5 py-3 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200"
+                          className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-400 px-5 py-3 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200 sm:px-5"
                         >
                           Probar gratis
                           <ArrowRight className="h-4 w-4" />
                         </a>
                       </DialogClose>
                       <p
-                        className={`text-sm leading-relaxed ${
+                        className={`max-w-md text-sm leading-relaxed ${
                           isDark ? "text-slate-400" : "text-slate-600"
                         }`}
                       >
                         Probalo para ver cómo se siente un club más ordenado y más vendible.
                       </p>
-                    </div>
+                    </div> */}
                   </div>
 
-                  <div className="grid gap-2.5 sm:grid-cols-2 lg:w-[320px] lg:grid-cols-2">
+                  {/* <div className="-mx-1 hidden md:flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0 lg:w-[320px] lg:grid-cols-2">
                     {PROOF_POINTS.map((point) => (
                       <div
                         key={point}
-                        className={`rounded-2xl border px-4 py-3 text-sm font-medium ${
+                        className={`min-w-[168px] snap-start rounded-2xl border px-4 py-3 text-sm font-medium sm:min-w-0 ${
                           isDark
                             ? "border-white/8 bg-slate-950/28 text-slate-100"
                             : "border-slate-200 bg-slate-50/90 text-slate-800"
@@ -294,11 +281,11 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
                         {point}
                       </div>
                     ))}
-                  </div>
+                  </div> */}
                 </div>
               </section>
 
-              <section className="mt-4 grid gap-3 md:grid-cols-3">
+              <section className="mt-4 hidden md:grid gap-3  md:grid-cols-3 sx:none">
                 {PRIMARY_BENEFITS.map((item) => (
                   <PrimaryBenefitCard
                     key={item.title}
@@ -307,9 +294,9 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
                     isDark={isDark}
                   />
                 ))}
-              </section>
+              </section> 
 
-              <section className="mt-6">
+              <section className="mt-5 sm:mt-6">
                 <div className="mb-4 flex items-center gap-3">
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
@@ -328,17 +315,10 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
                     >
                       Qué resuelve
                     </p>
-                    <h3
-                      className={`text-xl font-semibold ${
-                        isDark ? "text-white" : "text-slate-950"
-                      }`}
-                    >
-                      Todo lo importante, sin hacerte pensar de más.
-                    </h3>
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-3 pt-1 sm:gap-4 md:grid-cols-2">
                   {SHOWCASE_SECTIONS.map((section, index) => (
                     <ShowcaseSectionCard
                       key={section.title}
@@ -368,7 +348,7 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
                     Más orden para el club. Mejor experiencia para el jugador.
                   </p>
                   <p
-                    className={`text-sm ${
+                    className={`hidden text-sm sm:block ${
                       isDark ? "text-slate-400" : "text-slate-600"
                     }`}
                   >
@@ -378,7 +358,7 @@ export function FeatureShowcaseDialog({ isDark }: { isDark: boolean }) {
 
                 <DialogClose asChild>
                   <a
-                    href="#comenzar"
+                    href="/planes"
                     className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-400 px-5 py-3 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200 sm:min-w-[180px]"
                   >
                     Probar gratis
@@ -405,14 +385,14 @@ function PrimaryBenefitCard({
 }) {
   return (
     <div
-      className={`rounded-[1.4rem] border p-4 ${
+      className={`rounded-[1.25rem] border p-4 sm:rounded-[1.4rem] ${
         isDark
           ? "border-white/10 bg-white/[0.045]"
           : "border-white/80 bg-white/78"
       }`}
     >
       <p
-        className={`text-lg font-semibold ${
+        className={`text-base font-semibold sm:text-lg ${
           isDark ? "text-white" : "text-slate-950"
         }`}
       >
@@ -450,6 +430,8 @@ function ShowcaseSectionCard({
   index: number;
   isDark: boolean;
 }) {
+  const [isOpen, setIsOpen] = useState(featured);
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 14 }}
@@ -460,7 +442,7 @@ function ShowcaseSectionCard({
         duration: 0.35,
         ease: [0.16, 1, 0.3, 1],
       }}
-      className={`rounded-[1.55rem] border p-5 transition sm:p-6 ${
+      className={`rounded-[1.35rem] border p-4 transition sm:rounded-[1.55rem] sm:p-6 ${
         featured
           ? isDark
             ? "border-emerald-300/16 bg-[linear-gradient(180deg,rgba(16,185,129,0.08),rgba(255,255,255,0.04))]"
@@ -470,70 +452,88 @@ function ShowcaseSectionCard({
             : "border-white/80 bg-white/78"
       }`}
     >
-      <div className="flex items-start justify-between gap-4">
+      <button
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+        className="flex w-full items-start justify-between gap-3 text-left sm:pointer-events-none sm:cursor-default sm:gap-4"
+      >
         <div className="min-w-0">
           <p
-            className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${
+            className={`text-[10px] font-semibold uppercase tracking-[0.18em] sm:text-[11px] sm:tracking-[0.22em] ${
               isDark ? "text-emerald-100/72" : "text-emerald-700/80"
             }`}
           >
             {eyebrow}
           </p>
           <h4
-            className={`mt-2 text-xl font-semibold leading-tight ${
+            className={`mt-2 text-lg font-semibold leading-tight sm:text-xl ${
               isDark ? "text-white" : "text-slate-950"
             }`}
           >
             {title}
           </h4>
         </div>
-        <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${
-            isDark
-              ? "border-white/10 bg-slate-950/28 text-emerald-200"
-              : "border-slate-200 bg-emerald-50 text-emerald-700"
-          }`}
-        >
-          <Icon className="h-5 w-5" />
-        </div>
-      </div>
 
-      <p
-        className={`mt-3 text-sm leading-relaxed ${
-          isDark ? "text-slate-300" : "text-slate-600"
-        }`}
-      >
-        {lead}
-      </p>
-
-      <div className="mt-4 space-y-2">
-        {points.map((point) => (
+        <div className="flex items-center gap-2">
           <div
-            key={point}
-            className={`flex items-start gap-3 rounded-2xl px-3 py-2.5 ${
-              isDark ? "bg-slate-950/22" : "bg-slate-50/92"
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border sm:h-11 sm:w-11 ${
+              isDark
+                ? "border-white/10 bg-slate-950/28 text-emerald-200"
+                : "border-slate-200 bg-emerald-50 text-emerald-700"
             }`}
           >
-            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-300" />
-            <p
-              className={`text-sm leading-relaxed ${
-                isDark ? "text-slate-100/92" : "text-slate-700"
-              }`}
-            >
-              {point}
-            </p>
+            <Icon className="h-5 w-5" />
           </div>
-        ))}
-      </div>
+          <ChevronDown
+            className={`mt-2 h-5 w-5 shrink-0 transition sm:hidden ${
+              isOpen ? "rotate-180" : ""
+            } ${isDark ? "text-slate-300" : "text-slate-500"}`}
+          />
+        </div>
+      </button>
 
       <div
-        className={`mt-4 inline-flex rounded-full border px-3 py-1.5 text-xs font-medium ${
-          isDark
-            ? "border-emerald-300/14 bg-emerald-400/8 text-emerald-100"
-            : "border-emerald-200 bg-emerald-50 text-emerald-700"
+        className={`overflow-hidden transition-all duration-300 ${
+          isOpen ? "mt-3 max-h-[900px] opacity-100" : "max-h-0 opacity-0 sm:mt-3 sm:max-h-[900px] sm:opacity-100"
         }`}
       >
-        {accent}
+        <p
+          className={`text-sm leading-relaxed ${
+            isDark ? "text-slate-300" : "text-slate-600"
+          }`}
+        >
+          {lead}
+        </p>
+
+        <div className="mt-4 space-y-2">
+          {points.map((point) => (
+            <div
+              key={point}
+              className={`flex items-start gap-3 rounded-2xl px-3 py-2.5 ${
+                isDark ? "bg-slate-950/22" : "bg-slate-50/92"
+              }`}
+            >
+              <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-300" />
+              <p
+                className={`text-sm leading-relaxed ${
+                  isDark ? "text-slate-100/92" : "text-slate-700"
+                }`}
+              >
+                {point}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div
+          className={`mt-4 inline-flex rounded-full border px-3 py-1.5 text-xs font-medium ${
+            isDark
+              ? "border-emerald-300/14 bg-emerald-400/8 text-emerald-100"
+              : "border-emerald-200 bg-emerald-50 text-emerald-700"
+          }`}
+        >
+          {accent}
+        </div>
       </div>
     </motion.article>
   );

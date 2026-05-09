@@ -292,7 +292,7 @@ export function ClubTorneos() {
   return (
     <div className="space-y-6">
       <section className="rounded-[2rem] border border-emerald-100 bg-white/75 p-6 shadow-lg shadow-emerald-100/60 backdrop-blur dark:border-emerald-900/60 dark:bg-slate-950/75 dark:shadow-emerald-950/20">
-        <span className="inline-flex rounded-full bg-emerald-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+        <span className="hidden md:inline-flex rounded-full bg-emerald-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
           Comunidad competitiva
         </span>
         <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 lg:text-3xl">
@@ -303,7 +303,7 @@ export function ClubTorneos() {
         </p>
       </section>
 
-      <div className="flex flex-wrap items-center gap-2 rounded-[1.5rem] border border-emerald-100 bg-white/80 p-3 shadow-sm shadow-emerald-100/50 dark:border-emerald-900/60 dark:bg-slate-950/70 dark:shadow-emerald-950/10">
+      <div className="flex flex-wrap items-center gap-1 md:gap-2 rounded-[1.5rem] border border-emerald-100 bg-white/80 py-3 px-1 md:px-3 shadow-sm shadow-emerald-100/50 dark:border-emerald-900/60 dark:bg-slate-950/70 dark:shadow-emerald-950/10">
         {VIEWS.map((view) => (
           <Button
             key={view.id}

@@ -21,6 +21,24 @@ const siteUrl = sanitizedDomain
   : "https://example.com";
 
 const fbDomainVerification = process.env.FB_DOMAIN_VERIFICATION;
+const themeInitScript = `
+(() => {
+  try {
+    const storageKey = "app-shell-theme";
+    const storedTheme = window.localStorage.getItem(storageKey);
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const theme =
+      storedTheme === "dark" || storedTheme === "light"
+        ? storedTheme
+        : prefersDark
+          ? "dark"
+          : "light";
+    const isDark = theme === "dark";
+    document.documentElement.classList.toggle("dark", isDark);
+    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+  } catch (_) {}
+})();
+`;
 
 const organizationSchema = {
   "@context": "https://schema.org",
@@ -50,7 +68,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" className={cn("scroll-smooth", inter.variable)}>
+    <html
+      lang="es"
+      suppressHydrationWarning
+      className={cn("scroll-smooth", inter.variable)}
+    >
       <head>
         {fbDomainVerification ? (
           <meta
@@ -58,6 +80,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             content={fbDomainVerification}
           />
         ) : null}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: themeInitScript,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -67,7 +94,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body
         className={cn(
-          "min-h-screen bg-[#F9FAFB] text-[#111827] antialiased",
+          "min-h-screen bg-[#F9FAFB] text-[#111827] antialiased dark:bg-slate-950 dark:text-slate-100",
           inter.className,
         )}
       >
