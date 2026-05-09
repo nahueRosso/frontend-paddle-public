@@ -853,22 +853,25 @@ export default function PlansPage() {
             <span className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-500">
               Planes
             </span>
-            <h1 className="mt-3 text-3xl font-bold text-[#111827] dark:text-slate-100 md:text-4xl">
+            <h1 className="hidden md:block mt-3 text-lg md:text-3xl font-bold text-[#111827] dark:text-slate-100 md:text-4xl">
               Elegí el plan que mejor se adapta a tu club
             </h1>
-            <p className="mt-3 pb-6 text-base text-[#4B5563] dark:text-slate-400 md:text-lg">
+            <h1 className="block md:hidden mt-3 text-lg md:text-3xl font-bold text-[#111827] dark:text-slate-100 md:text-4xl">
+              Elegí el mejor plan para tu club
+            </h1>
+            <p className="mt-3 pb-6 text-xs md:text-base text-[#4B5563] dark:text-slate-400 md:text-lg">
               Todas las opciones incluyen actualizaciones constantes y acceso a
               la experiencia mejorada de reservas.
             </p>
 
             {!session?.user?.id ? (
-              <p className="mt-4 text-sm text-[#4B5563]/80 dark:text-slate-500">
+              <p className="mt-4 text-xs md:text-sm text-[#4B5563]/80 dark:text-slate-500">
                 Iniciá sesión para contratar un plan o recibir más información.
               </p>
             ) : null}
 
             {isChangingPlan && (
-              <div className="rounded-3xl border border-emerald-100 bg-white/70 p-6 text-center text-sm text-[#4B5563] dark:border-emerald-900/60 dark:bg-slate-950/80 dark:text-slate-400">
+              <div className="rounded-3xl text-xs md:text-sm border border-emerald-100 bg-white/70 p-6 text-center text-sm text-[#4B5563] dark:border-emerald-900/60 dark:bg-slate-950/80 dark:text-slate-400">
                 &quot;Seleccioná el nuevo plan que querés activar.&quot;
               </div>
             )}
@@ -908,7 +911,7 @@ export default function PlansPage() {
                         >
                           <div className="space-y-3">
                             <div className="flex items-center justify-between gap-3">
-                              <h2 className="text-2xl font-semibold text-[#111827] dark:text-slate-100">
+                              <h2 className="text-base md:text-2xl font-semibold text-[#111827] dark:text-slate-100">
                                 {plan.title}
                               </h2>
                               {plan.highlight ? (
@@ -917,12 +920,12 @@ export default function PlansPage() {
                                 </span>
                               ) : null}
                             </div>
-                            <p className="text-sm text-[#4B5563] dark:text-slate-400">
+                            <p className="text-xs md:text-sm text-start text-[#4B5563] dark:text-slate-400">
                               {plan.description}
                             </p>
                           </div>
 
-                          <ul className="space-y-2 text-sm text-[#4B5563] dark:text-slate-300">
+                          <ul className="space-y-2 text-xs md:text-sm text-start text-[#4B5563] dark:text-slate-300">
                             {plan.features.map((feature) => (
                               <li
                                 key={feature}
