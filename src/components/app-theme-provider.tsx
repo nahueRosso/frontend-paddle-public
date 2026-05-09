@@ -32,16 +32,36 @@ export function AppThemeProvider({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const storedTheme =
-      typeof window !== "undefined"
-        ? (window.localStorage.getItem(APP_THEME_STORAGE_KEY) as AppTheme | null)
-        : null;
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const storedTheme = window.localStorage.getItem(APP_THEME_STORAGE_KEY);
 
     if (storedTheme === "dark" || storedTheme === "light") {
       setThemeState(storedTheme);
+    } else {
+      setThemeState(mediaQuery.matches ? "dark" : "light");
     }
 
+    const handleSystemThemeChange = (event: MediaQueryListEvent) => {
+      const persistedTheme = window.localStorage.getItem(APP_THEME_STORAGE_KEY);
+
+      if (persistedTheme === "dark" || persistedTheme === "light") {
+        return;
+      }
+
+      setThemeState(event.matches ? "dark" : "light");
+    };
+
+    mediaQuery.addEventListener("change", handleSystemThemeChange);
+
     setMounted(true);
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleSystemThemeChange);
+    };
   }, []);
 
   useEffect(() => {

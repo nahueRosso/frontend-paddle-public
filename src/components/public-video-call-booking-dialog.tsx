@@ -613,7 +613,7 @@ export function PublicVideoCallBookingDialog({
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       Duración: {availability.durationMinutes} minutos
                     </p>
-                    <Button type="button" onClick={handleReserve} disabled={submitting}>
+                    <Button type="button" className="text-[#111827] dark:text-slate-100" onClick={handleReserve} disabled={submitting}>
                       {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                       Reservar videollamada
                     </Button>

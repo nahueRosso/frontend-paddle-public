@@ -63,8 +63,6 @@ type Plan = {
   locked?: boolean;
 };
 
-
-
 // const basePlans: Plan[] = [
 //   {
 //     id: "Administrador",
@@ -197,8 +195,6 @@ const basePlans: Plan[] = [
   },
 ];
 
-
-
 type ConfigFormState = {
   clubName: string;
   address: string;
@@ -298,9 +294,9 @@ export default function PlansPage() {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
   const [carouselSnapCount, setCarouselSnapCount] = useState(0);
-  const [priceDisplayCurrency, setPriceDisplayCurrency] = useState<"ARS" | "USD">(
-    "ARS",
-  );
+  const [priceDisplayCurrency, setPriceDisplayCurrency] = useState<
+    "ARS" | "USD"
+  >("ARS");
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [redirecting, setRedirecting] = useState(false);
@@ -333,13 +329,11 @@ export default function PlansPage() {
       setLogoFile(normalizedLogo);
     } catch (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "No se pudo preparar el logo.",
+        error instanceof Error ? error.message : "No se pudo preparar el logo.",
       );
     }
   };
-  
+
   const handleIconSelect = async (file: File, previewUrl: string) => {
     URL.revokeObjectURL(previewUrl);
 
@@ -368,7 +362,8 @@ export default function PlansPage() {
   const isApprovedPlan = currentPlanStatus === "approved";
   const isPendingPlan = currentPlanStatus === "pending";
   const isRejectedPlan = currentPlanStatus === "rejected";
-  const shouldShowStatusCard = (isApprovedPlan || isPendingPlan) && !isChangingPlan;
+  const shouldShowStatusCard =
+    (isApprovedPlan || isPendingPlan) && !isChangingPlan;
   const plans = useMemo(() => {
     const backendPlansById = new Map(
       (paymentsPlans ?? []).map((plan) => [plan.id, plan]),
@@ -418,8 +413,9 @@ export default function PlansPage() {
       return;
     }
 
-    setError((current) =>
-      current ?? "No pudimos actualizar los precios de los planes.",
+    setError(
+      (current) =>
+        current ?? "No pudimos actualizar los precios de los planes.",
     );
   }, [paymentsPlansError]);
 
@@ -581,14 +577,14 @@ export default function PlansPage() {
       formData.append("basePrice", String(configForm.basePrice));
       formData.append("paymentPlanId", selectedPlan.id);
 
-console.log("---- FORM DATA ----");
+      console.log("---- FORM DATA ----");
 
-for (const pair of formData.entries()) {
-  console.log(pair[0], pair[1]);
-}
+      for (const pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
 
-console.log("-------------------");
-      
+      console.log("-------------------");
+
       await createTenantConfigMutation.mutateAsync({
         tenantId: session.user.id,
         formData,
@@ -612,7 +608,6 @@ console.log("-------------------");
     setRedirecting(false);
   };
 
-  
   const scrollToPlanGrid = () => {
     if (planGridRef.current) {
       planGridRef.current.scrollIntoView({
@@ -695,15 +690,7 @@ console.log("-------------------");
       />
       <section className="mx-auto flex max-w-5xl flex-col gap-12">
         {shouldShowStatusCard && activePlan ? (
-          <div
-            className={cn(
-              "rounded-3xl p-8 text-center shadow-sm sm:p-10",
-              isApprovedPlan &&
-                "border border-emerald-100 bg-white/70 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20",
-              isPendingPlan &&
-                "border border-amber-200 bg-amber-50/80 dark:border-amber-900/60 dark:bg-amber-950/20",
-            )}
-          >
+          <div  id="sssqqqwww"  className={cn("rounded-3xl p-8 text-center shadow-sm sm:p-10",    isApprovedPlan &&      "border border-emerald-100 bg-white/70 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20",    isPendingPlan &&      "border border-amber-200 bg-amber-50/80 dark:border-amber-900/60 dark:bg-amber-950/20",  )}>
             <span
               className={cn(
                 "text-sm font-semibold uppercase tracking-[0.3em]",
@@ -731,81 +718,84 @@ console.log("-------------------");
                   "border border-amber-200 bg-white/70 dark:border-amber-900/60 dark:bg-transparent",
               )}
             >
+              {activePlan.features.length ? (
+                <div>
+                  <p
+                    className={cn(
+                      "text-xs uppercase tracking-wide",
+                      isApprovedPlan && "text-emerald-500",
+                      isPendingPlan && "text-amber-600 dark:text-amber-300",
+                    )}
+                  >
+                    Beneficios incluidos
+                  </p>
+                  <ul className="mt-3 space-y-2 text-sm text-[#4B5563] dark:text-slate-300">
+                    {activePlan.features.map((feature) => (
+                      <li key={feature} className="flex items-center gap-2">
+                        <Check
+                          className={cn(
+                            "h-4 w-4",
+                            isApprovedPlan && "text-emerald-500",
+                            isPendingPlan &&
+                              "text-amber-600 dark:text-amber-300",
+                          )}
+                        />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
 
-            {activePlan.features.length ? (
               <div>
-                <p className={cn(
-                "text-xs uppercase tracking-wide",
-                isApprovedPlan && "text-emerald-500",
-                isPendingPlan && "text-amber-600 dark:text-amber-300",
-              )}>
-                  Beneficios incluidos
-                </p>
-                <ul className="mt-3 space-y-2 text-sm text-[#4B5563] dark:text-slate-300">
-                  {activePlan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2">
-                      <Check className={cn(
-                "h-4 w-4",
-                isApprovedPlan && "text-emerald-500",
-                isPendingPlan && "text-amber-600 dark:text-amber-300",
-              )} />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-              <div>
-                <p className={cn(
-                "text-xs uppercase tracking-wide",
-                isApprovedPlan && "text-emerald-500",
-                isPendingPlan && "text-amber-600 dark:text-amber-300",
-              )}>
+                <p
+                  className={cn(
+                    "text-xs uppercase tracking-wide",
+                    isApprovedPlan && "text-emerald-500",
+                    isPendingPlan && "text-amber-600 dark:text-amber-300",
+                  )}
+                >
                   Vigencia
                 </p>
                 <p className="text-base font-semibold text-[#111827] dark:text-slate-100">
                   {formatDate(planStatus?.validUntil)}
                 </p>
               </div>
-              </div>
-
-         
+            </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              {( isPendingPlan) ? (
+              {isPendingPlan ? (
                 <>
-                <PublicVideoCallBookingDialog
-                  session={session}
-                  className={cn(
-                    "rounded-xl",
-                    isApprovedPlan
-                      ? "bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
-                      : "bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400",
-                  )}
-                  icon={<CalendarDays className="h-4 w-4" />}
-                />
-                <SubscriptionBadge
-                  tenantId={session?.user?.id ?? ''}
-                  subscriptionStatus={{
-                    currentPhase: 'trial',
-                    daysRemaining: 0,
-                    validUntil: '',
-                    requiresPayment: true,
-                    accessAllowed:true,
-                    planName: 'string | null',
-                    paymentStatus: 'SubscriptionPaymentStatus',
-                    subscriptionStatus: 'SubscriptionStatusValue',
-                  }}
-                  className={cn(
-                    "rounded-xl",
-                    isApprovedPlan
-                      ? "bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
-                      : "bg-emerald-500 text-white hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400",
-                  )}
-                  icon={<Octagon className="h-4 w-4" />}
-              
-                />
+                  <PublicVideoCallBookingDialog
+                    session={session}
+                    className={cn(
+                      "rounded-xl",
+                      isApprovedPlan
+                        ? "bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                        : "bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400",
+                    )}
+                    icon={<CalendarDays className="h-4 w-4" />}
+                  />
+                  <SubscriptionBadge
+                    tenantId={session?.user?.id ?? ""}
+                    subscriptionStatus={{
+                      currentPhase: "trial",
+                      daysRemaining: 0,
+                      validUntil: "",
+                      requiresPayment: true,
+                      accessAllowed: true,
+                      planName: "string | null",
+                      paymentStatus: "SubscriptionPaymentStatus",
+                      subscriptionStatus: "SubscriptionStatusValue",
+                    }}
+                    className={cn(
+                      "rounded-xl",
+                      isApprovedPlan
+                        ? "bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                        : "bg-emerald-500 text-white hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400",
+                    )}
+                    icon={<Octagon className="h-4 w-4" />}
+                  />
                 </>
               ) : null}
 
@@ -818,40 +808,13 @@ console.log("-------------------");
                   Cancelar suscripción
                 </Button>
               ) : null}
-
-             
             </div>
           </div>
-        ) : (
-          <div className="px-4 py-8 text-center sm:px-8 sm:py-10">
-            <span className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-500">
-              Planes
-            </span>
-            <h1 className="mt-3 text-3xl font-bold text-[#111827] dark:text-slate-100 md:text-4xl">
-              Elegí el plan que mejor se adapta a tu club
-            </h1>
-            <p className="mt-3 text-base text-[#4B5563] dark:text-slate-400 md:text-lg">
-              Todas las opciones incluyen actualizaciones constantes y acceso a
-              la experiencia mejorada de reservas.
-            </p>
-            {!session?.user?.id ? (
-              <p className="mt-4 text-sm text-[#4B5563]/80 dark:text-slate-500">
-                Iniciá sesión para contratar un plan o recibir más información.
-              </p>
-            ) : null}
-          </div>
-        )}
+        ) : null}
 
         {isChangingPlan || !currentPlanStatus || isRejectedPlan ? (
-          <>
-            {isChangingPlan && (
-              <div className="rounded-3xl border border-emerald-100 bg-white/70 p-6 text-center text-sm text-[#4B5563] dark:border-emerald-900/60 dark:bg-slate-950/80 dark:text-slate-400">
-                &quot;Seleccioná el nuevo plan que querés activar.&quot;
-              </div>
-            )}
-
-            <div ref={planGridRef} className="space-y-5">
-              <div className="flex justify-end">
+          <div id="ssdd" className="rounded-3xl p-8 text-center shadow-sm sm:p-10 border border-emerald-100 bg-white/70 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
+            <div className="flex justify-end">
                 <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white/85 px-3 py-1.5 shadow-sm shadow-emerald-50 dark:border-emerald-900/60 dark:bg-slate-950/85 dark:shadow-emerald-950/20">
                   <button
                     type="button"
@@ -887,6 +850,31 @@ console.log("-------------------");
                   </button>
                 </div>
               </div>
+            <span className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-500">
+              Planes
+            </span>
+            <h1 className="mt-3 text-3xl font-bold text-[#111827] dark:text-slate-100 md:text-4xl">
+              Elegí el plan que mejor se adapta a tu club
+            </h1>
+            <p className="mt-3 pb-6 text-base text-[#4B5563] dark:text-slate-400 md:text-lg">
+              Todas las opciones incluyen actualizaciones constantes y acceso a
+              la experiencia mejorada de reservas.
+            </p>
+
+            {!session?.user?.id ? (
+              <p className="mt-4 text-sm text-[#4B5563]/80 dark:text-slate-500">
+                Iniciá sesión para contratar un plan o recibir más información.
+              </p>
+            ) : null}
+
+            {isChangingPlan && (
+              <div className="rounded-3xl border border-emerald-100 bg-white/70 p-6 text-center text-sm text-[#4B5563] dark:border-emerald-900/60 dark:bg-slate-950/80 dark:text-slate-400">
+                &quot;Seleccioná el nuevo plan que querés activar.&quot;
+              </div>
+            )}
+
+            <div ref={planGridRef} className="space-y-5">
+              
 
               <Carousel
                 setApi={setCarouselApi}
@@ -899,15 +887,14 @@ console.log("-------------------");
                 <CarouselContent className="items-stretch">
                   {plans.map((plan) => {
                     const isSelected = selectedPlanId === plan.id;
-                    const isChangeFlow = Boolean(isApprovedPlan && isChangingPlan);
+                    const isChangeFlow = Boolean(
+                      isApprovedPlan && isChangingPlan,
+                    );
                     const isContactPlan = plan.id === "plan-4";
                     const displayPrice = getPlanDisplayPrice(plan);
 
                     return (
-                      <CarouselItem
-                        key={plan.id}
-                        className="md:basis-1/2"
-                      >
+                      <CarouselItem key={plan.id} className="md:basis-1/2">
                         <article
                           className={cn(
                             "flex h-full flex-col gap-6 rounded-3xl border border-emerald-100 bg-white/80 p-6 shadow-sm shadow-emerald-50 transition hover:shadow-md dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20",
@@ -937,7 +924,10 @@ console.log("-------------------");
 
                           <ul className="space-y-2 text-sm text-[#4B5563] dark:text-slate-300">
                             {plan.features.map((feature) => (
-                              <li key={feature} className="flex items-center gap-2">
+                              <li
+                                key={feature}
+                                className="flex items-center gap-2"
+                              >
                                 <Check className="h-4 w-4 text-emerald-500" />
                                 <span>{feature}</span>
                               </li>
@@ -959,7 +949,7 @@ console.log("-------------------");
                                 ? "Valor base fijo en dolares."
                                 : displayPrice.usesFallback
                                   ? "Precio en pesos no disponible por el momento. Se muestra el valor fijo en USD."
-                                  : "Precio actual en pesos argentinos traido desde el backend."}
+                                  : "Precio convertido a pesos al tipo de cambio oficial."}
                             </p>
                           </div>
 
@@ -1049,7 +1039,7 @@ console.log("-------------------");
                 ))}
               </div>
             </div>
-          </>
+          </div>
         ) : null}
 
         {selectedPlan && !isChangingPlan ? (
@@ -1058,8 +1048,6 @@ console.log("-------------------");
               <strong>{selectedPlan.title}</strong> seleccionado. Completa los
               siguientes datos para crear tu club y pasar a Mercado Pago.
             </div>
-
-            
 
             <section className="grid gap-6 lg:grid-cols-2">
               <article className="rounded-3xl border border-emerald-100 bg-white/80 p-6 shadow-sm dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
@@ -1246,17 +1234,17 @@ console.log("-------------------");
                   }}
                 />
               </article>
-
-
             </section>
-
-           
 
             <div className="flex justify-end border-t border-emerald-100 pt-6 dark:border-emerald-900/60">
               <Button
                 type="button"
                 className="w-full justify-center rounded-xl bg-emerald-500 px-6 py-3 font-medium text-white shadow-md transition-all hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400 md:w-auto"
-                disabled={redirecting || createTenantConfigMutation.isPending || !selectedPlan}
+                disabled={
+                  redirecting ||
+                  createTenantConfigMutation.isPending ||
+                  !selectedPlan
+                }
                 onClick={() => {
                   if (!redirecting) {
                     void handleCompleteSetup();
