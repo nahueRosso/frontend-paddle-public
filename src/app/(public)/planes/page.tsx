@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/carousel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -54,75 +55,148 @@ type Plan = {
   description: string;
   price: number;
   currency: string;
+  arsPrice?: number | null;
+  arsCurrency?: string | null;
   frequency: string;
   features: string[];
   highlight?: boolean;
   locked?: boolean;
 };
 
+
+
+// const basePlans: Plan[] = [
+//   {
+//     id: "Administrador",
+//     title: "Administrador",
+//     description:
+//       "Cuenta principal para el club. Permite definir horarios, cantidad de canchas y registrar manualmente pagos y reservas.",
+//     price: 22000,
+//     currency: "ARS",
+//     frequency: "mensuales",
+//     features: [
+//       "Panel administrativo completo",
+//       "Gestión manual de reservas y pagos",
+//       "Configuración de horarios y precios",
+//       "Visualización de turnos disponibles en la web",
+//     ],
+//   },
+//   {
+//     id: "Web",
+//     title: "Web",
+//     description:
+//       "Incluye todo lo del plan Administrador y habilita las reservas desde la web con pagos automáticos por Mercado Pago.",
+//     price: 50000,
+//     currency: "ARS",
+//     frequency: "mensuales",
+//     features: [
+//       "Todo lo del plan Administrador",
+//       "Reservas automáticas desde la web",
+//       "Integración con Mercado Pago",
+//       "Confirmación automática por correo o WhatsApp",
+//     ],
+//     highlight: true,
+//   },
+//   {
+//     id: "WhatsApp",
+//     title: "WhatsApp",
+//     description:
+//       "Incluye todo lo del plan Web y suma un chatbot automatizado para gestionar reservas, pagos y consultas desde WhatsApp.",
+//     price: 80000,
+//     currency: "ARS",
+//     frequency: "mensuales",
+//     features: [
+//       "Todo lo del plan Web",
+//       "Chatbot automatizado en WhatsApp",
+//       "Gestión de reservas y pagos desde WhatsApp",
+//       "Funcionalidad Match",
+//     ],
+//   },
+//   {
+//     id: "IA",
+//     title: "IA",
+//     description:
+//       "Incluye todo lo del plan WhatsApp y agrega automatización avanzada con inteligencia artificial para optimizar la gestión del club.",
+//     price: 122000,
+//     currency: "ARS",
+//     frequency: "mensuales",
+//     features: [
+//       "Todo lo del plan WhatsApp",
+//       "Automatización completa con IA",
+//       "Optimización operativa del club",
+//       "Atención y gestión avanzada automatizada",
+//     ],
+//   },
+// ];
+
 const basePlans: Plan[] = [
   {
-    id: "Administrador",
-    title: "Administrador",
+    id: "plan-1",
+    title: "Esencial",
     description:
-      "Cuenta principal para el club. Permite definir horarios, cantidad de canchas y registrar manualmente pagos y reservas.",
-    price: 22000,
-    currency: "ARS",
+      "La base operativa para digitalizar el club. Incluye gestión de reservas, canchas, jugadores, partidos y torneos, sin pagos online ni automatización por WhatsApp.",
+    price: 50,
+    currency: "USD",
     frequency: "mensuales",
     features: [
       "Panel administrativo completo",
-      "Gestión manual de reservas y pagos",
-      "Configuración de horarios y precios",
-      "Visualización de turnos disponibles en la web",
+      "Gestión de reservas, canchas y horarios",
+      "Administración de jugadores, partidos y torneos",
+      "Configuración de precios y disponibilidad",
+      "Reservas visibles desde la web",
     ],
   },
   {
-    id: "Web",
-    title: "Web",
+    id: "plan-2",
+    title: "Cobros",
     description:
-      "Incluye todo lo del plan Administrador y habilita las reservas desde la web con pagos automáticos por Mercado Pago.",
-    price: 50000,
-    currency: "ARS",
+      "Incluye todo lo del plan Esencial y suma Mercado Pago para cobrar reservas, partidos y torneos de forma más simple y automática.",
+    price: 70,
+    currency: "USD",
     frequency: "mensuales",
     features: [
-      "Todo lo del plan Administrador",
-      "Reservas automáticas desde la web",
+      "Todo lo del plan Esencial",
       "Integración con Mercado Pago",
-      "Confirmación automática por correo o WhatsApp",
+      "Cobro de reservas online",
+      "Cobro de partidos y torneos",
+      "Confirmación automática de pagos",
     ],
     highlight: true,
   },
   {
-    id: "WhatsApp",
-    title: "WhatsApp",
+    id: "plan-3",
+    title: "Automatizado",
     description:
-      "Incluye todo lo del plan Web y suma un chatbot automatizado para gestionar reservas, pagos y consultas desde WhatsApp.",
-    price: 80000,
-    currency: "ARS",
+      "Incluye todo lo del plan Cobros y agrega atención automatizada por WhatsApp para consultas, reservas y coordinación con jugadores.",
+    price: 85,
+    currency: "USD",
     frequency: "mensuales",
     features: [
-      "Todo lo del plan Web",
-      "Chatbot automatizado en WhatsApp",
-      "Gestión de reservas y pagos desde WhatsApp",
+      "Todo lo del plan Cobros",
+      "Automatización por WhatsApp",
+      "Gestión de reservas desde WhatsApp",
+      "Atención automatizada a jugadores",
       "Funcionalidad Match",
     ],
   },
   {
-    id: "IA",
-    title: "IA",
+    id: "plan-4",
+    title: "Premium",
     description:
-      "Incluye todo lo del plan WhatsApp y agrega automatización avanzada con inteligencia artificial para optimizar la gestión del club.",
-    price: 122000,
-    currency: "ARS",
+      "Incluye todo lo del plan Automatizado y suma una operación más dedicada, con número propio para el club y una experiencia exclusiva de atención y gestión.",
+    price: 100,
+    currency: "USD",
     frequency: "mensuales",
     features: [
-      "Todo lo del plan WhatsApp",
-      "Automatización completa con IA",
-      "Optimización operativa del club",
-      "Atención y gestión avanzada automatizada",
+      "Todo lo del plan Automatizado",
+      "Número de WhatsApp propio del club",
+      "Atención automatizada con canal exclusivo",
+      "Operación premium para el administrador",
+      "Modalidad de gestión dedicada",
     ],
   },
 ];
+
 
 
 type ConfigFormState = {
@@ -224,6 +298,9 @@ export default function PlansPage() {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
   const [carouselSnapCount, setCarouselSnapCount] = useState(0);
+  const [priceDisplayCurrency, setPriceDisplayCurrency] = useState<"ARS" | "USD">(
+    "ARS",
+  );
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [redirecting, setRedirecting] = useState(false);
@@ -307,8 +384,8 @@ export default function PlansPage() {
 
       return {
         ...plan,
-        price: backendPlan.price,
-        currency: backendPlan.currency,
+        arsPrice: backendPlan.price,
+        arsCurrency: backendPlan.currency,
       };
     });
   }, [paymentsPlans]);
@@ -366,25 +443,6 @@ export default function PlansPage() {
     };
   }, [carouselApi]);
 
-  // async function uploadLogo(file: File) {
-  //   const formData = new FormData();
-  //   formData.append("file", file);
-
-  //   const res = await fetch("/api/upload-logo", {
-  //     method: "POST",
-  //     body: formData,
-  //   });
-
-  //   if (!res.ok) {
-  //     throw new Error("Error subiendo logo");
-  //   }
-
-  //   const data = await res.json();
-
-  //   console.log("URL del logo:", data.url);
-
-  // }
-
   const formatDate = (value?: string | null) => {
     if (!value) {
       return "Sin fecha de vencimiento";
@@ -403,6 +461,26 @@ export default function PlansPage() {
       currency,
       maximumFractionDigits: 0,
     }).format(price);
+  };
+
+  const getPlanDisplayPrice = (plan: Plan) => {
+    if (
+      priceDisplayCurrency === "ARS" &&
+      typeof plan.arsPrice === "number" &&
+      plan.arsCurrency
+    ) {
+      return {
+        price: plan.arsPrice,
+        currency: plan.arsCurrency,
+        usesFallback: false,
+      };
+    }
+
+    return {
+      price: plan.price,
+      currency: plan.currency,
+      usesFallback: priceDisplayCurrency === "ARS",
+    };
   };
 
   const handlePlanSelection = (plan: Plan) => {
@@ -449,68 +527,6 @@ export default function PlansPage() {
     );
   };
 
-  // const handleCompleteSetup = async () => {
-  //   if (!session?.user?.id || !selectedPlan) {
-  //     setError("Necesitás elegir un plan e iniciar sesión.");
-  //     return;
-  //   }
-
-  //   setError(null);
-  //   setRedirecting(true);
-
-  //   try {
-  //     const response = await fetchWithTenantAdmin("/config", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({
-  //         planName: selectedPlan.id,
-  //         email: session.user.email,
-
-  //         tenantId: session.user.id,
-
-  //         clubName: configForm.clubName,
-  //         address: configForm.address,
-  //         province: configForm.province,
-  //         city: configForm.city,
-  //         contactPhone: configForm.contactPhone,
-  //         contactEmail: session.user.email,
-
-  //         turnDuration: configForm.turnDuration,
-  //         isDiscontinuous: configForm.isDiscontinuous,
-
-  //         openingMorning: configForm.openingMorning,
-  //         closingMorning: configForm.closingMorning,
-
-  //         openingEvening: configForm.isDiscontinuous
-  //           ? configForm.openingEvening
-  //           : null,
-
-  //         closingEvening: configForm.isDiscontinuous
-  //           ? configForm.closingEvening
-  //           : null,
-
-  //         courts: buildCourts(),
-
-  //         priceMode: configForm.priceMode,
-  //         basePrice: configForm.basePrice,
-
-  //         paymentPlanId: selectedPlan.id,
-  //       }),
-  //     });
-
-  //     const data = await response.json();
-  //     // window.location.href = data.init_point;
-  //     router.push("/contacto");
-  //   } catch (err) {
-  //     console.error("Error preparando suscripción:", err);
-  //     setError(
-  //       err instanceof Error
-  //         ? err.message
-  //         : "No pudimos guardar la configuración inicial.",
-  //     );
-  //     setRedirecting(false);
-  //   }
-  // };
   const handleCompleteSetup = async () => {
     if (!session?.user?.id || !selectedPlan) {
       setError("Necesitás elegir un plan e iniciar sesión.");
@@ -803,14 +819,7 @@ console.log("-------------------");
                 </Button>
               ) : null}
 
-              {/* {isApprovedPlan ? (
-                <Button
-                  className="rounded-xl bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
-                  onClick={triggerPlanChangeFlow}
-                >
-                  Cambiar plan
-                </Button>
-              ) : null} */}
+             
             </div>
           </div>
         ) : (
@@ -842,6 +851,43 @@ console.log("-------------------");
             )}
 
             <div ref={planGridRef} className="space-y-5">
+              <div className="flex justify-end">
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white/85 px-3 py-1.5 shadow-sm shadow-emerald-50 dark:border-emerald-900/60 dark:bg-slate-950/85 dark:shadow-emerald-950/20">
+                  <button
+                    type="button"
+                    onClick={() => setPriceDisplayCurrency("ARS")}
+                    className={cn(
+                      "text-xs font-medium transition-colors",
+                      priceDisplayCurrency === "ARS"
+                        ? "text-[#111827] dark:text-slate-100"
+                        : "text-[#4B5563] dark:text-slate-400",
+                    )}
+                  >
+                    ARS
+                  </button>
+                  <Switch
+                    checked={priceDisplayCurrency === "USD"}
+                    onCheckedChange={(checked) =>
+                      setPriceDisplayCurrency(checked ? "USD" : "ARS")
+                    }
+                    className="scale-90 cursor-pointer"
+                    aria-label="Cambiar visualizacion de precios entre pesos argentinos y dolares"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setPriceDisplayCurrency("USD")}
+                    className={cn(
+                      "text-xs font-medium transition-colors",
+                      priceDisplayCurrency === "USD"
+                        ? "text-[#111827] dark:text-slate-100"
+                        : "text-[#4B5563] dark:text-slate-400",
+                    )}
+                  >
+                    USD
+                  </button>
+                </div>
+              </div>
+
               <Carousel
                 setApi={setCarouselApi}
                 opts={{
@@ -854,6 +900,8 @@ console.log("-------------------");
                   {plans.map((plan) => {
                     const isSelected = selectedPlanId === plan.id;
                     const isChangeFlow = Boolean(isApprovedPlan && isChangingPlan);
+                    const isContactPlan = plan.id === "plan-4";
+                    const displayPrice = getPlanDisplayPrice(plan);
 
                     return (
                       <CarouselItem
@@ -898,47 +946,80 @@ console.log("-------------------");
 
                           <div className="mt-auto">
                             <span className="text-4xl font-bold text-[#111827] dark:text-slate-100">
-                              {formatPlanPrice(plan.currency, plan.price)}
+                              {formatPlanPrice(
+                                displayPrice.currency,
+                                displayPrice.price,
+                              )}
                             </span>
                             <span className="ml-1 text-sm text-[#4B5563]/80 dark:text-slate-500">
                               / {plan.frequency}
                             </span>
+                            <p className="mt-2 text-xs text-[#4B5563] dark:text-slate-400">
+                              {displayPrice.currency === "USD"
+                                ? "Valor base fijo en dolares."
+                                : displayPrice.usesFallback
+                                  ? "Precio en pesos no disponible por el momento. Se muestra el valor fijo en USD."
+                                  : "Precio actual en pesos argentinos traido desde el backend."}
+                            </p>
                           </div>
 
                           <div className="pt-2">
-                            <Button
-                              type="button"
-                              disabled={plan.locked || redirecting}
-                              className={cn(
-                                "w-full justify-center rounded-xl px-4 py-3 font-medium transition-all",
-                                plan.highlight
-                                  ? "bg-emerald-500 text-white shadow-md hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
-                                  : "border border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:border-emerald-500/60 dark:text-emerald-300 dark:hover:bg-emerald-500/10",
-                              )}
-                              onClick={() => {
-                                if (plan.locked) {
-                                  return;
-                                }
-                                if (isChangeFlow) {
-                                  void submitPlanChange(plan.id);
-                                  return;
-                                }
-                                handlePlanSelection(plan);
-                              }}
-                            >
-                              {plan.locked ? (
-                                <>
-                                  <Lock className="mr-2 h-4 w-4" />
-                                  Disponible próximamente
-                                </>
-                              ) : isChangeFlow ? (
-                                "Cambiar a este plan"
-                              ) : isSelected ? (
-                                "Plan seleccionado"
+                            {isContactPlan && !plan.locked && !isChangeFlow ? (
+                              session?.user?.email ? (
+                                <PublicVideoCallBookingDialog
+                                  session={session}
+                                  triggerLabel="Contactate con nosotros"
+                                  className="w-full justify-center rounded-xl border border-emerald-500 px-4 py-3 font-medium text-emerald-600 transition-all hover:bg-emerald-50 dark:border-emerald-500/60 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
+                                  icon={<CalendarDays className="h-4 w-4" />}
+                                />
                               ) : (
-                                "Elegir este plan"
-                              )}
-                            </Button>
+                                <Button
+                                  type="button"
+                                  disabled={redirecting}
+                                  className="w-full justify-center rounded-xl border border-emerald-500 px-4 py-3 font-medium text-emerald-600 transition-all hover:bg-emerald-50 dark:border-emerald-500/60 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
+                                  onClick={() => {
+                                    router.push("/login?redirect=/planes");
+                                  }}
+                                >
+                                  <CalendarDays className="mr-2 h-4 w-4" />
+                                  Contactate con nosotros
+                                </Button>
+                              )
+                            ) : (
+                              <Button
+                                type="button"
+                                disabled={plan.locked || redirecting}
+                                className={cn(
+                                  "w-full justify-center rounded-xl px-4 py-3 font-medium transition-all",
+                                  plan.highlight
+                                    ? "bg-emerald-500 text-white shadow-md hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                                    : "border border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:border-emerald-500/60 dark:text-emerald-300 dark:hover:bg-emerald-500/10",
+                                )}
+                                onClick={() => {
+                                  if (plan.locked) {
+                                    return;
+                                  }
+                                  if (isChangeFlow) {
+                                    void submitPlanChange(plan.id);
+                                    return;
+                                  }
+                                  handlePlanSelection(plan);
+                                }}
+                              >
+                                {plan.locked ? (
+                                  <>
+                                    <Lock className="mr-2 h-4 w-4" />
+                                    Disponible próximamente
+                                  </>
+                                ) : isChangeFlow ? (
+                                  "Cambiar a este plan"
+                                ) : isSelected ? (
+                                  "Plan seleccionado"
+                                ) : (
+                                  "Obtener prueba gratis"
+                                )}
+                              </Button>
+                            )}
                           </div>
                         </article>
                       </CarouselItem>

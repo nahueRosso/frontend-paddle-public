@@ -52,6 +52,7 @@ type PublicVideoCallBookingDialogProps = {
   session: Session | null;
   className?: string;
   icon?: ReactNode;
+  triggerLabel?: string;
 };
 
 type BookingFormState = {
@@ -126,6 +127,7 @@ export function PublicVideoCallBookingDialog({
   session,
   className,
   icon,
+  triggerLabel = "Obtener prueba gratis",
 }: PublicVideoCallBookingDialogProps) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<BookingFormState>(DEFAULT_FORM);
@@ -335,7 +337,7 @@ export function PublicVideoCallBookingDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <Button type="button" className={className} onClick={() => setOpen(true)}>
         {icon}
-        Obtener prueba gratis
+        {triggerLabel}
       </Button>
 
       <DialogContent className="max-h-[82vh] overflow-y-auto border border-emerald-100 bg-white p-0 shadow-2xl dark:border-emerald-900/50 dark:bg-slate-950 sm:max-w-xl">

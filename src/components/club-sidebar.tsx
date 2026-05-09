@@ -18,6 +18,11 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SectionId } from "@/types/club";
 
@@ -51,6 +56,22 @@ const navItems = [
   },
   { id: "torneos" as const, label: "Torneos", icon: Trophy, disabled: false },
 ];
+
+function getClubInitials(clubName: string) {
+  const words = clubName
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (words.length === 0) {
+    return "CP";
+  }
+
+  return words
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 // export function ClubSidebar({ clubName, icon }: { clubName: string; icon?: string }) {
 //   const router = useRouter();
@@ -152,12 +173,16 @@ export function ClubSidebar({
 "
         >
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/15 backdrop-blur">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={icon || "/images.png"}
-              alt={clubName}
-              className="h-7 w-7 rounded-xl object-cover"
-            />
+            <Avatar className="h-7 w-7 rounded-xl">
+              <AvatarImage
+                src={icon}
+                alt={clubName}
+                className="rounded-xl object-cover"
+              />
+              <AvatarFallback className="rounded-xl bg-white/15 text-[11px] font-semibold tracking-wide text-white">
+                {getClubInitials(clubName)}
+              </AvatarFallback>
+            </Avatar>
           </div>
           <div className="flex flex-col gap-0.5 overflow-hidden group-data-[collapsible=icon]:hidden">
             <span className="truncate text-sm font-semibold text-white">
