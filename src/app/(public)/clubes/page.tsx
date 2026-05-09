@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTenantConfigsQuery } from "@/hooks/queries/tenant-config";
 import { useRouter } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { HeroLoader } from "@/components/hero-loader";
 
 // export const metadata: Metadata = {
 //   title: `Complejos | ${company.brandName}`,
@@ -12,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // };
 
 export default function ComplejosPage() {
-  const { data: complexes = [] } = useTenantConfigsQuery();
+  const { data: complexes = [], isLoading } = useTenantConfigsQuery();
   const [filters, setFilters] = useState({
     province: "",
     hasWebBooking: false,
@@ -49,6 +50,11 @@ export default function ComplejosPage() {
   );
   return (
     <section className="flex h-[100vh] flex-1 flex-col bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.16),_transparent_34%),linear-gradient(180deg,_#f8fafc_0%,_#ecfdf5_48%,_#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.2),_transparent_26%),linear-gradient(180deg,_#020617_0%,_#052e2b_38%,_#020617_100%)]">
+      <HeroLoader
+        visible={isLoading}
+        title="Mi Club Pádel"
+        message="Cargando datos..."
+      />
       <div className="mx-auto mt-10 grid w-full max-w-5xl flex-1 gap-12 px-4 py-16 text-[#4B5563] dark:text-slate-300 sm:px-6 md:grid-cols-[minmax(0,1fr)_320px]">
         {/* === LISTADO === */}
         <div className="space-y-8">

@@ -130,6 +130,9 @@ export function PublicVideoCallBookingDialog({
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<BookingFormState>(DEFAULT_FORM);
   const [booking, setBooking] = useState<CalenderBooking | null>(null);
+  const [meetingStatus, setMeetingStatus] = useState<
+    "scheduled" | "available" | "not_trial" | null
+  >(null);
   const [availability, setAvailability] = useState<CalenderAvailability | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedSlot, setSelectedSlot] = useState<CalenderAvailabilitySlot | null>(null);
@@ -154,6 +157,7 @@ export function PublicVideoCallBookingDialog({
 
   const resetBookingFlow = () => {
     setBooking(null);
+    setMeetingStatus(null);
     setAvailability(null);
     setSelectedDate(undefined);
     setSelectedSlot(null);
@@ -166,6 +170,13 @@ export function PublicVideoCallBookingDialog({
 
     try {
       const response = await getMyCalenderBooking(email);
+      setMeetingStatus(
+        response.meetingStatus === "scheduled" ||
+          response.meetingStatus === "available" ||
+          response.meetingStatus === "not_trial"
+          ? response.meetingStatus
+          : null,
+      );
       setBooking(response.hasActiveBooking ? response.booking : null);
 
       if (!response.hasActiveBooking) {
@@ -174,6 +185,7 @@ export function PublicVideoCallBookingDialog({
       }
     } catch (loadError) {
       setBooking(null);
+      setMeetingStatus(null);
       setError(
         loadError instanceof Error
           ? loadError.message
@@ -202,7 +214,7 @@ export function PublicVideoCallBookingDialog({
   }, [open, session, sessionEmail]);
 
   useEffect(() => {
-    if (!open || booking || !selectedDate) {
+    if (!open || booking || meetingStatus !== "available" || !selectedDate) {
       return;
     }
 
@@ -242,7 +254,7 @@ export function PublicVideoCallBookingDialog({
     return () => {
       cancelled = true;
     };
-  }, [booking, open, selectedDate]);
+  }, [booking, meetingStatus, open, selectedDate]);
 
   const handleCancelBooking = async () => {
     if (!booking) {
@@ -255,9 +267,7 @@ export function PublicVideoCallBookingDialog({
     try {
       const response = await cancelCalenderBooking(booking.id);
       toast.success(response.message || "Reserva cancelada.");
-      setBooking(null);
-      setAvailability(null);
-      setSelectedSlot(null);
+      await loadBooking(sessionEmail);
     } catch (cancelError) {
       setError(
         cancelError instanceof Error
@@ -325,22 +335,22 @@ export function PublicVideoCallBookingDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <Button type="button" className={className} onClick={() => setOpen(true)}>
         {icon}
-        Agendar videollamada
+        Obtener prueba gratis
       </Button>
 
-      <DialogContent className="max-h-[90vh] overflow-y-auto border border-emerald-100 bg-white p-0 shadow-2xl dark:border-emerald-900/50 dark:bg-slate-950 sm:max-w-2xl">
+      <DialogContent className="max-h-[82vh] overflow-y-auto border border-emerald-100 bg-white p-0 shadow-2xl dark:border-emerald-900/50 dark:bg-slate-950 sm:max-w-xl">
         <DialogHeader>
-          <div className="border-b border-emerald-100 bg-emerald-50/70 px-6 py-5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+          <div className="border-b border-emerald-100 bg-emerald-50/70 px-5 py-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
             <DialogTitle className="text-[#111827] dark:text-slate-100">
               Agendar videollamada
             </DialogTitle>
             <DialogDescription className="mt-1 text-slate-600 dark:text-slate-300">
-              Consultá si ya tenés una reserva activa y, si no existe, elegí fecha y horario.
+              Conocé la plataforma en una videollamada y obtené 15 días gratis
             </DialogDescription>
           </div>
         </DialogHeader>
 
-        <div className="space-y-5 px-6 py-6">
+        <div className="space-y-4 px-5 py-4">
           {!sessionEmail ? (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-100">
               Necesitamos un email válido en tu sesión para consultar y crear la reserva pública.
@@ -379,7 +389,7 @@ export function PublicVideoCallBookingDialog({
           ) : null}
 
           {!loadingBooking && booking ? (
-            <div className="space-y-4 rounded-3xl border border-emerald-100 bg-emerald-50/60 p-5 dark:border-emerald-900/50 dark:bg-emerald-950/20">
+            <div className="space-y-4 rounded-3xl border border-emerald-100 bg-emerald-50/60 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/20">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
@@ -441,9 +451,19 @@ export function PublicVideoCallBookingDialog({
             </div>
           ) : null}
 
-          {!loadingBooking && !booking && sessionEmail ? (
-            <div className="space-y-5">
-              <div className="rounded-3xl border border-emerald-100 bg-slate-50/90 p-5 shadow-sm dark:border-emerald-900/40 dark:bg-slate-900/70">
+          {!loadingBooking && meetingStatus === "not_trial" && sessionEmail ? (
+            <Alert className="border-amber-200 bg-amber-50/70 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-100">
+              <AlertCircle />
+              <AlertTitle>La prueba gratis ya no está disponible</AlertTitle>
+              <AlertDescription>
+                Este email ya no está en período de trial, así que no puede agendar una nueva videollamada de prueba.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+
+          {!loadingBooking && !booking && meetingStatus === "available" && sessionEmail ? (
+            <div className="space-y-4">
+              <div className="rounded-3xl border border-emerald-100 bg-slate-50/90 p-4 shadow-sm dark:border-emerald-900/40 dark:bg-slate-900/70">
                 <div className="flex items-center gap-2">
                   <CalendarDays className="h-4 w-4 text-emerald-500" />
                   <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -460,7 +480,8 @@ export function PublicVideoCallBookingDialog({
                       setSelectedSlot(null);
                     }}
                     disabled={(date) => date < today || date > maxDate}
-                    className="w-full"
+                    className="w-full bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100"
+                    
                   />
                 </div>
                 <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
@@ -487,7 +508,7 @@ export function PublicVideoCallBookingDialog({
               </div>
 
               {selectedDate ? (
-                <div className="rounded-3xl border border-emerald-100 bg-slate-50/90 p-5 shadow-sm dark:border-emerald-900/40 dark:bg-slate-900/70">
+                <div className="rounded-3xl border border-emerald-100 bg-slate-50/90 p-4 shadow-sm dark:border-emerald-900/40 dark:bg-slate-900/70">
                   <div className="flex items-center gap-2">
                     <Clock3 className="h-4 w-4 text-emerald-500" />
                     <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -506,7 +527,7 @@ export function PublicVideoCallBookingDialog({
                   availability &&
                   !availability.isBlockedDate &&
                   availability.slots.length > 0 ? (
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="mt-4 grid max-h-52 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
                       {availability.slots.map((slot) => {
                         const isSelected = selectedSlot?.startTime === slot.startTime;
 
@@ -552,7 +573,7 @@ export function PublicVideoCallBookingDialog({
               ) : null}
 
               {selectedDate && selectedSlot && availability ? (
-                <div className="rounded-3xl border border-emerald-100 bg-slate-50/90 p-5 shadow-sm dark:border-emerald-900/40 dark:bg-slate-900/70">
+                <div className="rounded-3xl border border-emerald-100 bg-slate-50/90 p-4 shadow-sm dark:border-emerald-900/40 dark:bg-slate-900/70">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -613,6 +634,16 @@ export function PublicVideoCallBookingDialog({
                 </Empty>
               ) : null}
             </div>
+          ) : null}
+
+          {!loadingBooking && !booking && !meetingStatus && sessionEmail ? (
+            <Alert className="border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200">
+              <AlertCircle />
+              <AlertTitle>No pudimos determinar el estado del trial</AlertTitle>
+              <AlertDescription>
+                Intentá nuevamente en unos segundos. Si el problema sigue, revisá el estado de la suscripción antes de agendar.
+              </AlertDescription>
+            </Alert>
           ) : null}
         </div>
       </DialogContent>

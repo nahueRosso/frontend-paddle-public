@@ -58,11 +58,9 @@ export async function changePlan(payload: ChangePlanPayload) {
 
 export async function cancelPlan(payload: CancelPlanPayload) {
   const res = await fetchWithTenantAdmin(
-    "/payments-suscription/mercadopago/cancel",
+    `/config/${encodeURIComponent(payload.tenantId)}/subscription`,
     {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      method: "DELETE",
     },
   );
 

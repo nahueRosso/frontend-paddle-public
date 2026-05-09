@@ -107,6 +107,8 @@ export function ContactForm() {
             name="message"
             required
             rows={5}
+            minLength={2}
+            maxLength={300}
             value={formData.message}
             onChange={handleChange}
             placeholder="Contanos cómo podemos ayudarte..."

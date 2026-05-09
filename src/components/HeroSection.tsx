@@ -1,17 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import NextImage from "next/image";
-import { Baloo_2 } from "next/font/google";
 
 import { useAppTheme } from "@/components/app-theme-provider";
 import { FeatureShowcaseDialog } from "@/components/feature-showcase-dialog";
-
-const balooFont = Baloo_2({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+import { HeroLoader } from "@/components/hero-loader";
 
 const HERO_BACKGROUND_SRC = "/cancha-de-paddle.png";
 const HERO_BACKGROUND_DARK_SRC = "/cancha-de-paddle-dark-2.png";
@@ -58,51 +53,7 @@ export function HeroSection() {
 
   return (
     <div className="relative flex min-h-screen w-full flex-col justify-center overflow-hidden bg-slate-950">
-      <AnimatePresence>
-        {!isBackgroundReady ? (
-          <motion.div
-            key="hero-loader"
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-emerald-900 via-emerald-300 to-teal-500 text-slate-700"
-            initial={{ opacity: 1 }}
-            exit={{
-              opacity: 0,
-              transition: { duration: 0.5, ease: "easeOut" },
-            }}
-          >
-            <motion.div
-              className={`mb-6 text-3xl font-bold tracking-wide ${balooFont.className}`}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
-            >
-              Mi Club Pádel
-            </motion.div>
-
-            <motion.span
-              className="mb-4 h-16 w-16 rounded-full border-4 border-slate-400/40 border-t-slate-700"
-              animate={{ rotate: 360 }}
-              transition={{
-                repeat: Infinity,
-                duration: 1.4,
-                ease: "linear",
-              }}
-            />
-
-            <motion.p
-              className="text-lg font-medium"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                delay: 0.3,
-                duration: 0.6,
-                ease: [0.16, 1, 0.3, 1] as const,
-              }}
-            >
-              Configurando tu plataforma…
-            </motion.p>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      <HeroLoader visible={!isBackgroundReady} />
 
       <div className="absolute inset-0 overflow-hidden">
         <NextImage
@@ -181,7 +132,7 @@ export function HeroSection() {
           >
             <a
               className="inline-flex w-full items-center justify-center rounded-full bg-emerald-500 px-8 py-3 text-base font-semibold text-emerald-950 shadow-xl shadow-emerald-500/30 transition hover:translate-y-0.5 hover:bg-emerald-400 hover:shadow-emerald-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 sm:w-auto"
-              href="#comenzar"
+              href="/planes"
             >
               Probar gratis
             </a>

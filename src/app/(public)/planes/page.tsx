@@ -6,10 +6,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   CalendarDays,
   Check,
-  CreditCard,
   Loader2,
   Lock,
   NotebookPen,
+  Octagon,
   Settings,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -32,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import {
   useCancelPlanMutation,
   useChangePlanMutation,
@@ -46,6 +45,8 @@ import { ImageUploader } from "@/components/PageImageUploader";
 import { PublicVideoCallBookingDialog } from "@/components/public-video-call-booking-dialog";
 import { ARG_PROVINCES } from "@/const/province";
 import { normalizeImageFile } from "@/lib/image-normalizer";
+import { SubscriptionBadge } from "@/components/public-mp-suscription";
+import { HeroLoader } from "@/components/hero-loader";
 
 type Plan = {
   id: string;
@@ -160,13 +161,65 @@ const defaultConfig: ConfigFormState = {
   courtCount: 2,
 };
 
+const TIME_PATTERN = /^\d{2}:\d{2}$/;
+
+function validateInitialConfig(
+  configForm: ConfigFormState,
+  contactEmail: string,
+) {
+  const trimmedClubName = configForm.clubName.trim();
+  if (trimmedClubName.length < 2 || trimmedClubName.length > 50) {
+    return "El nombre del club debe tener entre 2 y 50 caracteres.";
+  }
+
+  const trimmedAddress = configForm.address.trim();
+  if (trimmedAddress.length < 2 || trimmedAddress.length > 100) {
+    return "La dirección debe tener entre 2 y 100 caracteres.";
+  }
+
+  const trimmedCity = configForm.city.trim();
+  if (trimmedCity.length < 2 || trimmedCity.length > 50) {
+    return "La ciudad debe tener entre 2 y 50 caracteres.";
+  }
+
+  const trimmedProvince = configForm.province.trim();
+  if (trimmedProvince.length < 2 || trimmedProvince.length > 50) {
+    return "La provincia debe tener entre 2 y 50 caracteres.";
+  }
+
+  const trimmedPhone = configForm.contactPhone.trim();
+  if (trimmedPhone.length < 6 || trimmedPhone.length > 20) {
+    return "El teléfono de contacto debe tener entre 6 y 20 caracteres.";
+  }
+
+  const trimmedEmail = contactEmail.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+    return "Ingresá un email de contacto válido.";
+  }
+
+  if (!Number.isInteger(configForm.courtCount) || configForm.courtCount < 1) {
+    return "Ingresá una cantidad válida de canchas.";
+  }
+
+  if (!TIME_PATTERN.test(configForm.openingMorning)) {
+    return "La apertura debe tener formato HH:mm.";
+  }
+
+  if (!TIME_PATTERN.test(configForm.closingMorning)) {
+    return "El cierre debe tener formato HH:mm.";
+  }
+
+  return null;
+}
+
 export default function PlansPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { session, planStatus } = useAuth();
+  const { session, planStatus, isPlanStatusLoading, status } = useAuth();
   const {
     data: paymentsPlans,
     error: paymentsPlansError,
+    isLoading: isPaymentsPlansLoading,
   } = usePaymentsPlansQuery();
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
@@ -183,6 +236,10 @@ export default function PlansPage() {
 
   const [iconPreview, setIconPreview] = useState<string | null>(null);
   const [iconFile, setIconFile] = useState<File | null>(null);
+  const isPageLoading =
+    status === "loading" ||
+    (Boolean(session?.user?.id) && isPlanStatusLoading) ||
+    isPaymentsPlansLoading;
 
   const handleLogoSelect = async (file: File, previewUrl: string) => {
     URL.revokeObjectURL(previewUrl);
@@ -234,9 +291,7 @@ export default function PlansPage() {
   const isApprovedPlan = currentPlanStatus === "approved";
   const isPendingPlan = currentPlanStatus === "pending";
   const isRejectedPlan = currentPlanStatus === "rejected";
-  const shouldShowStatusCard =
-    (isApprovedPlan || isPendingPlan || isRejectedPlan) &&
-    !isChangingPlan;
+  const shouldShowStatusCard = (isApprovedPlan || isPendingPlan) && !isChangingPlan;
   const plans = useMemo(() => {
     const backendPlansById = new Map(
       (paymentsPlans ?? []).map((plan) => [plan.id, plan]),
@@ -462,6 +517,13 @@ export default function PlansPage() {
       return;
     }
 
+    const contactEmail = session.user.email || configForm.contactEmail;
+    const validationError = validateInitialConfig(configForm, contactEmail);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setError(null);
     setRedirecting(true);
 
@@ -481,12 +543,12 @@ export default function PlansPage() {
       formData.append("planName", selectedPlan.id);
       formData.append("email", session.user.email || "");
       formData.append("tenantId", session.user.id);
-      formData.append("clubName", configForm.clubName);
-      formData.append("address", configForm.address);
-      formData.append("province", configForm.province);
-      formData.append("city", configForm.city);
-      formData.append("contactPhone", configForm.contactPhone);
-      formData.append("contactEmail", session.user.email || "");
+      formData.append("clubName", configForm.clubName.trim());
+      formData.append("address", configForm.address.trim());
+      formData.append("province", configForm.province.trim());
+      formData.append("city", configForm.city.trim());
+      formData.append("contactPhone", configForm.contactPhone.trim());
+      formData.append("contactEmail", contactEmail.trim());
       formData.append("turnDuration", String(configForm.turnDuration));
       formData.append("isDiscontinuous", String(configForm.isDiscontinuous));
       formData.append("openingMorning", configForm.openingMorning);
@@ -546,14 +608,6 @@ console.log("-------------------");
     }
   };
 
-  const triggerPlanChangeFlow = () => {
-    setIsChangingPlan(true);
-    setSelectedPlanId(null);
-    setError(null);
-    setRedirecting(false);
-    requestAnimationFrame(scrollToPlanGrid);
-  };
-
   const submitPlanChange = async (newPlanId: string) => {
     if (!session?.user?.id) {
       setError("Necesitás iniciar sesión para cambiar tu plan.");
@@ -601,7 +655,9 @@ console.log("-------------------");
         tenantId: session.user.id,
       });
       toast.success("Tu suscripción fue cancelada correctamente.");
-      router.push("/");
+      setIsChangingPlan(false);
+      setSelectedPlanId(null);
+      requestAnimationFrame(scrollToPlanGrid);
     } catch (err) {
       console.error("Error cancelando suscripción:", err);
       setError(
@@ -616,6 +672,11 @@ console.log("-------------------");
 
   return (
     <main className="px-4 pb-16 pt-28 text-[#4B5563] dark:text-slate-300 sm:px-6 sm:pt-32">
+      <HeroLoader
+        visible={isPageLoading}
+        title="Mi Club Pádel"
+        message="Cargando datos..."
+      />
       <section className="mx-auto flex max-w-5xl flex-col gap-12">
         {shouldShowStatusCard && activePlan ? (
           <div
@@ -625,8 +686,6 @@ console.log("-------------------");
                 "border border-emerald-100 bg-white/70 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20",
               isPendingPlan &&
                 "border border-amber-200 bg-amber-50/80 dark:border-amber-900/60 dark:bg-amber-950/20",
-              isRejectedPlan &&
-                "border border-rose-200 bg-rose-50/80 dark:border-rose-900/60 dark:bg-rose-950/20",
             )}
           >
             <span
@@ -634,14 +693,9 @@ console.log("-------------------");
                 "text-sm font-semibold uppercase tracking-[0.3em]",
                 isApprovedPlan && "text-emerald-500",
                 isPendingPlan && "text-amber-600 dark:text-amber-300",
-                isRejectedPlan && "text-rose-600 dark:text-rose-300",
               )}
             >
-              {isApprovedPlan
-                ? "Plan aprobado"
-                : isPendingPlan
-                  ? "Plan pendiente"
-                  : "Plan rechazado"}
+              {isApprovedPlan ? "Plan aprobado" : "Plan pendiente"}
             </span>
             <h1 className="mt-4 text-3xl font-bold text-[#111827] dark:text-slate-100">
               {activePlan.title}
@@ -649,49 +703,36 @@ console.log("-------------------");
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               {isApprovedPlan
                 ? "Tu plan ya fue aprobado. Desde acá podés coordinar la videollamada y gestionar tu suscripción."
-                : isPendingPlan
-                  ? "Tu compra está pendiente de aprobación. El siguiente paso es agendar la videollamada para terminar la activación."
-                  : "Tu solicitud no fue aprobada. Podés volver a elegir un plan y reintentar la configuración."}
+                : "Tu compra está pendiente de aprobación. El siguiente paso es agendar la videollamada para terminar la activación."}
             </p>
 
             <div
               className={cn(
                 "mt-6 grid gap-6 rounded-2xl p-6 text-left sm:grid-cols-2",
                 isApprovedPlan &&
-                  "border border-emerald-50 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20",
+                  "border border-emerald-50 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-transparent",
                 isPendingPlan &&
-                  "border border-amber-200 bg-white/70 dark:border-amber-900/60 dark:bg-slate-900/60",
-                isRejectedPlan &&
-                  "border border-rose-200 bg-white/70 dark:border-rose-900/60 dark:bg-slate-900/60",
+                  "border border-amber-200 bg-white/70 dark:border-amber-900/60 dark:bg-transparent",
               )}
             >
-              <div>
-                <p className="text-xs uppercase tracking-wide text-emerald-600">
-                  Vigencia
-                </p>
-                <p className="text-base font-semibold text-[#111827] dark:text-slate-100">
-                  {formatDate(planStatus?.validUntil)}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-emerald-600">
-                  Identificador
-                </p>
-                <p className="text-sm font-mono text-[#111827] dark:text-slate-100">
-                  {planStatus?.planId ?? "N/D"}
-                </p>
-              </div>
-            </div>
 
             {activePlan.features.length ? (
-              <div className="mt-6 rounded-2xl border border-emerald-100 bg-white p-6 text-left dark:border-emerald-900/60 dark:bg-slate-900/70">
-                <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">
-                  {isRejectedPlan ? "Plan solicitado" : "Beneficios incluidos"}
+              <div>
+                <p className={cn(
+                "text-xs uppercase tracking-wide",
+                isApprovedPlan && "text-emerald-500",
+                isPendingPlan && "text-amber-600 dark:text-amber-300",
+              )}>
+                  Beneficios incluidos
                 </p>
                 <ul className="mt-3 space-y-2 text-sm text-[#4B5563] dark:text-slate-300">
                   {activePlan.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-emerald-500" />
+                      <Check className={cn(
+                "h-4 w-4",
+                isApprovedPlan && "text-emerald-500",
+                isPendingPlan && "text-amber-600 dark:text-amber-300",
+              )} />
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -699,8 +740,25 @@ console.log("-------------------");
               </div>
             ) : null}
 
+              <div>
+                <p className={cn(
+                "text-xs uppercase tracking-wide",
+                isApprovedPlan && "text-emerald-500",
+                isPendingPlan && "text-amber-600 dark:text-amber-300",
+              )}>
+                  Vigencia
+                </p>
+                <p className="text-base font-semibold text-[#111827] dark:text-slate-100">
+                  {formatDate(planStatus?.validUntil)}
+                </p>
+              </div>
+              </div>
+
+         
+
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              {(isApprovedPlan || isPendingPlan) ? (
+              {( isPendingPlan) ? (
+                <>
                 <PublicVideoCallBookingDialog
                   session={session}
                   className={cn(
@@ -711,7 +769,30 @@ console.log("-------------------");
                   )}
                   icon={<CalendarDays className="h-4 w-4" />}
                 />
+                <SubscriptionBadge
+                  tenantId={session?.user?.id ?? ''}
+                  subscriptionStatus={{
+                    currentPhase: 'trial',
+                    daysRemaining: 0,
+                    validUntil: '',
+                    requiresPayment: true,
+                    accessAllowed:true,
+                    planName: 'string | null',
+                    paymentStatus: 'SubscriptionPaymentStatus',
+                    subscriptionStatus: 'SubscriptionStatusValue',
+                  }}
+                  className={cn(
+                    "rounded-xl",
+                    isApprovedPlan
+                      ? "bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                      : "bg-emerald-500 text-white hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400",
+                  )}
+                  icon={<Octagon className="h-4 w-4" />}
+              
+                />
+                </>
               ) : null}
+
               {isApprovedPlan ? (
                 <Button
                   variant="outline"
@@ -721,22 +802,15 @@ console.log("-------------------");
                   Cancelar suscripción
                 </Button>
               ) : null}
-              {isApprovedPlan ? (
+
+              {/* {isApprovedPlan ? (
                 <Button
                   className="rounded-xl bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
                   onClick={triggerPlanChangeFlow}
                 >
                   Cambiar plan
                 </Button>
-              ) : null}
-              {isRejectedPlan ? (
-                <Button
-                  className="rounded-xl bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:text-slate-950 dark:hover:bg-rose-400"
-                  onClick={triggerPlanChangeFlow}
-                >
-                  Elegir otro plan
-                </Button>
-              ) : null}
+              ) : null} */}
             </div>
           </div>
         ) : (
@@ -918,6 +992,8 @@ console.log("-------------------");
                     <Input
                       id="clubName"
                       value={configForm.clubName}
+                      minLength={2}
+                      maxLength={50}
                       onChange={(e) =>
                         handleConfigChange("clubName", e.target.value)
                       }
@@ -930,6 +1006,8 @@ console.log("-------------------");
                     <Input
                       id="address"
                       value={configForm.address}
+                      minLength={2}
+                      maxLength={100}
                       onChange={(e) =>
                         handleConfigChange("address", e.target.value)
                       }
@@ -943,6 +1021,8 @@ console.log("-------------------");
                       <Input
                         id="city"
                         value={configForm.city ?? ""}
+                        minLength={2}
+                        maxLength={50}
                         onChange={(e) =>
                           handleConfigChange("city", e.target.value)
                         }
@@ -979,6 +1059,8 @@ console.log("-------------------");
                     <Input
                       id="contactPhone"
                       value={configForm.contactPhone}
+                      minLength={6}
+                      maxLength={20}
                       onChange={(e) =>
                         handleConfigChange("contactPhone", e.target.value)
                       }
@@ -991,6 +1073,7 @@ console.log("-------------------");
                     <Input
                       id="contactEmail"
                       type="email"
+                      maxLength={254}
                       value={session?.user?.email ?? configForm.contactEmail}
                       onChange={(e) =>
                         handleConfigChange("contactEmail", e.target.value)
@@ -1009,27 +1092,12 @@ console.log("-------------------");
                 <div className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label>Duración del turno (min)</Label>
-                      <Input
-                        type="number"
-                        min={30}
-                        max={180}
-                        step={30}
-                        value={configForm.turnDuration}
-                        onChange={(event) =>
-                          handleConfigChange(
-                            "turnDuration",
-                            Number(event.target.value) || 0,
-                          )
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
                       <Label>Número de canchas</Label>
                       <Input
                         type="number"
                         min={1}
                         max={12}
+                        step={1}
                         value={configForm.courtCount}
                         onChange={(event) =>
                           handleConfigChange(
@@ -1039,26 +1107,8 @@ console.log("-------------------");
                         }
                       />
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between rounded-2xl border border-emerald-100 p-4 dark:border-emerald-900/60 dark:bg-slate-900/50">
-                    <div>
-                      <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">
-                        Horario cortado
-                      </p>
-                      <p className="text-xs text-[#4B5563]/80 dark:text-slate-400">
-                        Activá si abrís en dos franjas.
-                      </p>
-                    </div>
-                    <Switch
-                      checked={configForm.isDiscontinuous}
-                      onCheckedChange={(value) =>
-                        handleConfigChange("isDiscontinuous", value)
-                      }
-                    />
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label>Apertura (mañana)</Label>
+                      <Label>Apertura</Label>
                       <Input
                         type="time"
                         value={configForm.openingMorning}
@@ -1070,8 +1120,10 @@ console.log("-------------------");
                         }
                       />
                     </div>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label>Cierre (mañana)</Label>
+                      <Label>Cierre</Label>
                       <Input
                         type="time"
                         value={configForm.closingMorning}
@@ -1083,119 +1135,43 @@ console.log("-------------------");
                         }
                       />
                     </div>
-                    {configForm.isDiscontinuous ? (
-                      <>
-                        <div className="space-y-2">
-                          <Label>Apertura (tarde)</Label>
-                          <Input
-                            type="time"
-                            value={configForm.openingEvening}
-                            onChange={(event) =>
-                              handleConfigChange(
-                                "openingEvening",
-                                event.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Cierre (tarde)</Label>
-                          <Input
-                            type="time"
-                            value={configForm.closingEvening}
-                            onChange={(event) =>
-                              handleConfigChange(
-                                "closingEvening",
-                                event.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                      </>
-                    ) : null}
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Modo de precio</Label>
-                    <Select
-                      value={configForm.priceMode}
-                      onValueChange={(value) =>
-                        handleConfigChange(
-                          "priceMode",
-                          value as ConfigFormState["priceMode"],
-                        )
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="uniform">Uniforme</SelectItem>
-                        <SelectItem value="byCourt">Por cancha</SelectItem>
-                        <SelectItem value="byHour">Por hora</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Precio base (USD)</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={configForm.basePrice}
-                      onChange={(event) =>
-                        handleConfigChange(
-                          "basePrice",
-                          Number(event.target.value) || 0,
-                        )
-                      }
-                    />
                   </div>
                 </div>
               </article>
 
-            <ImageUploader
-              id="logo"
-              label="Logo"
-              preview={logoPreview}
-              onFileSelect={handleLogoSelect}
-              onClear={() => {
-                setLogoPreview(null);
-                setLogoFile(null);
-              }}
-            />
-            
-            <ImageUploader
-              id="logo"
-              label="Icono"
-              preview={iconPreview}
-              requireSquare
-              onFileSelect={handleIconSelect}
-              onClear={() => {
-                setIconPreview(null);
-                setIconFile(null);
-              }}
-            />
-
-              <article className="rounded-3xl border border-emerald-100 bg-white/80 p-6 shadow-sm dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20 lg:col-span-2">
-                <div className="mb-4 flex items-center gap-2 text-[#111827] dark:text-slate-100">
-                  <CreditCard className="h-5 w-5" />
-                  <h3 className="text-lg font-semibold">Medios de pago</h3>
-                </div>
-                <p className="text-sm text-[#4B5563] dark:text-slate-400">
-                  Vamos a vincular tu Mercado Pago en el siguiente paso.
-                  Próximamente vas a poder guardar múltiples tarjetas y ajustar
-                  cobros desde acá.
-                </p>
-                <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-[#4B5563]/80 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-400">
-                  Configuración de tarjetas y preferencias llegará pronto. Por
-                  ahora sólo necesitás confirmar los datos anteriores para abrir
-                  el checkout seguro.
-                </div>
+              <article className="rounded-3xl border border-emerald-100 bg-white/80 p-6 shadow-sm dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
+                <ImageUploader
+                  id="logo"
+                  label="Logo"
+                  preview={logoPreview}
+                  onFileSelect={handleLogoSelect}
+                  onClear={() => {
+                    setLogoPreview(null);
+                    setLogoFile(null);
+                  }}
+                />
               </article>
+
+              <article className="rounded-3xl border border-emerald-100 bg-white/80 p-6 shadow-sm dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
+                <ImageUploader
+                  id="icon"
+                  label="Icono"
+                  preview={iconPreview}
+                  requireSquare
+                  onFileSelect={handleIconSelect}
+                  onClear={() => {
+                    setIconPreview(null);
+                    setIconFile(null);
+                  }}
+                />
+              </article>
+
+
             </section>
 
            
 
-            <div className="border-t border-emerald-100 pt-6 dark:border-emerald-900/60">
+            <div className="flex justify-end border-t border-emerald-100 pt-6 dark:border-emerald-900/60">
               <Button
                 type="button"
                 className="w-full justify-center rounded-xl bg-emerald-500 px-6 py-3 font-medium text-white shadow-md transition-all hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400 md:w-auto"
@@ -1212,7 +1188,7 @@ console.log("-------------------");
                     Guardando datos...
                   </>
                 ) : (
-                  `Confirmar y pagar ${selectedPlan.title}`
+                  `Empezar con el plan ${selectedPlan.title}`
                 )}
               </Button>
             </div>

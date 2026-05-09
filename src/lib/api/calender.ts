@@ -25,7 +25,9 @@ export type CalenderBooking = {
 };
 
 export type MyBookingResponse = {
+  meetingStatus: "scheduled" | "available" | "not_trial" | string;
   hasActiveBooking: boolean;
+  isTrial?: boolean | null;
   booking: CalenderBooking | null;
 };
 
