@@ -24,10 +24,12 @@ function LoginPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const requestedRedirect =
+    searchParams.get("redirect") ?? searchParams.get("next") ?? "/";
   const redirectTo =
-    searchParams.get("redirect") ??
-    searchParams.get("next") ??
-    "/";
+    requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
+      ? requestedRedirect
+      : "/";
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -41,25 +43,9 @@ function LoginPageContent() {
     setIsSubmitting(true);
 
     try {
-      const response = await signIn("google", {
+      await signIn("google", {
         callbackUrl: redirectTo,
-        redirect: false,
       });
-
-      if (response?.error) {
-        setError("No pudimos iniciar sesion con Google. Intentalo nuevamente.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (response?.url) {
-        router.replace(response.url);
-        router.refresh();
-        return;
-      }
-
-      router.replace(redirectTo);
-      router.refresh();
     } catch (err) {
       console.error("Google sign-in error:", err);
       setError("Ocurrio un problema. Intentalo nuevamente en unos segundos.");
