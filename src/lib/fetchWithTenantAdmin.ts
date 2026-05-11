@@ -2,7 +2,7 @@
 const isDev = process.env.NEXT_PUBLIC_DEV === "true";
 
 export const API_URL = isDev
-  ? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000"
+  ? process.env.NEXT_PUBLIC_API_URL ?? "http://172.18.80.1:5000"
   : "https://api.miclubpadel.com";
 const defaultTenant = process.env.NEXT_PUBLIC_TENANT_SCHEMA ?? "public";
 

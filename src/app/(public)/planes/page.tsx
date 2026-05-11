@@ -176,6 +176,7 @@ const basePlans: Plan[] = [
       "Atención automatizada a jugadores",
       "Funcionalidad Match",
     ],
+    locked: true,
   },
   {
     id: "plan-4",
@@ -192,6 +193,7 @@ const basePlans: Plan[] = [
       "Operación premium para el administrador",
       "Modalidad de gestión dedicada",
     ],
+    locked: true,
   },
 ];
 
