@@ -1,3 +1,4 @@
+import { playerFetch, publicFetch } from "@/lib/auth/fetch"
 import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin"
 import type { PublicPlayerSession } from "@/lib/public-player-session"
 
@@ -79,13 +80,20 @@ export type PublicPlayerLookupResponse = Partial<PublicPlayerSession> & {
 }
 
 export async function fetchPublicPlayerLookup(slug: string, email: string) {
-  const response = await fetchWithTenantAdmin(
+  const response = await publicFetch(
     `/player/${slug}?email=${encodeURIComponent(email)}`,
     {
       method: "GET",
       cache: "no-store",
     },
   )
+
+  console.log("fetchPublicPlayerLookup: response", {
+    slug,
+    email,
+    status: response.status,
+    ok: response.ok,
+  })
 
   if (response.status === 404) {
     return {
@@ -101,17 +109,23 @@ export async function fetchPublicPlayerLookup(slug: string, email: string) {
 
   if (!response.ok) {
     const error = await response.json().catch(() => null)
+    console.log("fetchPublicPlayerLookup: error payload", error)
     throw new Error(error?.message || "No se pudo obtener el perfil del jugador.")
   }
 
-  return response.json() as Promise<PublicPlayerLookupResponse>
+  const payload = await response.json().catch(() => null)
+  console.log("fetchPublicPlayerLookup: payload", payload)
+
+  return payload as PublicPlayerLookupResponse
 }
 
 export async function createPlayer(slug: string, payload: CreatePlayerPayload) {
-  const response = await fetchWithTenantAdmin(`/player/${slug}`, {
+  const { tenantId: _tenantId, ...body } = payload as CreatePlayerPayload & {
+    tenantId?: string
+  }
+  const response = await publicFetch(`/player/${slug}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   })
 
   if (!response.ok) {
@@ -123,10 +137,12 @@ export async function createPlayer(slug: string, payload: CreatePlayerPayload) {
 }
 
 export async function updatePlayer(playerId: string, payload: UpdatePlayerPayload) {
-  const response = await fetchWithTenantAdmin(`/player/${playerId}`, {
+  const { tenantId: _tenantId, ...body } = payload as UpdatePlayerPayload & {
+    tenantId?: string
+  }
+  const response = await publicFetch(`/player/${playerId}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   })
 
   if (!response.ok) {
@@ -137,9 +153,8 @@ export async function updatePlayer(playerId: string, payload: UpdatePlayerPayloa
 }
 
 export async function verifyPlayerInClub(personId: string, slug: string) {
-  const response = await fetchWithTenantAdmin(`/player/${personId}`, {
+  const response = await publicFetch(`/player/${personId}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ slug }),
   })
 
@@ -177,7 +192,7 @@ export async function fetchAvailablePlayers(
   }
 
   const response = await fetchWithTenantAdmin(
-    `/player/available/${tenantId}?${searchParams.toString()}`,
+    `/player/available?${searchParams.toString()}`,
     { cache: "no-store" },
   )
 
@@ -217,7 +232,7 @@ export async function fetchAvailableSumPlayers(
   }
 
   const response = await fetchWithTenantAdmin(
-    `/player/available-sum/${tenantId}?${searchParams.toString()}`,
+    `/player/available-sum?${searchParams.toString()}`,
     { cache: "no-store" },
   )
 
@@ -244,7 +259,7 @@ export async function fetchAvailableSumPlayers(
 }
 
 export async function fetchPlayersByTenant(tenantId: string) {
-  const response = await fetchWithTenantAdmin(`/player/tenant/${tenantId}`, {
+  const response = await fetchWithTenantAdmin("/player/tenant", {
     cache: "no-store",
   })
 

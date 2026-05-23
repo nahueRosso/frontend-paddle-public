@@ -1,7 +1,6 @@
-import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin"
+import { playerFetch } from "@/lib/auth/fetch"
 
 export type CreateMatchRequestPayload = {
-  tenantId: string
   userName: string
   userPhone: string
   playerId?: string
@@ -51,9 +50,8 @@ export type MatchEntryIntentResponse =
     }
 
 export async function createMatchEntryIntent(payload: CreateMatchRequestPayload) {
-  const response = await fetchWithTenantAdmin("/match/entry-intent", {
+  const response = await playerFetch("/match/entry-intent", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   })
 

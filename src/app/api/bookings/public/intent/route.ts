@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
+import { proxyBackendRequest, toProxyResponse } from "@/lib/server/backend-proxy";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -13,23 +13,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const response = await fetchWithTenantAdmin("/bookings/public/intent", {
+    const response = await proxyBackendRequest(request, "/bookings/public/intent", {
       method: "POST",
       body: JSON.stringify(body),
     });
 
-    const text = await response.text();
-
-    if (!text) {
-      return new NextResponse(null, { status: response.status });
-    }
-
-    return new NextResponse(text, {
-      status: response.status,
-      headers: {
-        "Content-Type": response.headers.get("Content-Type") ?? "application/json",
-      },
-    });
+    return toProxyResponse(response);
   } catch (error) {
     console.error("Error creating public booking intent:", error);
 

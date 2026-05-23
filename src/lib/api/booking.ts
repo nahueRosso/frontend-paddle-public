@@ -8,6 +8,7 @@ import {
   PublicBookingIntentPayload,
   PublicBookingIntentResponse,
 } from "@/types/booking";
+import { playerFetch } from "@/lib/auth/fetch";
 import { fetchWithTenantAdmin } from "../fetchWithTenantAdmin";
  
 export async function fetchBookings(
@@ -15,7 +16,7 @@ export async function fetchBookings(
   date?: string
 ): Promise<Booking[]> {
   try {
-    let endpoint = `/bookings/${tenantId}`;
+    let endpoint = "/bookings";
     if (date) endpoint += `?date=${date}`;
 
     const res = await fetchWithTenantAdmin(endpoint, {
@@ -48,7 +49,7 @@ export async function fetchGetAvailability(
   googleId: string,
  date?: string
 ): Promise<CourtSchedule> {
-  let endpoint = `/bookings/availability/${googleId}`;
+  let endpoint = "/bookings/availability";
     if (date) endpoint += `?date=${date}`;
   const res = await fetchWithTenantAdmin(endpoint, {
     cache: "no-store",
@@ -63,10 +64,13 @@ export async function fetchGetAvailability(
 export async function CreatePaddleBooking(
   data: CreateBooking
 ): Promise<BookingResponse> {
+  const { tenantId: _tenantId, ...requestBody } = data as CreateBooking & {
+    tenantId?: string;
+  };
   const res = await fetchWithTenantAdmin("/bookings/reserve", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify(requestBody),
   });
 
   const text = await res.text();
@@ -85,7 +89,8 @@ export async function CreatePaddleBooking(
   }
 
   return {
-    tenantId: data.tenantId,
+    tenantId:
+      typeof payload?.tenantId === "string" ? payload.tenantId : undefined,
     courtNumber: data.courtNumber,
     date: data.date,
     startTime: data.startTime,
@@ -100,10 +105,13 @@ export async function CreatePaddleBooking(
 export async function createPublicBookingIntent(
   data: PublicBookingIntentPayload,
 ): Promise<PublicBookingIntentResponse> {
-  const response = await fetch("/api/bookings/public/intent", {
+  const { tenantId: _tenantId, ...requestBody } =
+    data as PublicBookingIntentPayload & {
+      tenantId?: string;
+    };
+  const response = await playerFetch("/api/bookings/public/intent", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify(requestBody),
   });
 
   const text = await response.text();
@@ -133,7 +141,7 @@ export async function createPublicBookingIntent(
 export async function fetchBillingBookingStatus(
   externalReference: string,
 ): Promise<BillingBookingStatusResponse> {
-  const response = await fetch(
+  const response = await playerFetch(
     `/api/billing/bookings/${encodeURIComponent(externalReference)}`,
     {
       method: "GET",
@@ -186,7 +194,7 @@ export async function updateBookingStatus({
 
 export async function generateBookingStoryImage(tenantId: string): Promise<Blob> {
   const res = await fetchWithTenantAdmin(
-    `/generate-image/story-booking/${tenantId}`,
+    "/generate-image/story-booking",
     {
       method: "GET",
       cache: "no-store",

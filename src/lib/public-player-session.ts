@@ -27,6 +27,28 @@ export type PublicPlayerSession = {
   player: PublicClubPlayer | null
 }
 
+const SESSION_PAYLOAD_KEYS = [
+  "id",
+  "personId",
+  "playerId",
+  "person",
+  "player",
+  "globalPerson",
+  "tenantPlayer",
+  "personExists",
+  "playerExists",
+  "verifiedInClub",
+  "playerStatus",
+  "email",
+  "firstName",
+  "lastName",
+  "phoneNumber",
+  "tenantId",
+  "status",
+  "category",
+  "gender",
+] as const
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return null
@@ -45,6 +67,20 @@ function asNumber(value: unknown): number | null {
 
 function asBoolean(value: unknown): boolean | null {
   return typeof value === "boolean" ? value : null
+}
+
+function hasProfileData(value: Record<string, unknown> | null) {
+  if (!value) return false
+
+  return Boolean(
+    asString(value.email) ??
+      asString(value.firstName) ??
+      asString(value.lastName) ??
+      asString(value.phoneNumber) ??
+      asString(value.gender) ??
+      asString(value.tenantId) ??
+      asNumber(value.category),
+  )
 }
 
 function normalizeProfile(value: Record<string, unknown> | null): PublicPlayerProfile | null {
@@ -78,41 +114,43 @@ function normalizeClubPlayer(value: Record<string, unknown> | null): PublicClubP
 export function normalizePublicPlayerSession(payload: unknown): PublicPlayerSession {
   const root = asRecord(payload)
   const embeddedPerson = asRecord(root?.person) ?? asRecord(root?.globalPerson)
-  const embeddedClubPlayer =
-    asRecord(root?.player) ??
-    asRecord(root?.tenantPlayer) ??
-    (root && (asString(root.tenantId) || asString(root.phoneNumber) || asString(root.status)) ? root : null)
+  const embeddedPlayer = asRecord(root?.player) ?? asRecord(root?.tenantPlayer)
   const explicitPersonExists = asBoolean(root?.personExists)
   const explicitPlayerExists = asBoolean(root?.playerExists)
+  const topLevelProfile = hasProfileData(root) ? root : null
+  const personSource = embeddedPerson ?? topLevelProfile
+  const explicitPlayerId =
+    asString(root?.playerId) ??
+    asString(embeddedPlayer?.id) ??
+    (explicitPlayerExists === true ? asString(root?.id) : null) ??
+    null
   const explicitPersonId =
     asString(root?.personId) ??
     asString(embeddedPerson?.id) ??
-    null
-  const explicitPlayerId =
-    asString(root?.playerId) ??
-    asString(embeddedClubPlayer?.id) ??
+    (explicitPlayerExists === false || !explicitPlayerId ? asString(root?.id) : null) ??
     null
   const playerStatus =
     (asString(root?.playerStatus) as PlayerStatus | null) ??
     (asString(root?.status) as PlayerStatus | null) ??
-    (asString(embeddedClubPlayer?.status) as PlayerStatus | null) ??
+    (asString(embeddedPlayer?.status) as PlayerStatus | null) ??
     null
   const personExists =
     explicitPersonExists ??
-    Boolean(explicitPersonId || embeddedPerson || root?.person || root?.globalPerson)
+    Boolean(explicitPersonId || personSource || root?.person || root?.globalPerson)
   const playerExists =
     explicitPlayerExists ??
     Boolean(explicitPlayerId || root?.player || root?.tenantPlayer)
   const verifiedInClub =
     asBoolean(root?.verifiedInClub) ??
     asBoolean(root?.verified) ??
-    asBoolean(embeddedClubPlayer?.verified) ??
+    asBoolean(embeddedPlayer?.verified) ??
     playerStatus === "verified"
 
   const person = personExists
-    ? normalizeProfile(embeddedPerson ?? embeddedClubPlayer ?? root)
+    ? normalizeProfile(personSource)
     : null
-  const normalizedPlayer = normalizeClubPlayer(embeddedClubPlayer ?? root)
+  const playerSource = playerExists ? embeddedPlayer ?? topLevelProfile : null
+  const normalizedPlayer = normalizeClubPlayer(playerSource)
   const player =
     playerExists && explicitPlayerId
       ? normalizedPlayer ?? (person ? { id: explicitPlayerId, ...person } : null)
@@ -127,5 +165,35 @@ export function normalizePublicPlayerSession(payload: unknown): PublicPlayerSess
     playerStatus,
     person,
     player,
+  }
+}
+
+function hasSessionPayloadFields(payload: unknown) {
+  const root = asRecord(payload)
+
+  if (!root) return false
+
+  return SESSION_PAYLOAD_KEYS.some((key) => key in root)
+}
+
+export function mergePublicPlayerSession(
+  base: PublicPlayerSession,
+  payload: unknown,
+): PublicPlayerSession {
+  if (!hasSessionPayloadFields(payload)) {
+    return base
+  }
+
+  const next = normalizePublicPlayerSession(payload)
+
+  return {
+    personExists: next.personExists || base.personExists,
+    playerExists: next.playerExists || base.playerExists,
+    personId: next.personId ?? base.personId,
+    playerId: next.playerId ?? base.playerId,
+    verifiedInClub: next.verifiedInClub || base.verifiedInClub,
+    playerStatus: next.playerStatus ?? base.playerStatus,
+    person: next.person ?? base.person,
+    player: next.player ?? base.player,
   }
 }

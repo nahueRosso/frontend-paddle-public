@@ -1,28 +1,24 @@
 import { NextResponse } from "next/server";
 
+import { AUTH_BACKEND_ROUTES } from "@/lib/auth/backend";
 import { proxyBackendRequest, toProxyResponse } from "@/lib/server/backend-proxy";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    console.log("[tournament-payment-link] Incoming request body:", body);
-
     const response = await proxyBackendRequest(
       request,
-      "/billing/tournaments/payment-link",
-      {
-        method: "POST",
-        body: JSON.stringify(body),
-      },
+      AUTH_BACKEND_ROUTES.publicLogout,
+      { method: "POST" },
     );
 
     return toProxyResponse(response);
   } catch (error) {
-    console.error("Error creating tournament payment link:", error);
+    console.error("Error destroying public session:", error);
 
     return NextResponse.json(
-      { error: "No se pudo generar el link de pago del torneo." },
+      { message: "No se pudo cerrar la sesion publica." },
       { status: 500 },
     );
   }
 }
+

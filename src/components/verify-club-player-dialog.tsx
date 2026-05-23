@@ -33,7 +33,13 @@ export default function VerifyClubPlayerDialog({
   onOpenChange,
   autoOpen = false,
 }: VerifyClubPlayerDialogProps) {
-  const { personId, playerExists, person, setPlayerSession } = usePlayer()
+  const {
+    personId,
+    playerExists,
+    person,
+    setPlayerSession,
+    ensureClubPlayerSession,
+  } = usePlayer()
   const queryClient = useQueryClient()
   const [internalOpen, setInternalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -68,6 +74,7 @@ export default function VerifyClubPlayerDialog({
       setIsSubmitting(true)
       const response = await verifyPlayerInClub(personId, slug)
       setPlayerSession(response)
+      await ensureClubPlayerSession()
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: playerKeys.all }),
         queryClient.invalidateQueries({ queryKey: tournamentKeys.all }),

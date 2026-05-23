@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
+import { proxyBackendRequest, toProxyResponse } from "@/lib/server/backend-proxy";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ externalReference: string }> },
 ) {
   const { externalReference } = await params;
@@ -13,7 +13,8 @@ export async function GET(
   );
 
   try {
-    const response = await fetchWithTenantAdmin(
+    const response = await proxyBackendRequest(
+      request,
       `/billing/tournaments/${encodeURIComponent(externalReference)}`,
       {
         method: "GET",
@@ -21,20 +22,7 @@ export async function GET(
       },
     );
 
-    const text = await response.text();
-    console.log("[tournament-payment-status] Backend response status:", response.status);
-    console.log("[tournament-payment-status] Backend response body:", text || null);
-
-    if (!text) {
-      return new NextResponse(null, { status: response.status });
-    }
-
-    return new NextResponse(text, {
-      status: response.status,
-      headers: {
-        "Content-Type": response.headers.get("Content-Type") ?? "application/json",
-      },
-    });
+    return toProxyResponse(response);
   } catch (error) {
     console.error("Error fetching tournament billing status:", error);
 

@@ -36,6 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useCreatePlayerMutation } from "@/hooks/mutations/player";
+import { usePlayer } from "@/providers/player-provider";
 
 const schema = z.object({
   dni: z.string().optional(),
@@ -55,6 +56,7 @@ export default function CreatePlayer({ slug }: { slug: string }) {
   const router = useRouter();
   const { data: session } = useSession();
   const createPlayerMutation = useCreatePlayerMutation();
+  const { setPlayerSession, ensureClubPlayerSession } = usePlayer();
   const {
     register,
     handleSubmit,
@@ -82,7 +84,9 @@ export default function CreatePlayer({ slug }: { slug: string }) {
       email: session?.user?.email,
     };
 
-    await createPlayerMutation.mutateAsync({ slug, payload });
+    const response = await createPlayerMutation.mutateAsync({ slug, payload });
+    setPlayerSession(response);
+    await ensureClubPlayerSession();
     router.refresh();
   };
 

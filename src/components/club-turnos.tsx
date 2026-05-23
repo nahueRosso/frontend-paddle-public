@@ -345,7 +345,6 @@ export function ClubTurnos() {
 
     try {
       const response = await createPublicBookingIntent({
-        tenantId: config.tenantId,
         courtNumber,
         date: bookingDate,
         startTime: slot.startTime,

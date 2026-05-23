@@ -9,11 +9,13 @@ import {
 } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Baloo_2 } from "next/font/google";
 import { ChevronDown, Menu, X } from "lucide-react";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/use-auth";
+import { buildLoginRedirectUrl, buildRelativeUrl } from "@/lib/auth/navigation";
 
 const balooFont = Baloo_2({
   subsets: ["latin"],
@@ -46,6 +48,7 @@ const navigation: Array<SingleNavItem | GroupNavItem> = [
 
 export function Header() {
   const { signOut, session } = useAuth();
+  const pathname = usePathname();
   const userEmail = session?.user?.email ?? "Sin email";
   const userImage = session?.user?.image;
   const userName = session?.user?.name ?? "Usuario";
@@ -107,6 +110,8 @@ export function Header() {
   }, [isMenuOpen, closeMenu]);
 
   const navItems = useMemo(() => navigation, []);
+  const currentUrl = buildRelativeUrl(pathname ?? "/");
+  const loginHref = buildLoginRedirectUrl(currentUrl);
 
   return (
     <header className="fixed z-[100] w-full border-b border-slate-200/70 bg-white/55 backdrop-blur dark:border-emerald-400/10 dark:bg-slate-950/30">
@@ -223,7 +228,7 @@ export function Header() {
                       <button
                         type="button"
                         onClick={() => {
-                          void signOut();
+                          void signOut({ callbackUrl: currentUrl });
                         }}
                         className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-900 transition hover:bg-slate-50/50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
                       >
@@ -234,7 +239,7 @@ export function Header() {
                 </div>
               ) : (
                 <Link
-                  href="/login"
+                  href={loginHref}
                   className="rounded-full border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/70 dark:focus-visible:ring-slate-600 dark:focus-visible:ring-offset-slate-950"
                 >
                   Iniciar sesión
@@ -384,7 +389,7 @@ export function Header() {
                       type="button"
                       onClick={() => {
                         closeMenu();
-                        void signOut();
+                        void signOut({ callbackUrl: currentUrl });
                       }}
                       className="mt-4 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
                     >
@@ -393,7 +398,7 @@ export function Header() {
                   </>
                 ) : (
                   <Link
-                    href="/login"
+                    href={loginHref}
                     className="block rounded-2xl border border-slate-300 bg-white px-4 py-3 text-center text-sm font-medium text-slate-900 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
                     onClick={closeMenu}
                   >

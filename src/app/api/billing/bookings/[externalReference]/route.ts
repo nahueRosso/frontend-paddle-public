@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
 
-import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
+import { proxyBackendRequest, toProxyResponse } from "@/lib/server/backend-proxy";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ externalReference: string }> },
 ) {
   const { externalReference } = await params;
 
   try {
-    const response = await fetchWithTenantAdmin(
+    const response = await proxyBackendRequest(
+      request,
       `/billing/bookings/${encodeURIComponent(externalReference)}`,
       {
         method: "GET",
@@ -17,18 +18,7 @@ export async function GET(
       },
     );
 
-    const text = await response.text();
-
-    if (!text) {
-      return new NextResponse(null, { status: response.status });
-    }
-
-    return new NextResponse(text, {
-      status: response.status,
-      headers: {
-        "Content-Type": response.headers.get("Content-Type") ?? "application/json",
-      },
-    });
+    return toProxyResponse(response);
   } catch (error) {
     console.error("Error fetching billing booking status:", error);
 

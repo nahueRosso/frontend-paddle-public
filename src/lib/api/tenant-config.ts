@@ -97,7 +97,7 @@ export async function fetchGetConfigAll(): Promise<ClubesFetch[]> {
 export async function fetchGetConfig(
   googleId: string,
 ): Promise<TenantConfigQueryResponse> {
-  const res = await fetchWithTenantAdmin(`/config/${googleId}`, {
+  const res = await fetchWithTenantAdmin("/config/current", {
     cache: "no-store",
   });
 
@@ -155,7 +155,7 @@ export async function updateTenantConfig({
   tenantId,
   data,
 }: UpdateTenantConfigPayload): Promise<TenantConfig> {
-  const res = await fetchWithTenantAdmin(`/config/${tenantId}`, {
+  const res = await fetchWithTenantAdmin("/config/current", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -174,7 +174,7 @@ export async function updateTenantFeaturesPricing({
   tenantId,
   data,
 }: UpdateTenantFeaturesPricingPayload): Promise<TenantConfig> {
-  const res = await fetchWithTenantAdmin(`/config/${tenantId}/features-pricing`, {
+  const res = await fetchWithTenantAdmin("/config/features-pricing", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -192,7 +192,7 @@ export async function updateTenantConfigAssets({
   tenantId,
   formData,
 }: UpdateTenantConfigAssetsInput): Promise<TenantConfig> {
-  const res = await fetchWithTenantAdmin(`/config/${tenantId}/assets`, {
+  const res = await fetchWithTenantAdmin("/config/assets", {
     method: "PATCH",
     body: formData,
   });
@@ -210,7 +210,7 @@ export async function updatePaymentStatus(
   paymentStatus: "pending" | "approved" | "rejected"
 ) {
   const res = await fetchWithTenantAdmin(
-    `/config/${tenantId}/payment-status`,
+    "/config/payment-status",
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -230,7 +230,7 @@ export async function updatePaymentStatus(
 export async function getCourtHoursConfig(
   tenantId: string,
 ): Promise<CourtHoursConfigResponse> {
-  const response = await fetchWithTenantAdmin(`/config/court-hours/${tenantId}`, {
+  const response = await fetchWithTenantAdmin("/config/court-hours", {
     cache: "no-store",
   });
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
+import { proxyBackendRequest, toProxyResponse } from "@/lib/server/backend-proxy";
 
 type PlanStatus = {
   active: boolean;
@@ -34,41 +34,25 @@ function isConnectionRefused(error: unknown): boolean {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const tenantId = searchParams.get("tenantId");
-
-  if (!tenantId) {
-    return NextResponse.json(
-      { error: "tenantId es requerido" },
-      { status: 400 }
-    );
-  }
- 
   try {
-    const response = await fetchWithTenantAdmin(
-      `/config/is-plan-active/${encodeURIComponent(tenantId)}`,
-      { cache: "no-store" }
-    );
-
-    const payload = await response.json() as PlanStatus;
-
-
+    const response = await proxyBackendRequest(request, "/config/is-plan-active", {
+      method: "GET",
+      cache: "no-store",
+    });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      return NextResponse.json(
-        { error: errorText || "No pudimos obtener el estado del plan." },
-        { status: response.status }
-      );
+      return toProxyResponse(response);
     }
+
+    const payload = await response.json() as PlanStatus;
 
     return NextResponse.json({
       active: payload.active,
       planId: payload.planId,
       planName: payload.planName,
-      status:payload.status,
+      status: payload.status,
       validUntil: payload.validUntil,
-      isTrial:payload.isTrial,
+      isTrial: payload.isTrial,
     });
   } catch (error) {
     console.error("Error consultando estado del plan:", error);

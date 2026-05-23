@@ -1,3 +1,4 @@
+import { playerFetch } from "@/lib/auth/fetch";
 import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
 import type { Tournament, TournamentCategory } from "@/types/tournament";
 import type { TournamentGroup } from "@/types/tournament-group";
@@ -204,7 +205,7 @@ export async function fetchTournament(
   status: "ongoing" | "finished" | "upcoming" | "post_deadline" = "ongoing",
 ): Promise<Tournament[]> {
   const response = await fetchWithTenantAdmin(
-    `/tournament/${tenantId}?status=${status}`,
+    `/tournament?status=${status}`,
     { cache: "no-store" },
   );
 
@@ -219,7 +220,7 @@ export async function fetchTournamentsByStatus(
   tenantId: string,
 ): Promise<TournamentGroup[]> {
   const response = await fetchWithTenantAdmin(
-    `/tournament/${tenantId}/fixture`,
+    "/tournament/fixture",
     { cache: "no-store" },
   );
 
@@ -244,8 +245,8 @@ export async function fetchTournamentRegistrationOptions({
   const searchParams = new URLSearchParams();
   appendCategoryParam(searchParams, categoryId);
   const query = searchParams.toString();
-  const response = await fetchWithTenantAdmin(
-    `/tournament/${tenantId}/${tournamentId}/player/${playerId}/options${query ? `?${query}` : ""}`,
+  const response = await playerFetch(
+    `/tournament/${tournamentId}/player/${playerId}/options${query ? `?${query}` : ""}`,
     { cache: "no-store" },
   );
 
@@ -268,8 +269,8 @@ export async function fetchEligibleTournamentPartners({
 }) {
   const searchParams = new URLSearchParams({ playerId });
   appendCategoryParam(searchParams, categoryId);
-  const response = await fetchWithTenantAdmin(
-    `/tournament/${tenantId}/${tournamentId}/eligible-partners?${searchParams.toString()}`,
+  const response = await playerFetch(
+    `/tournament/${tournamentId}/eligible-partners?${searchParams.toString()}`,
     { cache: "no-store" },
   );
   const json = await parseTournamentApiResponse<unknown>(
@@ -293,8 +294,8 @@ export async function createTournamentPartnerRequest({
   requestedPlayerId: string;
   categoryId?: string;
 }) {
-  const response = await fetchWithTenantAdmin(
-    `/tournament/${tenantId}/${tournamentId}/partner-request`,
+  const response = await playerFetch(
+    `/tournament/${tournamentId}/partner-request`,
     {
       method: "POST",
       body: JSON.stringify({
@@ -323,8 +324,8 @@ export async function fetchTournamentAvailablePlayers({
   const searchParams = new URLSearchParams();
   appendCategoryParam(searchParams, categoryId);
   const query = searchParams.toString();
-  const response = await fetchWithTenantAdmin(
-    `/tournament/${tenantId}/${tournamentId}/available-players${query ? `?${query}` : ""}`,
+  const response = await playerFetch(
+    `/tournament/${tournamentId}/available-players${query ? `?${query}` : ""}`,
     { cache: "no-store" },
   );
   const json = await parseTournamentApiResponse<unknown>(
@@ -346,8 +347,8 @@ export async function addTournamentAvailablePlayer({
   playerId: string;
   categoryId?: string;
 }) {
-  const response = await fetchWithTenantAdmin(
-    `/tournament/${tenantId}/${tournamentId}/available-players`,
+  const response = await playerFetch(
+    `/tournament/${tournamentId}/available-players`,
     {
       method: "POST",
       body: JSON.stringify({
@@ -364,7 +365,7 @@ export async function addTournamentAvailablePlayer({
 }
 
 export async function withdrawTournamentAvailablePlayer(availablePlayerId: string) {
-  const response = await fetchWithTenantAdmin(
+  const response = await playerFetch(
     `/tournament/available-players/${availablePlayerId}`,
     { method: "DELETE" },
   );
@@ -386,8 +387,8 @@ export async function pickTournamentAvailablePlayer({
   pickerPlayerId: string;
   availablePlayerId: string;
 }) {
-  const response = await fetchWithTenantAdmin(
-    `/tournament/${tenantId}/${tournamentId}/pick-available-player`,
+  const response = await playerFetch(
+    `/tournament/${tournamentId}/pick-available-player`,
     {
       method: "POST",
       body: JSON.stringify({
@@ -413,11 +414,11 @@ export async function fetchTournamentPartnerRequests({
   console.log("[partner-requests] Fetching:", {
     tenantId,
     playerId,
-    endpoint: `/tournament/${tenantId}/player/${playerId}/partner-requests`,
+    endpoint: `/tournament/player/${playerId}/partner-requests`,
   });
 
-  const response = await fetchWithTenantAdmin(
-    `/tournament/${tenantId}/player/${playerId}/partner-requests`,
+  const response = await playerFetch(
+    `/tournament/player/${playerId}/partner-requests`,
     { cache: "no-store" },
   );
   const json = await parseTournamentApiResponse<unknown>(
@@ -437,7 +438,7 @@ export async function acceptTournamentPartnerRequest({
   requestId: string;
   playerId: string;
 }) {
-  const response = await fetchWithTenantAdmin(
+  const response = await playerFetch(
     `/tournament/partner-request/${requestId}/accept`,
     {
       method: "PATCH",
@@ -458,7 +459,7 @@ export async function rejectTournamentPartnerRequest({
   requestId: string;
   playerId: string;
 }) {
-  const response = await fetchWithTenantAdmin(
+  const response = await playerFetch(
     `/tournament/partner-request/${requestId}/reject`,
     {
       method: "PATCH",
@@ -475,9 +476,8 @@ export async function rejectTournamentPartnerRequest({
 export async function createTournamentPaymentLink(
   payload: TournamentBillingPaymentLinkPayload,
 ) {
-  const response = await fetch("/api/billing/tournaments/payment-link", {
+  const response = await playerFetch("/api/billing/tournaments/payment-link", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
@@ -508,7 +508,7 @@ export async function createTournamentPaymentLink(
 export async function fetchBillingTournamentStatus(
   externalReference: string,
 ): Promise<BillingTournamentStatusResponse> {
-  const response = await fetch(
+  const response = await playerFetch(
     `/api/billing/tournaments/${encodeURIComponent(externalReference)}`,
     {
       method: "GET",

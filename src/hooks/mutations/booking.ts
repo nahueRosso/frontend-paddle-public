@@ -4,10 +4,14 @@ import { CreatePaddleBooking, updateBookingStatus } from "@/lib/api/booking"
 import { bookingKeys } from "@/lib/queryKeys/booking"
 import type { BookingResponse, BookingStatus, CreateBooking } from "@/types/booking"
 
+type CreateBookingMutationInput = CreateBooking & {
+  tenantId: string
+}
+
 export function useCreateBookingMutation() {
   const queryClient = useQueryClient()
 
-  return useMutation<BookingResponse, Error, CreateBooking>({
+  return useMutation<BookingResponse, Error, CreateBookingMutationInput>({
     mutationFn: CreatePaddleBooking,
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

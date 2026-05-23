@@ -17,7 +17,7 @@ import type {
   CreateMatchRequestPayload,
   MatchEntryIntentResponse,
 } from "@/lib/api/match";
-import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin";
+import { playerFetch } from "@/lib/auth/fetch";
 import {
   clearPendingMatchEntry,
   getPendingMatchEntry,
@@ -100,7 +100,7 @@ const getResponseError = async (response: Response) => {
 };
 
 const fetchMatchRequestStatus = async (matchRequestId: string) => {
-  const response = await fetchWithTenantAdmin(
+  const response = await playerFetch(
     `/match/request/${matchRequestId}/status`,
     { method: "GET", cache: "no-store" },
   );
@@ -113,17 +113,12 @@ const fetchMatchRequestStatus = async (matchRequestId: string) => {
 };
 
 const fetchPendingMatchProposals = async ({
-  tenantId,
   userPhone,
 }: {
-  tenantId: string;
   userPhone: string;
 }) => {
-  const params = new URLSearchParams({
-    tenantId,
-    phone: userPhone,
-  });
-  const response = await fetchWithTenantAdmin(
+  const params = new URLSearchParams({ phone: userPhone });
+  const response = await playerFetch(
     `/match/proposals?${params.toString()}`,
     { method: "GET", cache: "no-store" },
   );
@@ -139,7 +134,7 @@ const respondToProposal = async (
   proposalId: string,
   action: "confirm" | "reject",
 ) => {
-  const response = await fetchWithTenantAdmin(
+  const response = await playerFetch(
     `/match/proposals/${proposalId}/${action}`,
     { method: "POST" },
   );
@@ -150,7 +145,7 @@ const respondToProposal = async (
 };
 
 const cancelMatchRequest = async (matchRequestId: string) => {
-  const response = await fetchWithTenantAdmin(
+  const response = await playerFetch(
     `/match/request/${matchRequestId}/cancel`,
     { method: "POST" },
   );
@@ -193,6 +188,9 @@ export function ClubMatch() {
     useState<PendingMatchEntry | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const { player, playerId, personId, person } = usePlayer();
+
+  // console.log('player: ',player, 'playerId: ',playerId, 'personId: ',personId, 'person: ',person);
+  
   const createMatchEntryIntentMutation = useCreateMatchEntryIntentMutation();
   const [timeRange, setTimeRange] = useState<[number, number]>([10, 18]);
   const MIN_HOUR = parseHour(config.openingMorning);
@@ -256,7 +254,6 @@ export function ClubMatch() {
 
         if (player?.phoneNumber) {
           const pendingProposals = await fetchPendingMatchProposals({
-            tenantId: config.tenantId,
             userPhone: player.phoneNumber,
           });
           setProposals(pendingProposals);
@@ -448,7 +445,7 @@ export function ClubMatch() {
   ) => {
     setMatchRequest({
       id: response.requestId,
-      tenantId: dto.tenantId,
+      tenantId: config.tenantId,
       userName: dto.userName,
       userPhone: dto.userPhone,
       gender: dto.gender,
@@ -479,17 +476,34 @@ export function ClubMatch() {
   };
 
   const handleSubmit = async () => {
+    console.log("aprete el botonito", {
+      player,
+      person,
+      personId,
+      verifyClubPlayer,
+      verifyPlayer,
+      timeRange,
+    });
+
     if (!player) {
+      console.log("handleSubmit: salgo por !player", {
+        person,
+        personId,
+      });
       setVerifyClubPlayer(true);
       return;
     }
 
     if (player.status !== "verified") {
+      console.log("handleSubmit: salgo por player.status !== verified", {
+        status: player.status,
+      });
       setVerifyPlayer(true);
       return;
     }
 
     if (player.category == null) {
+      console.log("handleSubmit: salgo por player.category == null");
       setError("Tu perfil no tiene una categoria asignada para buscar partido.");
       return;
     }
@@ -498,7 +512,6 @@ export function ClubMatch() {
 
     try {
       const dto: CreateMatchRequestPayload = {
-        tenantId: config.tenantId,
         userName: player.firstName + " " + player.lastName,
         userPhone: player.phoneNumber,
         playerId: player.id,
@@ -520,9 +533,13 @@ export function ClubMatch() {
         matchType: "individual", // o dinámico si lo querés
       };
 
+      console.log("handleSubmit: voy a ejecutar mutateAsync", dto);
+
       const response = await createMatchEntryIntentMutation.mutateAsync(
         dto,
       );
+
+      console.log("handleSubmit: respuesta de mutateAsync", response);
 
       if (!response?.requestId) {
         throw new Error("No se pudo crear la solicitud.");
@@ -541,11 +558,12 @@ export function ClubMatch() {
       }
 
       const pendingProposals = await fetchPendingMatchProposals({
-        tenantId: config.tenantId,
         userPhone: player.phoneNumber,
       });
+      console.log("handleSubmit: pending proposals", pendingProposals);
       setProposals(pendingProposals);
     } catch (err) {
+      console.error("handleSubmit: error", err);
       setError(
         err instanceof Error
           ? err.message

@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { company } from "@/config/company";
 import { useAuth } from "@/hooks/use-auth";
+import { sanitizeRelativeRedirect } from "@/lib/auth/navigation";
 
 export default function LoginPage() {
   return (
@@ -25,11 +26,8 @@ function LoginPageContent() {
   const [error, setError] = useState<string | null>(null);
 
   const requestedRedirect =
-    searchParams.get("redirect") ?? searchParams.get("next") ?? "/";
-  const redirectTo =
-    requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
-      ? requestedRedirect
-      : "/";
+    searchParams.get("redirect") ?? searchParams.get("next");
+  const redirectTo = sanitizeRelativeRedirect(requestedRedirect, "/");
 
   useEffect(() => {
     if (status === "authenticated") {

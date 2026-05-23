@@ -22,11 +22,11 @@ export async function getSubscriptionStatus(
 ): Promise<SubscriptionStatus> {
   console.log("[subscription-status] requesting", {
     tenantId,
-    endpoint: `/config/${encodeURIComponent(tenantId)}/subscription-status`,
+    endpoint: "/config/subscription-status",
   });
 
   const response = await fetchWithTenantAdmin(
-    `/config/${encodeURIComponent(tenantId)}/subscription-status`,
+    "/config/subscription-status",
     {
       cache: "no-store",
     },
@@ -80,7 +80,7 @@ export async function createSubscriptionCheckout(
   tenantId: string,
 ): Promise<SubscriptionCheckoutResponse> {
   const response = await fetchWithTenantAdmin(
-    `/config/${encodeURIComponent(tenantId)}/subscription-checkout`,
+    "/config/subscription-checkout",
     {
       method: "POST",
     },

@@ -58,7 +58,7 @@ export async function changePlan(payload: ChangePlanPayload) {
 
 export async function cancelPlan(payload: CancelPlanPayload) {
   const res = await fetchWithTenantAdmin(
-    `/config/${encodeURIComponent(payload.tenantId)}/subscription`,
+    "/config/subscription",
     {
       method: "DELETE",
     },
@@ -71,10 +71,7 @@ export async function cancelPlan(payload: CancelPlanPayload) {
 }
 
 export async function getPlanStatus(tenantId: string): Promise<PlanStatus> {
-  const response = await fetch(
-    `/api/plans/status?tenantId=${encodeURIComponent(tenantId)}`,
-    { cache: "no-store" },
-  );
+  const response = await fetch("/api/plans/status", { cache: "no-store" });
 
   if (!response.ok) {
     if (response.status === 404) {

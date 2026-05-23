@@ -33,7 +33,6 @@ export interface CourtAvailability {
 export type CourtSchedule = CourtAvailability[];
 
 export interface CreateBooking {
-  tenantId: string;
   courtNumber: number;
   date: string;
   startTime: string;
@@ -105,7 +104,7 @@ export type BillingBookingStatusResponse = {
 
 export type BookingResponse = {
   id?: string;
-  tenantId: string;
+  tenantId?: string;
   courtNumber: number;
   date: string;
   startTime: string;
