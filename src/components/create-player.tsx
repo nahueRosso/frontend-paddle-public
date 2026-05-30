@@ -87,7 +87,7 @@ export default function CreatePlayer({ slug }: { slug: string }) {
     const response = await createPlayerMutation.mutateAsync({ slug, payload });
     setPlayerSession(response);
     await ensureClubPlayerSession();
-    router.refresh();
+    window.location.href = "/clubes";
   };
 
   return (
