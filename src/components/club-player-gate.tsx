@@ -98,6 +98,15 @@ export function ClubPlayerGate({
         }
 
         if (ensuredClubSession.status === "forbidden") {
+          // Si el mensaje indica que no existe Persona, redirigimos al estado de registro
+          const isMissingPerson = ensuredClubSession.message?.toLowerCase().includes("person");
+          if (isMissingPerson) {
+            setPlayerSession(EMPTY_PLAYER_SESSION);
+            setPlayerAuthStatus("needs_person_registration");
+            setPlayerAuthMessage(null);
+            return;
+          }
+
           setPlayerSession(EMPTY_PLAYER_SESSION);
           setPlayerAuthStatus("forbidden");
           setPlayerAuthMessage(
@@ -158,6 +167,14 @@ export function ClubPlayerGate({
           return;
         }
 
+        const message = isBackendFetchError(error)
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "No se pudo cargar el perfil público del jugador.";
+
+        const isMissingPerson = message.toLowerCase().includes("person");
+
         if (isBackendFetchError(error) && error.status === 401) {
           setPlayerSession(null);
           setPlayerAuthStatus("unauthenticated");
@@ -166,16 +183,18 @@ export function ClubPlayerGate({
           return;
         }
 
+        if (isMissingPerson) {
+          setPlayerSession(EMPTY_PLAYER_SESSION);
+          setPlayerAuthStatus("needs_person_registration");
+          setPlayerAuthMessage(null);
+          setErrorMessage(null);
+          return;
+        }
+
         setPlayerSession(null);
         setPlayerAuthStatus("forbidden");
         setPlayerAuthMessage(null);
-        setErrorMessage(
-          isBackendFetchError(error)
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : "No se pudo cargar el perfil público del jugador.",
-        );
+        setErrorMessage(message);
       } finally {
         if (!cancelled) {
           setIsLoading(false);
