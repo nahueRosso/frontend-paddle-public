@@ -743,31 +743,13 @@ function SlotButton({
   isPast: boolean;
   isSubmitting: boolean;
 }) {
-  // useEffect(() => {
-  //   console.log("[ClubTurnos][SlotButton]", {
-  //     startTime: slot.startTime,
-  //     endTime: slot.endTime,
-  //     status: slot.status,
-  //     hasWebBooking,
-  //     isPast,
-  //     isSubmitting,
-  //     disabled: !hasWebBooking || isPast,
-  //   });
-  // }, [
-  //   hasWebBooking,
-  //   isPast,
-  //   isSubmitting,
-  //   slot.endTime,
-  //   slot.startTime,
-  //   slot.status,
-  // ]);
 
   if (isSubmitting) {
     return (
         <Button
         variant="outline"
         className="h-auto rounded-2xl border-emerald-200 bg-white/80 px-3 py-2.5 text-xs font-medium text-slate-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-200"
-        disabled
+        // disabled
       >
         <div className="flex items-center gap-1.5">
           <Loader2 className="h-3 w-3 animate-spin" />
