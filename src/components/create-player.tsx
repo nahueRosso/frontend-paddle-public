@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   Select,
   SelectContent,
@@ -41,7 +43,10 @@ import { usePlayer } from "@/providers/player-provider";
 const schema = z.object({
   dni: z.string().optional(),
   birthdayDate: z.string().optional(),
-  phoneNumber: z.string().min(6, "Teléfono requerido"),
+  phoneNumber: z.string().refine(
+    (val) => val.length > 0 && isValidPhoneNumber(val),
+    { message: "Teléfono inválido. Seleccioná el país e ingresá el número completo." },
+  ),
   puntos: z.number().optional(),
   email: z.string().email("Email inválido").optional(),
   firstName: z.string().min(2, "Nombre requerido"),
@@ -62,6 +67,7 @@ export default function CreatePlayer({ slug }: { slug: string }) {
     handleSubmit,
     setValue,
     reset,
+    control,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -176,9 +182,18 @@ export default function CreatePlayer({ slug }: { slug: string }) {
                     <FieldLabel className="text-slate-800 dark:text-slate-200">
                       Teléfono
                     </FieldLabel>
-                    <Input
-                      {...register("phoneNumber")}
-                      className="border-emerald-100 bg-white dark:border-emerald-900/60 dark:bg-slate-900 dark:text-slate-100"
+                    <Controller
+                      control={control}
+                      name="phoneNumber"
+                      render={({ field }) => (
+                        <PhoneInput
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          error={!!errors.phoneNumber}
+                          inputClassName="border-emerald-100 bg-white dark:border-emerald-900/60 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      )}
                     />
                     {errors.phoneNumber && (
                       <p className="text-sm text-rose-500">

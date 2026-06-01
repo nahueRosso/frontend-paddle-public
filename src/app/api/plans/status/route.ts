@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 
-import { proxyBackendRequest, toProxyResponse } from "@/lib/server/backend-proxy";
+import { authOptions } from "@/lib/auth";
+import { API_URL, DEFAULT_TENANT_SCHEMA } from "@/lib/auth/backend";
 
 type PlanStatus = {
   active: boolean;
@@ -8,7 +10,7 @@ type PlanStatus = {
   planName?: string | null;
   status?: "pending" | "approved" | "rejected" | null;
   validUntil?: string | null;
-  isTrial?:boolean | null;
+  isTrial?: boolean | null;
 };
 
 function isConnectionRefused(error: unknown): boolean {
@@ -34,38 +36,56 @@ function isConnectionRefused(error: unknown): boolean {
 }
 
 export async function GET(request: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ active: false });
+  }
+
+  // Extract only public_token to avoid stale admin_token from a previous user
+  // polluting the plan status response for the current authenticated user.
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  const publicTokenEntry = cookieHeader
+    .split(";")
+    .find((c) => c.trim().startsWith("public_token="))
+    ?.trim();
+
   try {
-    const response = await proxyBackendRequest(request, "/config/is-plan-active", {
+    const response = await fetch(`${API_URL}/config/is-plan-active`, {
       method: "GET",
+      headers: {
+        "X-Tenant-Schema": DEFAULT_TENANT_SCHEMA,
+        ...(publicTokenEntry ? { cookie: publicTokenEntry } : {}),
+      },
       cache: "no-store",
     });
 
     if (!response.ok) {
-      return toProxyResponse(response);
+      return NextResponse.json({ active: false }, { status: response.status });
     }
 
-    const payload = await response.json() as PlanStatus;
+    const payload = (await response.json()) as Partial<PlanStatus>;
 
     return NextResponse.json({
-      active: payload.active,
-      planId: payload.planId,
-      planName: payload.planName,
-      status: payload.status,
-      validUntil: payload.validUntil,
-      isTrial: payload.isTrial,
+      active: payload.active ?? false,
+      planId: payload.planId ?? null,
+      planName: payload.planName ?? null,
+      status: payload.status ?? null,
+      validUntil: payload.validUntil ?? null,
+      isTrial: payload.isTrial ?? null,
     });
   } catch (error) {
     console.error("Error consultando estado del plan:", error);
 
     if (isConnectionRefused(error)) {
       console.warn(
-        "Servicio de planes inalcanzable. Devolviendo estado inactivo por defecto."
+        "Servicio de planes inalcanzable. Devolviendo estado inactivo por defecto.",
       );
       return NextResponse.json({
         active: false,
         planId: null,
         planName: null,
-        status:null,
+        status: null,
         validUntil: null,
         warning:
           "No se pudo contactar al servicio de planes. Se responde estado inactivo por defecto.",
@@ -74,7 +94,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(
       { error: "Error inesperado consultando el estado del plan." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

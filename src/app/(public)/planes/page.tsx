@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import {
   CalendarDays,
   Check,
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/carousel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -260,8 +262,8 @@ function validateInitialConfig(
   }
 
   const trimmedPhone = configForm.contactPhone.trim();
-  if (trimmedPhone.length < 6 || trimmedPhone.length > 20) {
-    return "El teléfono de contacto debe tener entre 6 y 20 caracteres.";
+  if (!trimmedPhone || !isValidPhoneNumber(trimmedPhone)) {
+    return "Ingresá un teléfono de contacto válido con código de país (ej: +5491122334455).";
   }
 
   const trimmedEmail = contactEmail.trim();
@@ -1130,15 +1132,9 @@ export default function PlansPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="contactPhone">Teléfono de contacto</Label>
-                    <Input
-                      id="contactPhone"
+                    <PhoneInput
                       value={configForm.contactPhone}
-                      minLength={6}
-                      maxLength={20}
-                      onChange={(e) =>
-                        handleConfigChange("contactPhone", e.target.value)
-                      }
-                      placeholder="+5491122334455"
+                      onChange={(val) => handleConfigChange("contactPhone", val)}
                     />
                   </div>
 

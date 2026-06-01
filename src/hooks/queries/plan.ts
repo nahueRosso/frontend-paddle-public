@@ -8,11 +8,11 @@ import {
 } from "@/lib/api/plans"
 import { planKeys } from "@/lib/queryKeys/plan" 
 
-export function usePlanStatusQuery(tenantId?: string) {
+export function usePlanStatusQuery(tenantId?: string, publicSessionReady = true) {
   return useQuery<PlanStatus, Error>({
     queryKey: planKeys.statusByTenant(tenantId),
     queryFn: () => getPlanStatus(tenantId!),
-    enabled: Boolean(tenantId),
+    enabled: Boolean(tenantId) && publicSessionReady,
   })
 }
 

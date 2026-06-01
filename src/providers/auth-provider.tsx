@@ -52,12 +52,13 @@ export const AuthContext = createContext<AuthContextValue | null>(null);
  
 function AuthContextBridge({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
-  const { data: planStatus, isLoading: isPlanStatusLoading } = usePlanStatusQuery(
-    session?.user?.id,
-  );
   const [publicSessionStatus, setPublicSessionStatus] =
     useState<SessionState>("loading");
   const [sessionScope, setSessionScope] = useState<SessionScope>("none");
+  const { data: planStatus, isLoading: isPlanStatusLoading } = usePlanStatusQuery(
+    session?.user?.id,
+    publicSessionStatus === "authenticated",
+  );
 
   const syncPublicSession = useCallback(async () => {
     if (!session?.idToken) {
