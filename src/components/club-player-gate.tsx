@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { fetchPublicPlayerLookup } from "@/lib/api/player";
 import { isBackendFetchError } from "@/lib/auth/errors";
 import { buildLoginRedirectUrl } from "@/lib/auth/navigation";
-import { ensurePlayerSession } from "@/lib/auth/player-session";
+import { ensurePlayerSessionWithOptionalGoogle } from "@/lib/auth/player-session";
 import type { SessionState } from "@/lib/auth/types";
 import {
   mergePublicPlayerSession,
@@ -46,6 +46,7 @@ export function ClubPlayerGate({
     publicSessionStatus,
     syncPublicSession,
     markPublicSessionActive,
+    session,
   } = useAuth();
   const [playerSession, setPlayerSession] = useState<PublicPlayerSession | null>(null);
   const [playerAuthStatus, setPlayerAuthStatus] =
@@ -81,7 +82,7 @@ export function ClubPlayerGate({
       setErrorMessage(null);
 
       try {
-        const ensuredClubSession = await ensurePlayerSession(slug);
+        const ensuredClubSession = await ensurePlayerSessionWithOptionalGoogle(slug, session?.idToken);
 
         if (cancelled) {
           return;
@@ -207,7 +208,7 @@ export function ClubPlayerGate({
     return () => {
       cancelled = true;
     };
-  }, [markPublicSessionActive, publicSessionStatus, router, slug, userEmail]);
+  }, [markPublicSessionActive, publicSessionStatus, router, session, slug, userEmail]);
 
   if (isLoading || !playerSession) {
     if (errorMessage && !isLoading) {

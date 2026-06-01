@@ -80,8 +80,9 @@ function AuthContextBridge({ children }: { children: ReactNode }) {
       }
 
       setPublicSessionStatus("forbidden");
+      setSessionScope("none");
     }
-  }, [session?.idToken, sessionScope]);
+  }, [session?.idToken]);
 
   const clearPublicSession = useCallback(async () => {
     try {
