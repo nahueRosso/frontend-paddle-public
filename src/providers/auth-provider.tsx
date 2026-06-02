@@ -75,8 +75,14 @@ function AuthContextBridge({ children }: { children: ReactNode }) {
       setSessionScope("public");
     } catch (error) {
       if (isBackendFetchError(error) && error.status === 401) {
-        setPublicSessionStatus("unauthenticated");
-        setSessionScope("none");
+        // The Google id_token stored in NextAuth is stale (expires in 1h).
+        // Trigger a silent Google re-auth — if the user is still in their Google SSO
+        // session the redirect completes in milliseconds with no visible login UI.
+        void nextAuthSignIn("google", {
+          redirect: true,
+          callbackUrl:
+            typeof window !== "undefined" ? window.location.href : "/",
+        });
         return;
       }
 
