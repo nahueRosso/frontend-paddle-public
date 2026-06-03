@@ -581,14 +581,6 @@ export default function PlansPage() {
       formData.append("basePrice", String(configForm.basePrice));
       formData.append("paymentPlanId", selectedPlan.id);
 
-      console.log("---- FORM DATA ----");
-
-      for (const pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
-
-      console.log("-------------------");
-
       await createTenantConfigMutation.mutateAsync({
         tenantId: session.user.id,
         formData,
@@ -604,7 +596,6 @@ export default function PlansPage() {
       setError(null);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
-      console.error(err);
       setError("No pudimos guardar la configuración inicial.");
       setRedirecting(false);
       return;
@@ -645,7 +636,6 @@ export default function PlansPage() {
         toast.success("El plan fue actualizado correctamente.");
       }
     } catch (err) {
-      console.error("Error cambiando plan:", err);
       setError(
         err instanceof Error
           ? err.message
@@ -674,7 +664,6 @@ export default function PlansPage() {
       setSelectedPlanId(null);
       requestAnimationFrame(scrollToPlanGrid);
     } catch (err) {
-      console.error("Error cancelando suscripción:", err);
       setError(
         err instanceof Error
           ? err.message

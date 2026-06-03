@@ -411,12 +411,6 @@ export async function fetchTournamentPartnerRequests({
   tenantId: string;
   playerId: string;
 }): Promise<PartnerRequestsResponse> {
-  console.log("[partner-requests] Fetching:", {
-    tenantId,
-    playerId,
-    endpoint: `/tournament/player/${playerId}/partner-requests`,
-  });
-
   const response = await playerFetch(
     `/tournament/player/${playerId}/partner-requests`,
     { cache: "no-store" },
@@ -425,8 +419,6 @@ export async function fetchTournamentPartnerRequests({
     response,
     "No se pudieron obtener las solicitudes.",
   );
-
-  console.log("[partner-requests] Raw response:", json);
 
   return normalizePartnerRequestsResponse(json);
 }

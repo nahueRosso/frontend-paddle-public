@@ -39,8 +39,6 @@ export function PlayerProvider({
   slug: string
   children: React.ReactNode
 }) {
-  console.log("PlayerProvider: initialSession", initialSession)
-
   const [playerSession, setPlayerSessionState] = useState(initialSession)
   const [authStatus, setAuthStatus] = useState<SessionState>(() => {
     if (initialAuthStatus) {
@@ -101,8 +99,6 @@ export function PlayerProvider({
             : await ensurePlayerSession(slug)
 
       if (response.payload) {
-        console.log("PlayerProvider: ensureClubPlayerSession payload", response.payload)
-        console.log("PlayerProvider: ensureClubPlayerSession current", playerSession)
         setPlayerSessionState((current) =>
           mergePublicPlayerSession(current, response.payload),
         )

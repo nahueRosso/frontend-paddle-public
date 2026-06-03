@@ -34,12 +34,10 @@ export async function fetchBookings(
     try {
       return JSON.parse(text) as Booking[];
     } catch {
-      console.error("⚠️ JSON inválido en /bookings →", text);
       return [];
     }
-  } catch (error) {
-    console.error("❌ fetchBookings error:", error);
-    return []; // 👈 evita romper UI
+  } catch {
+    return [];
   }
 }
 

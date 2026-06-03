@@ -140,14 +140,6 @@ export function ClubTorneos() {
     const hasMercadoPagoReturn =
       Boolean(externalReference) || Boolean(paymentStatus) || Boolean(paymentId);
 
-    console.log("[tournament-payment] Mercado Pago return detected:", {
-      href: window.location.href,
-      externalReference,
-      paymentStatus,
-      paymentId,
-      hasMercadoPagoReturn,
-    });
-
     if (!hasMercadoPagoReturn) {
       return;
     }
@@ -195,12 +187,6 @@ export function ClubTorneos() {
         return true;
       }
 
-      console.log("[tournament-payment] Finalizing tournament payment flow:", {
-        uiState,
-        externalReference,
-        response,
-      });
-
       if (uiState === "approved" || uiState === "rejected") {
         clearPendingTournamentPayments((pending) =>
           matchesTournamentPendingPayment(pending, externalReference, response),
@@ -227,21 +213,8 @@ export function ClubTorneos() {
         attempts += 1;
 
         try {
-          console.log("[tournament-payment] Polling billing status:", {
-            attempt: attempts,
-            externalReference,
-            paymentStatus,
-          });
-
           const response = await fetchBillingTournamentStatus(externalReference);
           const resolvedStatus = getTournamentBillingState(response, paymentStatus);
-
-          console.log("[tournament-payment] Billing status response:", {
-            attempt: attempts,
-            externalReference,
-            resolvedStatus,
-            response,
-          });
 
           if (resolvedStatus === "approved") {
             await finalize("approved", response);
@@ -261,12 +234,6 @@ export function ClubTorneos() {
           await finalize(resolvedStatus, response);
           return;
         } catch (error) {
-          console.error("[tournament-payment] Error polling billing status:", {
-            attempt: attempts,
-            externalReference,
-            error,
-          });
-
           if (attempts >= 3) {
             toast.error(
               error instanceof Error
@@ -1335,15 +1302,6 @@ function TournamentRegisterDialog({
       }
 
       try {
-        console.log("[tournament-payment] Creating payment link with payload:", {
-          tenantId: config.tenantId,
-          tournamentId: tournament.id,
-          tournamentTeamId: teamId,
-          playerName: billingContact.playerName,
-          playerPhone: billingContact.playerPhone,
-          playerEmail: billingContact.playerEmail,
-        });
-
         const paymentResponse = await createTournamentPaymentLink({
           tenantId: config.tenantId,
           tournamentTeamId: teamId,
@@ -1352,8 +1310,6 @@ function TournamentRegisterDialog({
           playerEmail: billingContact.playerEmail,
           tournamentId: tournament.id,
         });
-
-        console.log("[tournament-payment] Payment link response:", paymentResponse);
 
         if (paymentResponse.alreadyPaid) {
           clearPendingTournamentPayments(
@@ -1383,15 +1339,10 @@ function TournamentRegisterDialog({
           setPendingTournamentPayment(nextPendingPayment);
           setPendingTournamentPaymentState(nextPendingPayment);
           setPaymentResolved(false);
-          console.log("[tournament-payment] Redirecting to checkoutUrl:", {
-            checkoutUrl: paymentResponse.checkoutUrl,
-            externalReference: nextPendingPayment.externalReference,
-          });
           window.location.href = paymentResponse.checkoutUrl;
           return;
         }
       } catch (paymentError) {
-        console.error("[tournament-payment] Error creating payment link:", paymentError);
         const message =
           paymentError instanceof Error
             ? paymentError.message

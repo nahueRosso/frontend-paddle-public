@@ -5,7 +5,6 @@ import { proxyBackendRequest, toProxyResponse } from "@/lib/server/backend-proxy
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    console.log("[tournament-payment-link] Incoming request body:", body);
 
     const response = await proxyBackendRequest(
       request,
@@ -17,8 +16,7 @@ export async function POST(request: Request) {
     );
 
     return toProxyResponse(response);
-  } catch (error) {
-    console.error("Error creating tournament payment link:", error);
+  } catch {
 
     return NextResponse.json(
       { error: "No se pudo generar el link de pago del torneo." },

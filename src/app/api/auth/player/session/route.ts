@@ -31,8 +31,7 @@ export async function POST(request: Request) {
     );
 
     return toProxyResponse(response);
-  } catch (error) {
-    console.error("Error ensuring player session:", error);
+  } catch {
 
     return NextResponse.json(
       { message: "No se pudo asegurar la sesion del jugador.", status: "forbidden" },

@@ -18,11 +18,6 @@ export async function POST(request: Request) {
     message?: string;
   };
 
-  console.log("[contacto] Nuevo mensaje recibido", {
-    name,
-    email,
-    message,
-  });
   // TODO: integrar proveedor externo (CRM, ticketing o email transaccional)
 
   return NextResponse.json({ success: true });

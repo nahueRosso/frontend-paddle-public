@@ -88,13 +88,6 @@ export async function fetchPublicPlayerLookup(slug: string, email: string) {
     },
   )
 
-  console.log("fetchPublicPlayerLookup: response", {
-    slug,
-    email,
-    status: response.status,
-    ok: response.ok,
-  })
-
   if (response.status === 404) {
     return {
       personExists: false,
@@ -109,14 +102,10 @@ export async function fetchPublicPlayerLookup(slug: string, email: string) {
 
   if (!response.ok) {
     const error = await response.json().catch(() => null)
-    console.log("fetchPublicPlayerLookup: error payload", error)
     throw new Error(error?.message || "No se pudo obtener el perfil del jugador.")
   }
 
-  const payload = await response.json().catch(() => null)
-  console.log("fetchPublicPlayerLookup: payload", payload)
-
-  return payload as PublicPlayerLookupResponse
+  return (await response.json().catch(() => null)) as PublicPlayerLookupResponse
 }
 
 export async function createPlayer(slug: string, payload: CreatePlayerPayload) {

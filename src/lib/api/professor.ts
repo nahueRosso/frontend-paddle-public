@@ -2,7 +2,7 @@ import { fetchWithTenantAdmin } from "@/lib/fetchWithTenantAdmin"
 import type { Professor } from "@/types/professor"
 
 export async function getProfessors(tenantId: string): Promise<Professor[]> {
-  const response = await fetchWithTenantAdmin(`/professor/${tenantId}`, {
+  const response = await fetchWithTenantAdmin(`/professor`, {
     cache: "no-store",
   })
 

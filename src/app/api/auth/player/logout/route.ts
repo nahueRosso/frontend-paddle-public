@@ -12,8 +12,7 @@ export async function POST(request: Request) {
     );
 
     return toProxyResponse(response);
-  } catch (error) {
-    console.error("Error destroying player session:", error);
+  } catch {
 
     return NextResponse.json(
       { message: "No se pudo cerrar la sesion del jugador." },

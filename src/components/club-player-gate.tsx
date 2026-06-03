@@ -129,29 +129,12 @@ export function ClubPlayerGate({
 
         const normalizedPlayerSession = normalizePublicPlayerSession(lookupResponse);
 
-        console.log("ClubPlayerGate: lookupResponse", lookupResponse);
-        console.log(
-          "ClubPlayerGate: normalizedPlayerSession",
-          normalizedPlayerSession,
-        );
-
         if (!normalizedPlayerSession.personExists || !normalizedPlayerSession.playerExists) {
           setPlayerSession(normalizedPlayerSession);
           setPlayerAuthStatus("needs_person_registration");
           setPlayerAuthMessage(null);
           return;
         }
-
-        console.log("ClubPlayerGate: ensuredClubSession", ensuredClubSession);
-        console.log(
-          "ClubPlayerGate: finalPlayerSession",
-          ensuredClubSession.payload
-            ? mergePublicPlayerSession(
-                normalizedPlayerSession,
-                ensuredClubSession.payload,
-              )
-            : normalizedPlayerSession,
-        );
 
         setPlayerSession(
           ensuredClubSession.payload

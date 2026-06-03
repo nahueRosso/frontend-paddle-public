@@ -64,7 +64,7 @@ export async function getTenant(tenant: string): Promise<TenantPublic | null> {
   try {
     const res = await fetch(
       // `${process.env.NEXT_PUBLIC_API_URL}/config`,
-      `${process.env.NEXT_PUBLIC_API_URL}/config/${tenant}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/config/slug/${tenant}`,
       {
         cache: "no-store", // dinámico (sin cache)
       }
@@ -220,7 +220,6 @@ export async function updatePaymentStatus(
 
   if (!res.ok) {
     const text = await res.text();
-    console.error("BACKEND ERROR:", text);
     throw new Error(text);
   }
 

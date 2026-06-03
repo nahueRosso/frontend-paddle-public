@@ -49,8 +49,6 @@ const navigation: Array<SingleNavItem | GroupNavItem> = [
 export function Header() {
   const { signOut, session } = useAuth();
 
-  console.log(session?.idToken);
-  
   const pathname = usePathname();
   const userEmail = session?.user?.email ?? "Sin email";
   const userImage = session?.user?.image;

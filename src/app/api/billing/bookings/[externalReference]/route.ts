@@ -19,8 +19,7 @@ export async function GET(
     );
 
     return toProxyResponse(response);
-  } catch (error) {
-    console.error("Error fetching billing booking status:", error);
+  } catch {
 
     return NextResponse.json(
       { error: "No se pudo consultar el estado del pago." },

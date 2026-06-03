@@ -19,8 +19,7 @@ export async function POST(request: Request) {
     });
 
     return toProxyResponse(response);
-  } catch (error) {
-    console.error("Error creating public booking intent:", error);
+  } catch {
 
     return NextResponse.json(
       { error: "Error inesperado al iniciar la reserva publica." },

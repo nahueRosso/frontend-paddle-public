@@ -66,8 +66,7 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    async signIn({ user }) {
-      console.log("Nuevo login:", user?.email ?? "sin email");
+    async signIn() {
       return true;
     },
 

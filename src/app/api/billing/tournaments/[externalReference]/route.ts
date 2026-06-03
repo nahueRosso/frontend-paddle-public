@@ -7,10 +7,6 @@ export async function GET(
   { params }: { params: Promise<{ externalReference: string }> },
 ) {
   const { externalReference } = await params;
-  console.log(
-    "[tournament-payment-status] Checking status for externalReference:",
-    externalReference,
-  );
 
   try {
     const response = await proxyBackendRequest(
@@ -23,8 +19,7 @@ export async function GET(
     );
 
     return toProxyResponse(response);
-  } catch (error) {
-    console.error("Error fetching tournament billing status:", error);
+  } catch {
 
     return NextResponse.json(
       { error: "No se pudo consultar el estado del pago del torneo." },

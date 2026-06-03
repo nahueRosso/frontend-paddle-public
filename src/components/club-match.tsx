@@ -476,34 +476,17 @@ export function ClubMatch() {
   };
 
   const handleSubmit = async () => {
-    console.log("aprete el botonito", {
-      player,
-      person,
-      personId,
-      verifyClubPlayer,
-      verifyPlayer,
-      timeRange,
-    });
-
     if (!player) {
-      console.log("handleSubmit: salgo por !player", {
-        person,
-        personId,
-      });
       setVerifyClubPlayer(true);
       return;
     }
 
     if (player.status !== "verified") {
-      console.log("handleSubmit: salgo por player.status !== verified", {
-        status: player.status,
-      });
       setVerifyPlayer(true);
       return;
     }
 
     if (player.category == null) {
-      console.log("handleSubmit: salgo por player.category == null");
       setError("Tu perfil no tiene una categoria asignada para buscar partido.");
       return;
     }
@@ -533,13 +516,9 @@ export function ClubMatch() {
         matchType: "individual", // o dinámico si lo querés
       };
 
-      console.log("handleSubmit: voy a ejecutar mutateAsync", dto);
-
       const response = await createMatchEntryIntentMutation.mutateAsync(
         dto,
       );
-
-      console.log("handleSubmit: respuesta de mutateAsync", response);
 
       if (!response?.requestId) {
         throw new Error("No se pudo crear la solicitud.");
@@ -560,10 +539,8 @@ export function ClubMatch() {
       const pendingProposals = await fetchPendingMatchProposals({
         userPhone: player.phoneNumber,
       });
-      console.log("handleSubmit: pending proposals", pendingProposals);
       setProposals(pendingProposals);
     } catch (err) {
-      console.error("handleSubmit: error", err);
       setError(
         err instanceof Error
           ? err.message

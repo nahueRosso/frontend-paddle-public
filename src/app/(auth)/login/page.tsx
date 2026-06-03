@@ -44,8 +44,7 @@ function LoginPageContent() {
       await signIn("google", {
         callbackUrl: redirectTo,
       });
-    } catch (err) {
-      console.error("Google sign-in error:", err);
+    } catch {
       setError("Ocurrio un problema. Intentalo nuevamente en unos segundos.");
       setIsSubmitting(false);
     }

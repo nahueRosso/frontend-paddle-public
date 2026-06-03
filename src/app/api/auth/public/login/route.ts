@@ -24,8 +24,7 @@ export async function POST(request: Request) {
     );
 
     return toProxyResponse(response);
-  } catch (error) {
-    console.error("Error creating public session:", error);
+  } catch {
 
     return NextResponse.json(
       { message: "No se pudo iniciar la sesion publica.", status: "forbidden" },

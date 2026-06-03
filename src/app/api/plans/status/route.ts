@@ -75,12 +75,7 @@ export async function GET(request: Request) {
       isTrial: payload.isTrial ?? null,
     });
   } catch (error) {
-    console.error("Error consultando estado del plan:", error);
-
     if (isConnectionRefused(error)) {
-      console.warn(
-        "Servicio de planes inalcanzable. Devolviendo estado inactivo por defecto.",
-      );
       return NextResponse.json({
         active: false,
         planId: null,
