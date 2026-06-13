@@ -47,7 +47,6 @@ import { cn } from "@/lib/utils";
 import { ImageUploader } from "@/components/PageImageUploader";
 import { PublicVideoCallBookingDialog } from "@/components/public-video-call-booking-dialog";
 import { ARG_PROVINCES } from "@/const/province";
-import { normalizeImageFile } from "@/lib/image-normalizer";
 import { SubscriptionBadge } from "@/components/public-mp-suscription";
 import { HeroLoader } from "@/components/hero-loader";
 
@@ -178,7 +177,6 @@ const basePlans: Plan[] = [
       "Atención automatizada a jugadores",
       "Funcionalidad Match",
     ],
-    locked: true,
   },
   {
     id: "plan-4",
@@ -195,7 +193,6 @@ const basePlans: Plan[] = [
       "Operación premium para el administrador",
       "Modalidad de gestión dedicada",
     ],
-    locked: true,
   },
 ];
 
@@ -318,46 +315,14 @@ export default function PlansPage() {
     (Boolean(session?.user?.id) && isPlanStatusLoading) ||
     isPaymentsPlansLoading;
 
-  const handleLogoSelect = async (file: File, previewUrl: string) => {
-    URL.revokeObjectURL(previewUrl);
-
-    try {
-      const normalizedLogo = await normalizeImageFile(file, {
-        width: 1500,
-        height: 1000,
-        fileName: "club-logo",
-      });
-      const normalizedPreviewUrl = URL.createObjectURL(normalizedLogo);
-
-      setLogoPreview(normalizedPreviewUrl);
-      setLogoFile(normalizedLogo);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "No se pudo preparar el logo.",
-      );
-    }
+  const handleLogoSelect = (_file: File, previewUrl: string) => {
+    setLogoPreview(previewUrl);
+    setLogoFile(_file);
   };
 
-  const handleIconSelect = async (file: File, previewUrl: string) => {
-    URL.revokeObjectURL(previewUrl);
-
-    try {
-      const normalizedIcon = await normalizeImageFile(file, {
-        width: 1000,
-        height: 1000,
-        fileName: "club-icon",
-      });
-      const normalizedPreviewUrl = URL.createObjectURL(normalizedIcon);
-
-      setIconPreview(normalizedPreviewUrl);
-      setIconFile(normalizedIcon);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "No se pudo preparar el icono.",
-      );
-    }
+  const handleIconSelect = (_file: File, previewUrl: string) => {
+    setIconPreview(previewUrl);
+    setIconFile(_file);
   };
   const createTenantConfigMutation = useCreateTenantConfigWithAssetsMutation();
   const changePlanMutation = useChangePlanMutation();
@@ -1203,6 +1168,9 @@ export default function PlansPage() {
                   id="logo"
                   label="Logo"
                   preview={logoPreview}
+                  aspectRatio={3 / 2}
+                  exportWidth={1500}
+                  exportHeight={1000}
                   onFileSelect={handleLogoSelect}
                   onClear={() => {
                     setLogoPreview(null);
@@ -1216,7 +1184,9 @@ export default function PlansPage() {
                   id="icon"
                   label="Icono"
                   preview={iconPreview}
-                  requireSquare
+                  aspectRatio={1}
+                  exportWidth={1000}
+                  exportHeight={1000}
                   onFileSelect={handleIconSelect}
                   onClear={() => {
                     setIconPreview(null);

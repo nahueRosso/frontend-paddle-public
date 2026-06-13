@@ -1,18 +1,21 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { ImagePlus, Trash2, AlertCircle } from "lucide-react";
+import { ImagePlus, Trash2, AlertCircle, Crop } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { validateSquareImage } from "@/lib/utils";
+import { ImageCropperDialog } from "@/components/ImageCropperDialog";
 
 type ImageUploaderProps = {
   id: string;
   label: string;
-//   description: string;
   preview: string | null;
-  requireSquare?: boolean;
+  /** e.g. 3/2 for logo, 1 for square icon */
+  aspectRatio?: number;
+  /** Pixel dimensions of the exported image */
+  exportWidth?: number;
+  exportHeight?: number;
   onFileSelect: (file: File, previewUrl: string) => void;
   onClear: () => void;
 };
@@ -20,72 +23,62 @@ type ImageUploaderProps = {
 export function ImageUploader({
   id,
   label,
-//   description,
   preview,
-  requireSquare = false,
+  aspectRatio = 3 / 2,
+  exportWidth = 1500,
+  exportHeight = 1000,
   onFileSelect,
   onClear,
 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [pendingFileName, setPendingFileName] = useState("imagen");
 
-  const processFile = useCallback(
-    async (file: File) => {
-      setError(null);
+  const isSquare = Math.abs(aspectRatio - 1) < 0.01;
 
-      if (!file.type.startsWith("image/")) {
-        setError("Solo se permiten archivos de imagen.");
-        return;
-      }
+  const processFile = useCallback((file: File) => {
+    setError(null);
 
-      if (file.size > 5 * 1024 * 1024) {
-        setError("La imagen no puede superar los 5MB.");
-        return;
-      }
+    if (!file.type.startsWith("image/") || file.type === "image/svg+xml") {
+      setError("Solo se permiten imágenes JPG, PNG o WEBP.");
+      return;
+    }
 
-      if (requireSquare) {
-        const isSquare = await validateSquareImage(file);
-        if (!isSquare) {
-          setError(
-            "El icono debe ser cuadrado (ancho y alto iguales). Ej: 512x512px.",
-          );
-          return;
-        }
-      }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("La imagen no puede superar los 5 MB.");
+      return;
+    }
 
-      const previewUrl = URL.createObjectURL(file);
-      onFileSelect(file, previewUrl);
-    },
-    [requireSquare, onFileSelect],
-  );
+    const objectUrl = URL.createObjectURL(file);
+    setPendingFileName(file.name);
+    setCropSrc(objectUrl);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      void processFile(file);
-    }
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
+    if (file) processFile(file);
+    if (inputRef.current) inputRef.current.value = "";
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file) {
-      void processFile(file);
-    }
+    if (file) processFile(file);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
+  const handleCropConfirm = (croppedFile: File) => {
+    const previewUrl = URL.createObjectURL(croppedFile);
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    onFileSelect(croppedFile, previewUrl);
   };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
+  const handleCropCancel = () => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
   };
 
   const handleClear = () => {
@@ -93,45 +86,74 @@ export function ImageUploader({
     onClear();
   };
 
+  const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
+  const g = gcd(exportWidth, exportHeight);
+  const ratioLabel = `${exportWidth / g}:${exportHeight / g}`;
+  const dimensionHint = isSquare
+    ? `Se exporta en ${exportWidth}×${exportHeight} px (1:1). Recomendado: fondo transparente.`
+    : `Se exporta en ${exportWidth}×${exportHeight} px (${ratioLabel}).`;
+
+  const friendlyHint = isSquare
+    ? `${exportWidth}×${exportHeight} px — cuadrado`
+    : `${exportWidth}×${exportHeight} px — horizontal`;
+
   return (
     <div className="space-y-2">
-      <Label htmlFor={id} className="dark:text-slate-100">{label}</Label>
-      {/* <p className="text-xs text-muted-foreground">{description}</p> */}
+      <Label htmlFor={id} className="dark:text-slate-100">
+        {label}
+      </Label>
 
       <input
         ref={inputRef}
         id={id}
         type="file"
-        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+        accept="image/png,image/jpeg,image/webp"
         className="sr-only"
         onChange={handleChange}
       />
 
       {preview ? (
-        <div className="flex items-center gap-4">
-          <div
-            className={cn(
-              "relative overflow-hidden rounded-xl border-2 border-emerald-200 bg-white dark:border-emerald-900/60 dark:bg-slate-950",
-              requireSquare ? "h-20 w-20" : "h-20 w-[7.5rem]",
-            )}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={preview}
-              alt={`Preview de ${label}`}
-              className="h-full w-full object-contain"
-            />
+        <div className="space-y-2">
+          <div className="flex items-center gap-4">
+            <div
+              className={cn(
+                "relative overflow-hidden rounded-xl border-2 border-emerald-200 bg-white dark:border-emerald-900/60 dark:bg-slate-950",
+                isSquare ? "h-20 w-20" : "h-20 w-[7.5rem]",
+              )}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={preview}
+                alt={`Preview de ${label}`}
+                className="h-full w-full object-contain"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900/60 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
+                onClick={() => inputRef.current?.click()}
+              >
+                <Crop className="h-4 w-4" />
+                Cambiar
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-rose-900/60 dark:text-rose-300 dark:hover:bg-rose-950/30 dark:hover:text-rose-200"
+                onClick={handleClear}
+              >
+                <Trash2 className="h-4 w-4" />
+                Quitar
+              </Button>
+            </div>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-2 border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-rose-900/60 dark:text-rose-300 dark:hover:bg-rose-950/30 dark:hover:text-rose-200"
-            onClick={handleClear}
-          >
-            <Trash2 className="h-4 w-4" />
-            Quitar
-          </Button>
+          <p className="text-xs text-muted-foreground/70 dark:text-slate-400">
+            {friendlyHint}
+          </p>
         </div>
       ) : (
         <button
@@ -144,23 +166,19 @@ export function ImageUploader({
           )}
           onClick={() => inputRef.current?.click()}
           onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
         >
           <ImagePlus className="h-8 w-8 text-emerald-400 dark:text-emerald-300" />
           <span className="text-sm text-muted-foreground dark:text-slate-300">
-            Arrastra una imagen o hace click para seleccionar
+            Arrastrá una imagen o hacé click para seleccionar
           </span>
-          {requireSquare && (
-            <span className="text-xs text-muted-foreground/70 dark:text-slate-400">
-              Se exporta en 1000x1000 px (1:1). Recomendado: fondo transparente.
-            </span>
-          )}
-          {!requireSquare && (
-            <span className="text-xs text-muted-foreground/70 dark:text-slate-400">
-              Se exporta en 1500x1000 px (3:2)
-            </span>
-          )}
+          <span className="text-xs text-muted-foreground/70 dark:text-slate-400">
+            {dimensionHint}
+          </span>
+          <span className="text-xs text-muted-foreground/50 dark:text-slate-500">
+            JPG, PNG o WEBP — máx. 5 MB
+          </span>
         </button>
       )}
 
@@ -169,6 +187,19 @@ export function ImageUploader({
           <AlertCircle className="h-4 w-4 shrink-0" />
           {error}
         </div>
+      )}
+
+      {cropSrc && (
+        <ImageCropperDialog
+          imageSrc={cropSrc}
+          fileName={pendingFileName}
+          aspectRatio={aspectRatio}
+          exportWidth={exportWidth}
+          exportHeight={exportHeight}
+          open={Boolean(cropSrc)}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+        />
       )}
     </div>
   );

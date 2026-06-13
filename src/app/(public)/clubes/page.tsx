@@ -81,7 +81,7 @@ export default function ComplejosPage() {
                 <div className="flex min-h-[7rem] items-center justify-center rounded-2xl bg-slate-50/80 px-4 dark:bg-slate-950/70">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={complex.iconUrl || "/logo-placeholder.png"}
+                    src={complex.iconUrl || "/icon-placeholder.svg"}
                     alt={complex.clubName}
                     className="mx-auto block max-h-16 w-auto rounded-lg object-contain"
                   />

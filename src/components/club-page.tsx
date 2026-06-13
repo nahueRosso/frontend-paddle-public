@@ -354,7 +354,7 @@ export function ClubPage({ slug }: ClubPageProps) {
               <div className="mx-auto flex min-h-[4.5rem] items-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={config?.logoUrl || "/logo-placeholder.png"}
+                  src={config?.logoUrl || "/logo-placeholder.svg"}
                   alt={config.clubName}
                   className="h-20 w-auto object-contain sm:h-24"
                 />

@@ -8,8 +8,8 @@ import { useAppTheme } from "@/components/app-theme-provider";
 import { FeatureShowcaseDialog } from "@/components/feature-showcase-dialog";
 import { HeroLoader } from "@/components/hero-loader";
 
-const HERO_BACKGROUND_SRC = "/cancha-de-paddle.png";
-const HERO_BACKGROUND_DARK_SRC = "/cancha-de-paddle-dark-2.png";
+const HERO_BACKGROUND_SRC = "/cancha-de-paddle.webp";
+const HERO_BACKGROUND_DARK_SRC = "/cancha-de-paddle-dark-2.webp";
 
 const FADE_IN_VARIANTS: Variants = {
   hidden: { opacity: 0, y: 16 },
@@ -17,8 +17,8 @@ const FADE_IN_VARIANTS: Variants = {
     opacity: 1,
     y: 0,
     transition: {
-      delay: 0.25 + custom * 0.15,
-      duration: 0.65,
+      delay: 0.1 + custom * 0.07,
+      duration: 0.5,
       ease: [0.16, 1, 0.3, 1] as const,
     },
   }),

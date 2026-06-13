@@ -84,12 +84,12 @@ export async function getTenant(tenant: string): Promise<TenantPublic | null> {
 
 // export async function fetchGetConfigAll(): Promise<TenantConfigQueryResponse> {
 export async function fetchGetConfigAll(): Promise<ClubesFetch[]> {
-  const res = await fetchWithTenantAdmin(`/config`, {
+  const res = await fetchWithTenantAdmin(`/config/public`, {
     cache: "no-store",
   });
 
   if (!res.ok) throw new Error("Error al traer ejercicios");
-  const json = (await res.json()) as ClubesFetch[]; // Cambiado a ClubesFetch[]
+  const json = (await res.json()) as ClubesFetch[];
   return json;
 }
 
@@ -109,7 +109,7 @@ export async function fetchGetConfig(
 export async function fetchGetConfigBySlug(
   slug: string,
 ): Promise<TenantConfigQueryResponse> {
-  const res = await fetchWithTenantAdmin(`/config/slug/${slug}`, {
+  const res = await fetchWithTenantAdmin(`/config/public-slug/${slug}`, {
     cache: "no-store",
   });
 
@@ -139,13 +139,24 @@ export async function createTenantConfig(
 export async function createTenantConfigWithAssets({
   formData,
 }: CreateTenantConfigWithAssetsInput) {
+  const formEntries: Record<string, unknown> = {};
+  formData.forEach((value, key) => {
+    formEntries[key] = value instanceof File ? `[File: ${value.name} ${value.size}b]` : value;
+  });
+  console.log("[createTenantConfigWithAssets] POST /config payload:", formEntries);
+
   const response = await fetchWithTenantAdmin("/config", {
     method: "POST",
     body: formData,
   });
 
+  console.log("[createTenantConfigWithAssets] response status:", response.status);
+
   if (!response.ok) {
-    throw new Error("No pudimos guardar la configuración inicial.");
+    let body = "";
+    try { body = await response.text(); } catch { /* noop */ }
+    console.error("[createTenantConfigWithAssets] error body:", body);
+    throw new Error(`No pudimos guardar la configuración inicial. (${response.status}) ${body}`);
   }
 
   return response.json();

@@ -32,7 +32,7 @@ function FloatingWhatsappButtonComponent() {
 
   return (
     <motion.a
-      href="https://wa.me/5492923507531?text=Hola%20quiero%20información"
+      href="https://wa.me/5491178257528?text=Hola%20quiero%20información"
       target="_blank"
       rel="noopener noreferrer"
       aria-label={whatsappButtonLabel}

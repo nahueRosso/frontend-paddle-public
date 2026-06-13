@@ -73,7 +73,7 @@ function getGoogleId(session: Session | null): string | undefined {
 
 function formatDate(value: string) {
   const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(Date.UTC(year, (month ?? 1) - 1, day ?? 1));
+  const date = new Date(year, (month ?? 1) - 1, day ?? 1);
 
   return new Intl.DateTimeFormat("es-AR", {
     day: "2-digit",
