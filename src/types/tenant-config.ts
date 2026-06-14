@@ -67,6 +67,9 @@ export interface TenantConfig {
   address: string;
   city?: string;
   province?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  placeId?: string | null;
   contactPhone: string;
   contactEmail: string;
   turnDuration: number;
@@ -162,6 +165,9 @@ export interface ClubConfig {
 
   city: string;
   province: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  placeId?: string | null;
 
   contactPhone: string;
   contactEmail: string;

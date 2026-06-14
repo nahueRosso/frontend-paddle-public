@@ -8,6 +8,7 @@ import {
   LayoutGrid,
   Timer,
   DollarSign,
+  Navigation,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useClub } from "@/context/club-context";
@@ -25,7 +26,15 @@ export function ClubHome() {
     .filter(Boolean)
     .join(", ");
 
-  const mapQuery = encodeURIComponent(fullAddress);
+  const hasCoords = Boolean(config.latitude && config.longitude);
+
+  const mapSrc = hasCoords
+    ? `https://www.google.com/maps/embed/v1/place?key=AIzaSyDBwO9a-mIRIUBairZ8wT-qMT6-yQjFKbI&q=${config.latitude},${config.longitude}`
+    : `https://www.google.com/maps/embed/v1/place?key=AIzaSyDBwO9a-mIRIUBairZ8wT-qMT6-yQjFKbI&q=${encodeURIComponent(fullAddress)}`;
+
+  const directionsHref = hasCoords
+    ? `https://www.google.com/maps/dir/?api=1&destination=${config.latitude},${config.longitude}${config.placeId ? `&destination_place_id=${config.placeId}` : ""}`
+    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddress)}`;
 
   return (
     <div className="space-y-5 sm:space-y-6 lg:space-y-8">
@@ -107,10 +116,19 @@ export function ClubHome() {
         </Card>
 
         <Card className="overflow-hidden rounded-[1.45rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20 sm:rounded-[1.75rem]">
-          <CardHeader className="pb-3 sm:pb-4">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 sm:pb-4">
             <CardTitle className="text-base text-slate-900 dark:text-slate-100 sm:text-lg">
               Ubicacion
             </CardTitle>
+            <a
+              href={directionsHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800 shadow-sm transition-colors hover:bg-emerald-100 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
+            >
+              <Navigation className="h-3.5 w-3.5" />
+              Cómo llegar
+            </a>
           </CardHeader>
           <CardContent className="p-0">
             <div className="aspect-[4/3] w-full sm:aspect-video">
@@ -122,7 +140,7 @@ export function ClubHome() {
                 loading="lazy"
                 allowFullScreen
                 referrerPolicy="no-referrer-when-downgrade"
-                src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${mapQuery}`}
+                src={mapSrc}
               />
             </div>
           </CardContent>

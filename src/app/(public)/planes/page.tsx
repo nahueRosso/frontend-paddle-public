@@ -46,6 +46,16 @@ import { planKeys } from "@/lib/queryKeys/plan";
 import { cn } from "@/lib/utils";
 import { ImageUploader } from "@/components/PageImageUploader";
 import { PublicVideoCallBookingDialog } from "@/components/public-video-call-booking-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ARG_PROVINCES } from "@/const/province";
 import { SubscriptionBadge } from "@/components/public-mp-suscription";
 import { HeroLoader } from "@/components/hero-loader";
@@ -310,6 +320,7 @@ export default function PlansPage() {
 
   const [iconPreview, setIconPreview] = useState<string | null>(null);
   const [iconFile, setIconFile] = useState<File | null>(null);
+  const [showLegalDialog, setShowLegalDialog] = useState(false);
   const isPageLoading =
     status === "loading" ||
     (Boolean(session?.user?.id) && isPlanStatusLoading) ||
@@ -1207,7 +1218,7 @@ export default function PlansPage() {
                 }
                 onClick={() => {
                   if (!redirecting) {
-                    void handleCompleteSetup();
+                    setShowLegalDialog(true);
                   }
                 }}
               >
@@ -1230,6 +1241,94 @@ export default function PlansPage() {
           </div>
         ) : null}
       </section>
+
+      <AlertDialog open={showLegalDialog} onOpenChange={setShowLegalDialog}>
+        <AlertDialogContent className="max-w-lg rounded-3xl border border-emerald-100 bg-white p-8 shadow-lg dark:border-emerald-900/60 dark:bg-slate-950">
+          <AlertDialogHeader className="gap-3">
+            <AlertDialogTitle className="text-xl font-semibold text-[#111827] dark:text-slate-100">
+              Antes de continuar
+            </AlertDialogTitle>
+            <AlertDialogDescription className="sr-only">
+              Revisá nuestros documentos legales antes de confirmar tu plan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-5 text-sm text-[#4B5563] dark:text-slate-400">
+            <p className="leading-relaxed">
+              Nuestra plataforma cumple con la{" "}
+              <strong className="text-[#111827] dark:text-slate-200">
+                Ley N.° 25.326
+              </strong>{" "}
+              de Protección de Datos Personales de la República Argentina. Te
+              recomendamos leer los siguientes documentos antes de confirmar:
+            </p>
+
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+              <ul className="space-y-3">
+                <li className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+                    <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                  </span>
+                  <a
+                    href="/terminos"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-emerald-700 underline underline-offset-4 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
+                  >
+                    Términos y Condiciones
+                  </a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+                    <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                  </span>
+                  <a
+                    href="/privacidad"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-emerald-700 underline underline-offset-4 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
+                  >
+                    Política de Privacidad
+                  </a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+                    <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                  </span>
+                  <a
+                    href="/como-eliminar-datos"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-emerald-700 underline underline-offset-4 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300"
+                  >
+                    Cómo eliminar mis datos
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <p className="text-xs leading-relaxed text-[#4B5563]/80 dark:text-slate-500">
+              Al hacer clic en <strong className="text-[#111827] dark:text-slate-300">Confirmar y continuar</strong> aceptás
+              haber leído estos documentos y que procesemos tu información de
+              acuerdo con nuestra Política de Privacidad.
+            </p>
+          </div>
+
+          <AlertDialogFooter className="mt-2 gap-2">
+            <AlertDialogCancel className="rounded-xl border border-slate-200 bg-white text-[#4B5563] hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-emerald-500 font-medium text-white shadow-md hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+              onClick={() => {
+                void handleCompleteSetup();
+              }}
+            >
+              Confirmar y continuar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

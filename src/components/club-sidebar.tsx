@@ -57,22 +57,6 @@ const navItems = [
   { id: "torneos" as const, label: "Torneos", icon: Trophy, disabled: false },
 ];
 
-function getClubInitials(clubName: string) {
-  const words = clubName
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-
-  if (words.length === 0) {
-    return "CP";
-  }
-
-  return words
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase() ?? "")
-    .join("");
-}
-
 // export function ClubSidebar({ clubName, icon }: { clubName: string; icon?: string }) {
 //   const router = useRouter();
 //   const pathname = usePathname();
@@ -179,8 +163,13 @@ export function ClubSidebar({
                 alt={clubName}
                 className="rounded-xl object-cover"
               />
-              <AvatarFallback className="rounded-xl bg-white/15 text-[11px] font-semibold tracking-wide text-white">
-                {getClubInitials(clubName)}
+              <AvatarFallback className="rounded-xl bg-white/15">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/mi-padel-club-icon-circulo-negro.svg"
+                  alt={clubName}
+                  className="h-5 w-5 opacity-80 invert"
+                />
               </AvatarFallback>
             </Avatar>
           </div>

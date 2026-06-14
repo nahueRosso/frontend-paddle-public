@@ -108,6 +108,52 @@ export async function fetchPublicPlayerLookup(slug: string, email: string) {
   return (await response.json().catch(() => null)) as PublicPlayerLookupResponse
 }
 
+export type ExistingPersonSummary = {
+  id: string
+  firstName: string | null
+  lastName: string | null
+  baseCategory: number | null
+  gender: string
+  phoneNumber: string | null
+}
+
+export type PhoneChallengeResponse =
+  | { conflict: 'none' }
+  | { conflict: 'person'; person: ExistingPersonSummary }
+  | { conflict: 'player'; challengeId: string; whatsappNumber: string }
+
+export type PhoneChallengeStatusResponse = {
+  verified: boolean
+  expired: boolean
+}
+
+export async function checkPhoneChallenge(phoneNumber: string): Promise<PhoneChallengeResponse> {
+  const response = await publicFetch('/player/phone-challenge', {
+    method: 'POST',
+    body: JSON.stringify({ phoneNumber }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null)
+    throw new Error(error?.message || 'No se pudo verificar el teléfono.')
+  }
+
+  return response.json() as Promise<PhoneChallengeResponse>
+}
+
+export async function getPhoneChallengeStatus(challengeId: string): Promise<PhoneChallengeStatusResponse> {
+  const response = await publicFetch(`/player/phone-challenge/${challengeId}`, {
+    method: 'GET',
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    return { verified: false, expired: true }
+  }
+
+  return response.json() as Promise<PhoneChallengeStatusResponse>
+}
+
 export async function createPlayer(slug: string, payload: CreatePlayerPayload) {
   const { tenantId: _tenantId, ...body } = payload as CreatePlayerPayload & {
     tenantId?: string

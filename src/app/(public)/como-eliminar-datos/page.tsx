@@ -17,59 +17,90 @@ export default function DataDeletionPage() {
           Eliminación de datos personales
         </h1>
         <p>
-          Podés eliminar tus datos en cualquier momento cerrando sesión en la
-          aplicación. Al hacerlo, toda la información local almacenada (token,
-          preferencias y datos personales) se elimina automáticamente.
+          Podés solicitar la eliminación de tus datos personales en cualquier
+          momento. El proceso es simple: envianos un correo y nos encargamos de
+          todo en menos de 24 horas hábiles.
         </p>
       </header>
 
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-          ¿Cómo cerrar sesión?
+          ¿Cómo solicitar la eliminación?
         </h2>
         <ol className="list-decimal space-y-2 pl-6">
           <li>
-            Ingresá a la aplicación Mi Club Pádel con tu cuenta habitual.
+            Enviá un correo a{" "}
+            <a
+              href={`mailto:${company.email}`}
+              className="font-semibold text-slate-900 underline underline-offset-4 dark:text-slate-100"
+            >
+              {company.email}
+            </a>{" "}
+            con el asunto <strong>Solicitud de eliminación de datos</strong>.
           </li>
           <li>
-            En la barra superior, hacé clic en el botón{" "}
-            <strong>Cerrar sesión</strong>.
+            Indicá el nombre de tu club o cuenta y el correo electrónico
+            asociado, para que podamos identificar tu información correctamente.
           </li>
           <li>
-            Ese proceso elimina el token de autenticación, las preferencias
-            guardadas y cualquier dato almacenado en tu dispositivo.
+            En menos de <strong>24 horas hábiles</strong> te confirmamos por
+            correo que los datos fueron eliminados y te enviamos la confirmación
+            correspondiente.
           </li>
         </ol>
       </section>
 
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-          Datos que se eliminan
+          ¿Qué datos se eliminan?
         </h2>
         <p>
-          Al cerrar sesión se remueven todos los registros locales asociados a tu
-          cuenta: token de acceso, identificadores de sesión, preferencias y
-          datos guardados por Mi Club Pádel en el navegador. No conservamos
-          copias locales una vez finalizado el proceso de cierre de sesión.
+          Al procesar tu solicitud eliminamos de nuestros servidores toda la
+          información personal y operativa asociada a tu cuenta: datos de
+          contacto, registros de reservas, configuraciones, integraciones y
+          cualquier otro dato vinculado a tu perfil o club.
         </p>
       </section>
 
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-          Necesitás ayuda adicional
+          Datos que conservamos de forma mínima
         </h2>
         <p>
-          Si experimentás algún inconveniente escribinos a{" "}
+          Con el único fin de prevenir el abuso del período de prueba gratuito
+          (trial), conservamos de forma permanente únicamente dos datos
+          anonimizados:
+        </p>
+        <ul className="list-disc space-y-2 pl-6">
+          <li>El nombre del tenant (identificador del club).</li>
+          <li>La dirección de correo electrónico utilizada para el registro.</li>
+        </ul>
+        <p>
+          Estos datos no se usan con fines comerciales ni se comparten con
+          terceros. Su único propósito es identificar si una cuenta ya accedió
+          anteriormente al período de prueba.
+        </p>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+          ¿Tenés dudas?
+        </h2>
+        <p>
+          Si tenés alguna consulta sobre este proceso, escribinos a{" "}
           <a
             href={`mailto:${company.email}`}
             className="font-semibold text-slate-900 underline underline-offset-4 dark:text-slate-100"
           >
             {company.email}
           </a>{" "}
-          o llamanos al {company.phone}. Responderemos tu solicitud de
-          eliminación de datos lo antes posible.
+          o llamanos al {company.phone}. Con gusto te ayudamos.
         </p>
       </section>
+
+      <footer className="rounded-3xl border border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400">
+        Última actualización: Junio de 2026 — {company.brandName}.
+      </footer>
     </LegalPageLayout>
   );
 }

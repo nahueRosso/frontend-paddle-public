@@ -22,7 +22,7 @@ export const company: CompanyInfo = {
   legalName: "Mi Club Pádel",
   cuit: "",
   email: "contacto@miclubpadel.com",
-  phone: "+54 9 11 2345-6789",
+  phone: "+54 9 11 7825-7528",
   legalPhone: "",
   address: "Argentina",
   province: "Buenos Aires",
