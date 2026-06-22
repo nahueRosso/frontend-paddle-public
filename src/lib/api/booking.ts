@@ -190,6 +190,25 @@ export async function updateBookingStatus({
   }
 }
 
+export type CancelBookingResponse = {
+  cancelled: boolean;
+  refundAmount: number;
+  message: string;
+};
+
+export async function cancelBooking(bookingId: string): Promise<CancelBookingResponse> {
+  const res = await fetchWithTenantAdmin(`/bookings/${bookingId}/cancel`, {
+    method: "POST",
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "No se pudo cancelar la reserva.");
+  }
+
+  return res.json();
+}
+
 export async function generateBookingStoryImage(tenantId: string): Promise<Blob> {
   const res = await fetchWithTenantAdmin(
     "/generate-image/story-booking",

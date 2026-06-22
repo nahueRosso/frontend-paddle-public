@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CalendarDays,
   MapPin,
   Phone,
   Mail,
@@ -112,6 +113,7 @@ export function ClubHome() {
               label="Horarios"
               value={`${config.openingMorning} - ${config.closingMorning}`}
             />
+            <OpenDaysBadges openDays={config.openDays} />
           </CardContent>
         </Card>
 
@@ -241,6 +243,42 @@ function InfoRow({
         <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">
           {value || "No disponible"}
         </p>
+      </div>
+    </div>
+  );
+}
+
+const WEEKDAY_LABELS: Record<number, string> = {
+  1: "Lun", 2: "Mar", 3: "Mié", 4: "Jue", 5: "Vie", 6: "Sáb", 0: "Dom",
+};
+const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
+function OpenDaysBadges({ openDays }: { openDays?: number[] }) {
+  const days = openDays ?? WEEKDAY_ORDER;
+  return (
+    <div className="flex items-start gap-3">
+      <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+      <div className="min-w-0 space-y-1.5">
+        <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500 sm:text-xs sm:tracking-[0.2em]">
+          Días de apertura
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {WEEKDAY_ORDER.map((day) => {
+            const isOpen = days.includes(day);
+            return (
+              <span
+                key={day}
+                className={`rounded-md px-2 py-0.5 text-[11px] font-medium ${
+                  isOpen
+                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
+                    : "bg-slate-100 text-slate-400 line-through dark:bg-slate-800 dark:text-slate-500"
+                }`}
+              >
+                {WEEKDAY_LABELS[day]}
+              </span>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

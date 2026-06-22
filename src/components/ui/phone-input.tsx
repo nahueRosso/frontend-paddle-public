@@ -75,13 +75,16 @@ export function PhoneInput({
   const parsed = React.useMemo(() => parseValue(value), [value]);
   const [countryCode, setCountryCode] = React.useState<CountryCode>(parsed.countryCode);
   const [national, setNational] = React.useState(parsed.national);
+  const internalRef = React.useRef(false);
 
-  // Sync external value changes (e.g. form reset)
   React.useEffect(() => {
+    if (internalRef.current) {
+      internalRef.current = false;
+      return;
+    }
     const p = parseValue(value);
     setCountryCode(p.countryCode);
     setNational(p.national);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   const selectedCountry = PHONE_COUNTRIES.find((c) => c.code === countryCode) ?? PHONE_COUNTRIES[0];
@@ -89,7 +92,11 @@ export function PhoneInput({
   const emit = (code: CountryCode, nat: string) => {
     if (!onChange) return;
     const country = PHONE_COUNTRIES.find((c) => c.code === code) ?? PHONE_COUNTRIES[0];
-    const digits = nat.replace(/\D/g, "");
+    let digits = nat.replace(/\D/g, "");
+    if (code === "AR" && digits.length === 10 && !digits.startsWith("9")) {
+      digits = "9" + digits;
+    }
+    internalRef.current = true;
     onChange(digits ? `${country.dial}${digits}` : "");
   };
 

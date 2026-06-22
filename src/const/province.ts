@@ -22,5 +22,5 @@ export const ARG_PROVINCES = [
   "Santiago del Estero",
   "Tierra del Fuego",
   "Tucumán",
-  "Ciudad Autónoma de Buenos Aires",
+  "CABA",
 ];

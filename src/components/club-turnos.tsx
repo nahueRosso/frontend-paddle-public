@@ -20,7 +20,7 @@ import type { CourtConfig } from "@/types/tenant-config";
 import { useBookingsQuery } from "@/hooks/queries/booking";
 import { useCurrentTime } from "@/hooks/use-current-time";
 import { useBookingsSocket } from "@/hooks/use-bookings-socket";
-import { createPublicBookingIntent } from "@/lib/api/booking";
+import { cancelBooking, createPublicBookingIntent } from "@/lib/api/booking";
 import {
   buildPendingPaymentOwnerIdentity,
   buildPendingPaymentStorageKey,
@@ -99,6 +99,8 @@ export function ClubTurnos() {
   const activeCourts = config.courts.filter((c) => c.active);
   const showCourtPrice = config.bookingRules?.showCourtPrice ?? true;
   const defaultCourtPrice = config.basePrice ?? 0;
+  const openDays = config.openDays ?? [1, 2, 3, 4, 5, 6, 0];
+  const isDayClosed = !openDays.includes(selectedDate.getDay());
 
   const { player, person, playerId, personId, personExists } = usePlayer();
   const bookingActor = player ?? person;
@@ -422,12 +424,46 @@ export function ClubTurnos() {
   const pendingCourtLabel = pendingPayment
     ? `Cancha ${pendingPayment.courtNumber}`
     : null;
+  const [cancelConfirm, setCancelConfirm] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
   const handleContinuePayment = () => {
     if (!pendingPayment) {
       return;
     }
 
     window.location.href = pendingPayment.checkoutUrl;
+  };
+
+  const handleCancelBooking = async () => {
+    if (!pendingPayment?.bookingId) return;
+    if (!cancelConfirm) {
+      setCancelConfirm(true);
+      return;
+    }
+
+    setCancelling(true);
+    try {
+      const result = await cancelBooking(pendingPayment.bookingId);
+      clearPendingPayment();
+      setCancelConfirm(false);
+      toast({ title: result.message });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: bookingKeys.list(config.tenantId, bookingDate),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: bookingKeys.availabilityByTenant(config.tenantId, bookingDate),
+        }),
+      ]);
+    } catch (err) {
+      toast({
+        title: err instanceof Error ? err.message : "Error al cancelar",
+        variant: "destructive",
+      });
+    } finally {
+      setCancelling(false);
+    }
   };
 
   return (
@@ -469,11 +505,29 @@ export function ClubTurnos() {
                 ) : null}
                 <Button
                   variant="outline"
-                  onClick={clearPendingPayment}
-                  className="border-amber-300 bg-white/80 text-amber-900 hover:bg-amber-100 dark:border-amber-900/60 dark:bg-slate-950/50 dark:text-amber-100 dark:hover:bg-amber-500/10"
+                  onClick={handleCancelBooking}
+                  disabled={cancelling}
+                  className={
+                    cancelConfirm
+                      ? "border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
+                      : "border-amber-300 bg-white/80 text-amber-900 hover:bg-amber-100 dark:border-amber-900/60 dark:bg-slate-950/50 dark:text-amber-100 dark:hover:bg-amber-500/10"
+                  }
                 >
-                  Cerrar
+                  {cancelling
+                    ? "Cancelando..."
+                    : cancelConfirm
+                      ? "Confirmar cancelación"
+                      : "Cancelar reserva"}
                 </Button>
+                {cancelConfirm && !cancelling ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => setCancelConfirm(false)}
+                    className="border-amber-300 bg-white/80 text-amber-900 hover:bg-amber-100 dark:border-amber-900/60 dark:bg-slate-950/50 dark:text-amber-100 dark:hover:bg-amber-500/10"
+                  >
+                    No, mantener
+                  </Button>
+                ) : null}
               </div>
             </div>
           </div>
@@ -583,7 +637,11 @@ export function ClubTurnos() {
       </div>
 
       {/* Schedule Grid */}
-      {isBookingsLoading ? (
+      {isDayClosed ? (
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-400">
+          El club no abre este día.
+        </div>
+      ) : isBookingsLoading ? (
         <ScheduleSkeleton count={activeCourts.length} />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">

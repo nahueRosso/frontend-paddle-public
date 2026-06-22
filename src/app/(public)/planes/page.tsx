@@ -57,6 +57,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ARG_PROVINCES } from "@/const/province";
+import { CityCombobox } from "@/components/ui/city-combobox";
 import { SubscriptionBadge } from "@/components/public-mp-suscription";
 import { HeroLoader } from "@/components/hero-loader";
 
@@ -1058,27 +1059,14 @@ export default function PlansPage() {
 
                   <div className="grid md:grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="city">Ciudad</Label>
-                      <Input
-                        id="city"
-                        value={configForm.city ?? ""}
-                        minLength={2}
-                        maxLength={50}
-                        onChange={(e) =>
-                          handleConfigChange("city", e.target.value)
-                        }
-                        placeholder="Rosario"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
                       <Label htmlFor="province">Provincia</Label>
 
                       <Select
                         value={configForm.province ?? ""}
-                        onValueChange={(value) =>
-                          handleConfigChange("province", value)
-                        }
+                        onValueChange={(value) => {
+                          handleConfigChange("province", value);
+                          handleConfigChange("city", "");
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar provincia" />
@@ -1092,6 +1080,15 @@ export default function PlansPage() {
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="city">Ciudad</Label>
+                      <CityCombobox
+                        province={configForm.province}
+                        value={configForm.city}
+                        onChange={(val) => handleConfigChange("city", val)}
+                      />
                     </div>
                   </div>
 

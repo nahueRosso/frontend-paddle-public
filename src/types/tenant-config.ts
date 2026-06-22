@@ -172,6 +172,7 @@ export interface ClubConfig {
   contactPhone: string;
   contactEmail: string;
 
+  openDays?: number[];
   turnDuration: number;
   isDiscontinuous: boolean;
 

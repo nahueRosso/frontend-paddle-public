@@ -1,7 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import type { Session } from "next-auth";
 import type { JWT } from "next-auth/jwt";
-import FacebookProvider from "next-auth/providers/facebook";
 import GoogleProvider from "next-auth/providers/google";
 
 function extractProviderId(profile: unknown): string | undefined {
@@ -26,20 +25,6 @@ const nextAuthSecret =
   "miclubpadel-dev-secret";
 
 const providers: NextAuthOptions["providers"] = [];
-
-if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
-  providers.push(
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-      authorization: {
-        params: {
-          scope: "email,public_profile",
-        },
-      },
-    }),
-  );
-}
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   providers.push(
