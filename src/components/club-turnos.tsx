@@ -466,216 +466,272 @@ export function ClubTurnos() {
     }
   };
 
+  const allCourtSlots = activeCourts.map((court) => ({
+    court,
+    slots: generateTimeSlots(
+      config.openingMorning,
+      config.closingMorning,
+      config.turnDuration,
+      court.number,
+      bookings,
+    ),
+  }));
+
+  const timeSlotMap = new Map<string, { courtNumber: number; slot: TimeSlot; court: typeof activeCourts[0] }[]>();
+  for (const { court, slots } of allCourtSlots) {
+    for (const slot of slots) {
+      const key = slot.startTime;
+      if (!timeSlotMap.has(key)) timeSlotMap.set(key, []);
+      timeSlotMap.get(key)!.push({ courtNumber: court.number, slot, court });
+    }
+  }
+  const timeSlotEntries = [...timeSlotMap.entries()].sort(([a], [b]) => a.localeCompare(b));
+
   return (
-    <div className="space-y-6">
-      <section className="rounded-[2rem] border border-emerald-100 bg-white/75 p-6 shadow-lg shadow-emerald-100/60 backdrop-blur dark:border-emerald-900/60 dark:bg-slate-950/75 dark:shadow-emerald-950/20">
-        <span className="hidden md:inline-flex rounded-full bg-emerald-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
-          Reservas web
-        </span>
-        <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 lg:text-3xl">
-          Turnos disponibles
-        </h2>
-        <p className="mt-2 max-w-2xl text-slate-600 dark:text-slate-400">
-          Selecciona una fecha y cancha para ver la disponibilidad.
-        </p>
-        {pendingPayment ? (
-          <div className="mt-4 rounded-[1.5rem] border border-amber-200 bg-amber-50/90 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-1">
-                <p className="font-semibold">
-                  Tenes una reserva pendiente para {pendingCourtLabel} a las {pendingPayment.startTime}.
-                </p>
-                <p className="text-amber-800/90 dark:text-amber-200/90">
-                  {isPendingPaymentExpired
-                    ? "El tiempo de pago vencio. La disponibilidad se va a refrescar."
-                    : `Te quedan ${paymentCountdown} para completar el pago.`}
-                </p>
-                <p className="text-xs text-amber-700/80 dark:text-amber-300/80">
-                  Fecha: {pendingPayment.date}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {!isPendingPaymentExpired ? (
-                  <Button
-                    onClick={handleContinuePayment}
-                    className="bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
-                  >
-                    Continuar pago
-                  </Button>
-                ) : null}
-                <Button
-                  variant="outline"
-                  onClick={handleCancelBooking}
-                  disabled={cancelling}
-                  className={
-                    cancelConfirm
-                      ? "border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
-                      : "border-amber-300 bg-white/80 text-amber-900 hover:bg-amber-100 dark:border-amber-900/60 dark:bg-slate-950/50 dark:text-amber-100 dark:hover:bg-amber-500/10"
-                  }
-                >
-                  {cancelling
-                    ? "Cancelando..."
-                    : cancelConfirm
-                      ? "Confirmar cancelación"
-                      : "Cancelar reserva"}
+    <div className="space-y-5">
+      {/* Header */}
+      <div>
+        <h2 className="text-xl font-bold text-[#F2F3F5]">Reservar turno</h2>
+        <p className="text-sm text-[#6B7280]">{config.clubName}</p>
+      </div>
+
+      {pendingPayment ? (
+        <div className="rounded-2xl border border-amber-900/60 bg-amber-950/30 p-4 text-sm text-amber-100">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="font-semibold">
+                Reserva pendiente: {pendingCourtLabel} a las {pendingPayment.startTime}
+              </p>
+              <p className="text-amber-200">
+                {isPendingPaymentExpired
+                  ? "El tiempo de pago venció."
+                  : `Te quedan ${paymentCountdown} para pagar.`}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {!isPendingPaymentExpired ? (
+                <Button onClick={handleContinuePayment} className="bg-amber-500 text-white hover:bg-amber-400">
+                  Continuar pago
                 </Button>
-                {cancelConfirm && !cancelling ? (
-                  <Button
-                    variant="outline"
-                    onClick={() => setCancelConfirm(false)}
-                    className="border-amber-300 bg-white/80 text-amber-900 hover:bg-amber-100 dark:border-amber-900/60 dark:bg-slate-950/50 dark:text-amber-100 dark:hover:bg-amber-500/10"
-                  >
-                    No, mantener
-                  </Button>
-                ) : null}
-              </div>
+              ) : null}
+              <Button
+                variant="outline"
+                onClick={handleCancelBooking}
+                disabled={cancelling}
+                className={cancelConfirm ? "border-rose-900/60 bg-rose-950/30 text-rose-300" : "border-amber-900/60 bg-[#14161A] text-amber-100"}
+              >
+                {cancelling ? "Cancelando..." : cancelConfirm ? "Confirmar cancelación" : "Cancelar reserva"}
+              </Button>
+              {cancelConfirm && !cancelling ? (
+                <Button variant="outline" onClick={() => setCancelConfirm(false)} className="border-amber-900/60 bg-[#14161A] text-amber-100">
+                  No, mantener
+                </Button>
+              ) : null}
             </div>
           </div>
-        ) : null}
-      </section>
+        </div>
+      ) : null}
 
-      <Card className="rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
-        <CardContent className="flex flex-col items-center gap-4 p-4 sm:flex-row sm:justify-between">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={goToPreviousDay}
-              disabled={isToday}
-              aria-label="Dia anterior"
-              className="border-emerald-200 bg-white/80 text-slate-700 hover:bg-emerald-50 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
+      {/* Day selector - horizontal chips */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+        {Array.from({ length: 7 }).map((_, i) => {
+          const date = new Date();
+          date.setDate(date.getDate() + i);
+          const isSelected = format(date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd");
+          const dayLabel = i === 0 ? "Hoy" : format(date, "EEE", { locale: es }).replace(/^\w/, c => c.toUpperCase());
+          const dayNum = format(date, "d");
+
+          return (
+            <button
+              key={i}
+              onClick={() => setSelectedDate(date)}
+              className={`flex shrink-0 flex-col items-center rounded-xl px-4 py-2 text-xs font-medium transition ${
+                isSelected
+                  ? "border border-[#D6FF3D] bg-[#D6FF3D]/10 text-[#D6FF3D]"
+                  : "border border-[#1E2028] bg-[#101216] text-[#6B7280] hover:border-[#2a3036]"
+              }`}
             >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="min-w-[200px] justify-center gap-2 border-emerald-200 bg-white/80 text-slate-700 hover:bg-emerald-50 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
-                >
-                  <Clock className="h-4 w-4" />
-                  <span className="capitalize">
-                    {format(selectedDate, "EEEE d 'de' MMMM", { locale: es })}
-                  </span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto border-emerald-100 p-0 dark:border-emerald-900/60 dark:bg-slate-950" align="center">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  disabled={(date) =>
-                    date < new Date(new Date().setHours(0, 0, 0, 0))
-                  }
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={goToNextDay}
-              aria-label="Dia siguiente"
-              className="border-emerald-200 bg-white/80 text-slate-700 hover:bg-emerald-50 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {isToday && (
-            <Badge className="hidden md:block border-0 bg-emerald-100 text-xs text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-300 dark:hover:bg-emerald-500/15">
-              Hoy
-            </Badge>
-          )}
-
-          <div className="flex md:hidden flex-wrap items-center gap-2 rounded-[1.5rem] border border-emerald-100 bg-white/80 p-3 shadow-sm shadow-emerald-100/50 dark:border-emerald-900/60 dark:bg-slate-950/70 dark:shadow-emerald-950/10">
-        <Button
-          variant={selectedCourt === null ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSelectedCourt(null)}
-          className="rounded-full border-emerald-200 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
-        >
-          Todas
-        </Button>
-        {activeCourts.map((court) => (
-          <Button
-            key={court.number}
-            variant={selectedCourt === court.number ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedCourt(court.number)}
-            className="rounded-full border-emerald-200 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
-          >
-            Cancha {court.number}
-          </Button>
-        ))}
-      </div>
-        </CardContent>
-      </Card>
-
-      <div className="hidden md:flex flex-wrap items-center gap-2 rounded-[1.5rem] border border-emerald-100 bg-white/80 p-3 shadow-sm shadow-emerald-100/50 dark:border-emerald-900/60 dark:bg-slate-950/70 dark:shadow-emerald-950/10">
-        <Button
-          variant={selectedCourt === null ? "default" : "outline"}
-          size="sm"
-          onClick={() => setSelectedCourt(null)}
-          className="rounded-full border-emerald-200 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
-        >
-          Todas
-        </Button>
-        {activeCourts.map((court) => (
-          <Button
-            key={court.number}
-            variant={selectedCourt === court.number ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedCourt(court.number)}
-            className="rounded-full border-emerald-200 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
-          >
-            Cancha {court.number}
-          </Button>
-        ))}
+              <span>{dayLabel}</span>
+              <span className="text-lg font-bold">{dayNum}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Schedule Grid */}
+      {/* View toggle: Por horario / Por cancha */}
+      <div className="flex rounded-xl border border-[#1E2028] bg-[#101216] p-1 w-fit">
+        <button
+          onClick={() => setSelectedCourt(null)}
+          className={`rounded-lg px-4 py-1.5 text-xs font-medium transition ${
+            selectedCourt === null
+              ? "bg-[#F2F3F5] text-[#0A0B0D]"
+              : "text-[#6B7280] hover:text-[#9CA3AF]"
+          }`}
+        >
+          Por horario
+        </button>
+        <button
+          onClick={() => setSelectedCourt(-1)}
+          className={`rounded-lg px-4 py-1.5 text-xs font-medium transition ${
+            selectedCourt !== null
+              ? "bg-[#F2F3F5] text-[#0A0B0D]"
+              : "text-[#6B7280] hover:text-[#9CA3AF]"
+          }`}
+        >
+          Por cancha
+        </button>
+      </div>
+
+      {/* Schedule */}
       {isDayClosed ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-400">
+        <div className="rounded-2xl border border-dashed border-[#2a3036] bg-[#14161A] p-8 text-center text-sm text-[#6B7280]">
           El club no abre este día.
         </div>
       ) : isBookingsLoading ? (
         <ScheduleSkeleton count={activeCourts.length} />
-      ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {activeCourts
-            .filter(
-              (court) =>
-                selectedCourt === null || court.number === selectedCourt,
-            )
-            .map((court) => {
-              const slots = generateTimeSlots(
-                config.openingMorning,
-                config.closingMorning,
-                config.turnDuration,
-                court.number,
-                bookings,
-              );
+      ) : selectedCourt === null ? (
+        /* === BY TIME VIEW === */
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {[...timeSlotEntries]
+            .sort(([, a], [, b]) => {
+              const aAvail = a.some((c) => c.slot.status === "available" && !isSlotPast(bookingDate, c.slot.startTime, currentTime));
+              const bAvail = b.some((c) => c.slot.status === "available" && !isSlotPast(bookingDate, c.slot.startTime, currentTime));
+              if (aAvail === bAvail) return 0;
+              return aAvail ? -1 : 1;
+            })
+            .map(([startTime, courts]) => {
+            const availableCount = courts.filter((c) => c.slot.status === "available" && !isSlotPast(bookingDate, c.slot.startTime, currentTime)).length;
+            const slotIsPast = isSlotPast(bookingDate, startTime, currentTime);
+            const hasAvailable = availableCount > 0;
 
-              return (
-                <CourtSchedule
-                  key={court.number}
-                  courtNumber={court.number}
-                  courtName={`Cancha ${court.number}`}
-                  courtData={court}
-                  slots={slots}
-                  hasWebBooking={config.hasWebBooking}
-                  showCourtPrice={showCourtPrice}
-                  courtPrice={court.price ?? defaultCourtPrice}
-                  onBooking={handleBooking}
-                  submittingSlot={submittingSlot}
-                  selectedDate={selectedDate}
-                  currentTime={currentTime}
-                />
-              );
-            })}
+            return (
+              <div key={startTime} className="rounded-2xl border border-[#1E2028] bg-[#101216] p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className={`text-xl font-bold ${!hasAvailable ? "text-[#4B5563]" : "text-[#F2F3F5]"}`}>
+                    {startTime}
+                  </h3>
+                  <span className="text-xs text-[#6B7280]">{availableCount} libres</span>
+                </div>
+                <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(courts.length, 7)}, minmax(0, 1fr))` }}>
+                  {courts.map(({ courtNumber, slot }) => {
+                    const isPast = isSlotPast(bookingDate, slot.startTime, currentTime);
+                    const isPending = slot.status === "pending";
+                    const isOccupied = slot.status === "occupied" || isPast;
+                    const slotKey = `${courtNumber}-${bookingDate}-${slot.startTime}`;
+                    const isSubmittingThis = submittingSlot === slotKey;
+
+                    if (isSubmittingThis) {
+                      return (
+                        <div key={courtNumber} className="flex h-10 items-center justify-center rounded-xl border border-[#D6FF3D]/50 bg-[#D6FF3D]/10">
+                          <Loader2 className="h-4 w-4 animate-spin text-[#D6FF3D]" />
+                        </div>
+                      );
+                    }
+
+                    if (isPending) {
+                      return (
+                        <div key={courtNumber} className="flex h-10 items-center justify-center rounded-xl border border-amber-900/60 bg-amber-950/30 text-xs font-bold text-amber-200">
+                          {courtNumber}
+                        </div>
+                      );
+                    }
+
+                    if (isOccupied) {
+                      return (
+                        <div key={courtNumber} className="flex h-10 items-center justify-center rounded-xl border border-[#1E2028] bg-[#1a1d24] text-xs font-bold text-[#4B5563]">
+                          {courtNumber}
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={courtNumber}
+                        onClick={() => handleBooking(courtNumber, slot)}
+                        disabled={!config.hasWebBooking}
+                        className="flex h-10 items-center justify-center rounded-xl border border-[#D6FF3D]/40 bg-[#D6FF3D]/10 text-sm font-bold text-[#D6FF3D] transition hover:bg-[#D6FF3D]/20"
+                      >
+                        {courtNumber}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* === BY COURT VIEW === */
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {activeCourts.map((court) => {
+            const slots = generateTimeSlots(
+              config.openingMorning,
+              config.closingMorning,
+              config.turnDuration,
+              court.number,
+              bookings,
+            );
+            const envLabel = formatCourtEnvironment(court.environment);
+            const structLabel = formatCourtStructure(court.structure);
+
+            return (
+              <div key={court.number} className="rounded-2xl border border-[#1E2028] bg-[#101216] p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-base font-bold text-[#F2F3F5]">Cancha {court.number}</h3>
+                    {structLabel && <span className="text-xs text-[#6B7280]">{structLabel}</span>}
+                  </div>
+                  {envLabel && (
+                    <span className="text-xs text-[#6B7280]">{envLabel}</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {slots.map((slot) => {
+                    const isPast = isSlotPast(bookingDate, slot.startTime, currentTime);
+                    const isPending = slot.status === "pending";
+                    const isOccupied = slot.status === "occupied" || isPast;
+                    const slotKey = `${court.number}-${bookingDate}-${slot.startTime}`;
+                    const isSubmittingThis = submittingSlot === slotKey;
+
+                    if (isSubmittingThis) {
+                      return (
+                        <div key={slot.startTime} className="flex h-10 items-center justify-center rounded-xl border border-[#D6FF3D]/50 bg-[#D6FF3D]/10 px-3">
+                          <Loader2 className="h-4 w-4 animate-spin text-[#D6FF3D]" />
+                        </div>
+                      );
+                    }
+
+                    if (isPending) {
+                      return (
+                        <div key={slot.startTime} className="flex h-10 items-center justify-center rounded-xl border border-amber-900/60 bg-amber-950/30 px-3 text-xs font-bold text-amber-200">
+                          {slot.startTime}
+                        </div>
+                      );
+                    }
+
+                    if (isOccupied) {
+                      return (
+                        <div key={slot.startTime} className="flex h-10 items-center justify-center rounded-xl border border-[#1E2028] bg-[#1a1d24] px-3 text-xs font-bold text-[#4B5563]">
+                          {slot.startTime}
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={slot.startTime}
+                        onClick={() => handleBooking(court.number, slot)}
+                        disabled={!config.hasWebBooking}
+                        className="flex h-10 items-center justify-center rounded-xl border border-[#D6FF3D]/40 bg-[#D6FF3D]/10 px-3 text-xs font-bold text-[#D6FF3D] transition hover:bg-[#D6FF3D]/20"
+                      >
+                        {slot.startTime}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
       <VerifyPlayerDialog
@@ -727,36 +783,36 @@ function CourtSchedule({
 
 
   return (
-    <Card className="rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
+    <Card className="rounded-2xl border-[#1E2028] bg-[#101216]">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-sm font-bold text-white">
             {courtNumber}
           </div>
           <div className="space-y-1">
-            <CardTitle className="text-base text-slate-900 dark:text-slate-100">{courtName}</CardTitle>
+            <CardTitle className="text-base text-[#F2F3F5]">{courtName}</CardTitle>
             <div className="flex flex-wrap gap-2">
               {environmentLabel ? (
-                <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-[11px] font-normal text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300">
+                <Badge variant="outline" className="border-[#2a3036] bg-[#D6FF3D]/10 text-[11px] font-normal text-[#D6FF3D]">
                   {environmentLabel}
                 </Badge>
               ) : null}
               {structureLabel ? (
-                <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-[11px] font-normal text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300">
+                <Badge variant="outline" className="border-[#2a3036] bg-[#D6FF3D]/10 text-[11px] font-normal text-[#D6FF3D]">
                   {structureLabel}
                 </Badge>
               ) : null}
               {surfaceLabel ? (
-                <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-[11px] font-normal text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300">
+                <Badge variant="outline" className="border-[#2a3036] bg-[#D6FF3D]/10 text-[11px] font-normal text-[#D6FF3D]">
                   {surfaceLabel}
                 </Badge>
               ) : null}
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-[#6B7280]">
               {availableCount} turnos disponibles
             </p>
             {showCourtPrice ? (
-              <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+              <p className="text-xs font-semibold text-[#D6FF3D]">
                 ${Number(courtPrice ?? 0).toLocaleString()} por turno
               </p>
             ) : null}
@@ -806,7 +862,7 @@ function SlotButton({
     return (
         <Button
         variant="outline"
-        className="h-auto rounded-2xl border-emerald-200 bg-white/80 px-3 py-2.5 text-xs font-medium text-slate-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-200"
+        className="h-auto rounded-2xl border-[#2a3036] bg-[#14161A] px-3 py-2.5 text-xs font-medium text-[#9CA3AF] border-[#1E2028] bg-[#14161A]"
         // disabled
       >
         <div className="flex items-center gap-1.5">
@@ -820,9 +876,9 @@ function SlotButton({
   if (slot.status === "occupied") {
     return (
       <div
-        className="flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-100/80 px-3 py-2.5 text-center opacity-60 dark:border-slate-800 dark:bg-slate-900/70"
+        className="flex items-center justify-center rounded-2xl border border-[#2a3036] bg-[#1a1d24] px-3 py-2.5 text-center opacity-60 bg-[#14161A]"
       >
-        <span className="text-xs font-medium text-slate-500 line-through dark:text-slate-500">
+        <span className="text-xs font-medium text-[#6B7280] line-through">
           {slot.startTime} - {slot.endTime}
         </span>
       </div>
@@ -832,11 +888,11 @@ function SlotButton({
   if (slot.status === "pending") {
     return (
       <div
-        className="flex items-center justify-center rounded-2xl border border-amber-300/40 bg-amber-50 px-3 py-2.5 text-center dark:border-amber-900/60 dark:bg-amber-950/25"
+        className="flex items-center justify-center rounded-2xl border border-amber-900/60/40 bg-amber-950/30 px-3 py-2.5 text-center"
       >
         <div className="flex items-center gap-1.5">
-          <Clock className="h-3 w-3 text-amber-700 dark:text-amber-300" />
-          <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
+          <Clock className="h-3 w-3 text-amber-200" />
+          <span className="text-xs font-medium text-amber-200">
             Pendiente {slot.startTime}
           </span>
         </div>
@@ -847,9 +903,9 @@ function SlotButton({
   if (isPast) {
     return (
       <div
-        className="flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-100/80 px-3 py-2.5 text-center opacity-60 dark:border-slate-800 dark:bg-slate-900/70"
+        className="flex items-center justify-center rounded-2xl border border-[#2a3036] bg-[#1a1d24] px-3 py-2.5 text-center opacity-60 bg-[#14161A]"
       >
-        <span className="text-xs font-medium text-slate-500 line-through dark:text-slate-500">
+        <span className="text-xs font-medium text-[#6B7280] line-through">
           {slot.startTime} - {slot.endTime}
         </span>
       </div>
@@ -860,8 +916,8 @@ function SlotButton({
     <Button
       variant="outline"
       className={cn(
-        "h-auto rounded-2xl border-emerald-200 bg-emerald-50/50 px-3 py-2.5 text-xs font-medium text-slate-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100",
-        "hover:border-emerald-500 hover:bg-emerald-100 hover:text-emerald-700 dark:hover:border-emerald-500/70 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300",
+        "h-auto rounded-2xl border-[#2a3036] bg-[#14161A]/50 px-3 py-2.5 text-xs font-medium text-[#9CA3AF] border-[#1E2028] bg-[#14161A]",
+        "hover:border-[#D6FF3D]/50 hover:bg-[#D6FF3D]/15 hover:text-[#D6FF3D]",
         "transition-colors",
       )}
       onClick={onClick}
@@ -878,7 +934,7 @@ function ScheduleSkeleton({ count }: { count: number }) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       {Array.from({ length: Math.max(count, 2) }).map((_, i) => (
-        <Card key={i} className="rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
+        <Card key={i} className="rounded-2xl border-[#1E2028] bg-[#101216]">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
               <Skeleton className="h-9 w-9 rounded-lg" />

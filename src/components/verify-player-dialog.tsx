@@ -26,7 +26,7 @@ export default function VerifyPlayerDialog({
         if (!value) onClose();
       }}
     >
-      <AlertDialogContent className="border-emerald-100 bg-white text-slate-900 shadow-xl shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950 dark:text-slate-100 dark:shadow-emerald-950/20">
+      <AlertDialogContent className="border-[#1E2028] bg-[#101216] text-[#F2F3F5]">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-slate-900 dark:text-slate-100">
             Cuenta pendiente de verificación
@@ -50,7 +50,7 @@ export default function VerifyPlayerDialog({
         </AlertDialogHeader>
 
         <AlertDialogFooter>
-          <AlertDialogAction className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400">
+          <AlertDialogAction className="bg-[#D6FF3D] text-[#0A0B0D] hover:bg-[#e4ff6a]">
             Entendido
           </AlertDialogAction>
         </AlertDialogFooter>

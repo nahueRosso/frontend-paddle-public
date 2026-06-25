@@ -5,8 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 import {
   SidebarProvider,
   SidebarInset,
-  SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import { Menu, PanelLeft } from "lucide-react";
 import { ClubSidebar } from "@/components/club-sidebar";
 import { ClubHome } from "@/components/club-home";
 import { ClubTurnos } from "@/components/club-turnos";
@@ -18,11 +19,26 @@ import { SectionId } from "@/types/club";
 import { ClubTorneos } from "@/components/club-ranking";
 import { ClubProfessors } from "@/components/club-clases";
 import { ClubMatch } from "@/components/club-match";
+import { ClubPerfil } from "@/components/club-perfil";
+import { ClubRankingStandalone } from "@/components/club-ranking-standalone";
 import { ClubProvider } from "@/context/club-context";
 import { ClubPartnerRequestsDialog } from "@/components/club-partner-requests-dialog";
 import { fetchBillingBookingStatus } from "@/lib/api/booking";
 import { clearPendingBookingPayments } from "@/lib/pending-booking-payment";
 import type { BillingBookingStatusResponse } from "@/types/booking";
+
+function CustomSidebarTrigger() {
+  const { toggleSidebar } = useSidebar();
+  return (
+    <button
+      onClick={toggleSidebar}
+      className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#14161A] hover:text-[#F2F3F5]"
+    >
+      <Menu className="h-5 w-5 md:hidden" />
+      <PanelLeft className="hidden h-5 w-5 md:block" />
+    </button>
+  );
+}
 
 interface ClubPageProps {
   slug: string;
@@ -79,9 +95,11 @@ export function ClubPage({ slug }: ClubPageProps) {
     return [
       "home",
       ...(features.turnos ? (["turnos"] as const) : []),
-      ...(features.clases ? (["clases"] as const) : []),
       ...(features.match ? (["match"] as const) : []),
+      ...(features.clases ? (["clases"] as const) : []),
       ...(features.torneos ? (["torneos"] as const) : []),
+      "ranking" as const,
+      "perfil" as const,
     ];
   }, [config]);
 
@@ -315,14 +333,13 @@ export function ClubPage({ slug }: ClubPageProps) {
     return (
       <SidebarProvider>
         <SidebarInset>
-          <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_38%),linear-gradient(180deg,_#f8fafc_0%,_#ecfdf5_48%,_#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_28%),linear-gradient(180deg,_#020617_0%,_#062f2b_40%,_#020617_100%)]">
-            <header className="relative flex items-center justify-between border-b border-emerald-100/80 bg-white/75 px-4 py-5 backdrop-blur dark:border-emerald-900/60 dark:bg-slate-950/65 lg:px-6">
+          <div className="min-h-screen bg-[#0A0B0D]">
+            <header className="relative flex items-center justify-between border-b border-[#1E2028] bg-[#0A0B0D] px-4 py-3 lg:px-6">
               <div className="absolute left-4 lg:left-6">
-                <SidebarTrigger />
+                <CustomSidebarTrigger />
               </div>
-
-              <div className="mx-auto flex min-h-[4.5rem] items-center">
-                <div className="h-20 w-[12rem] rounded-2xl border border-emerald-100/80 bg-white/70 dark:border-emerald-900/60 dark:bg-slate-950/70 sm:h-24" />
+              <div className="mx-auto flex min-h-[3rem] items-center">
+                <div className="h-10 w-[8rem] rounded-xl border border-[#1E2028] bg-[#101216]" />
               </div>
             </header>
             <main className="flex-1 overflow-auto px-4 py-6 lg:px-6 lg:py-8">
@@ -342,25 +359,33 @@ export function ClubPage({ slug }: ClubPageProps) {
         <ClubPartnerRequestsDialog />
         <ClubSidebar
           clubName={config?.clubName ?? "Cargando..."}
+          clubCity={[config?.city, config?.province].filter(Boolean).join(", ") || undefined}
           activeSection={activeSection}
           onSectionChange={setActiveSection}
           icon={config?.iconUrl}
           visibleSections={visibleSections}
         />
         <SidebarInset>
-          <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_38%),linear-gradient(180deg,_#f8fafc_0%,_#ecfdf5_48%,_#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_28%),linear-gradient(180deg,_#020617_0%,_#062f2b_40%,_#020617_100%)]">
-            <header className="relative flex items-center justify-between border-b border-emerald-100/80 bg-white/75 px-4 py-5 backdrop-blur dark:border-emerald-900/60 dark:bg-slate-950/65 lg:px-6">
+          <div className="min-h-screen bg-[#0A0B0D]">
+            <header className="relative flex items-center justify-between border-b border-[#1E2028] bg-[#0A0B0D] px-4 py-3 lg:px-6">
               <div className="absolute left-4 lg:left-6">
-              <SidebarTrigger />
+                <CustomSidebarTrigger />
               </div>
 
-              <div className="mx-auto flex min-h-[4.5rem] items-center">
+              <div className="mx-auto flex items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={config?.logoUrl || "/logo-placeholder.svg"}
+                  src={config?.iconUrl || "/mi-padel-club-icon-circulo-negro.svg"}
                   alt={config.clubName}
-                  className="h-20 w-auto object-contain sm:h-24"
+                  className="h-7 w-7 rounded-lg object-contain"
                 />
+                <span className="text-sm font-semibold text-[#F2F3F5]">{config.clubName}</span>
+              </div>
+
+              <div className="absolute right-4 lg:right-6">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#D6FF3D] text-xs font-bold text-[#0A0B0D]">
+                  V
+                </div>
               </div>
             </header>
             <main className="flex-1 overflow-auto px-4 py-6 lg:px-6 lg:py-8">
@@ -378,6 +403,8 @@ export function ClubPage({ slug }: ClubPageProps) {
                 {visibleSections.includes("match") &&
                   activeSection === "match" &&
                   <ClubMatch />}
+                {activeSection === "ranking" && <ClubRankingStandalone />}
+                {activeSection === "perfil" && <ClubPerfil />}
               </div>
             </main>
           </div>

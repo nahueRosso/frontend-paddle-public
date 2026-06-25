@@ -94,7 +94,7 @@ export default function VerifyClubPlayerDialog({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={setOpen}>
-      <AlertDialogContent className="border-emerald-100 bg-white text-slate-900 shadow-2xl shadow-emerald-100/70 dark:border-emerald-900/60 dark:bg-slate-950 dark:text-slate-100 dark:shadow-emerald-950/30">
+      <AlertDialogContent className="border-[#1E2028] bg-[#101216] text-[#F2F3F5]">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-slate-900 dark:text-slate-100">
             Verificar en este club
@@ -109,7 +109,7 @@ export default function VerifyClubPlayerDialog({
         <AlertDialogFooter>
           <AlertDialogCancel
             disabled={isSubmitting}
-            className="border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-emerald-500/10"
+            className="border-[#2a3036] bg-[#14161A] text-[#F2F3F5] hover:bg-[#1a1d24] hover:text-[#D6FF3D]"
           >
             Cerrar
           </AlertDialogCancel>
@@ -119,7 +119,7 @@ export default function VerifyClubPlayerDialog({
               void handleVerify()
             }}
             disabled={isSubmitting}
-            className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+            className="bg-[#D6FF3D] text-[#0A0B0D] hover:bg-[#e4ff6a]"
           >
             {isSubmitting ? (
               <>

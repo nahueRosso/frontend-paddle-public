@@ -41,6 +41,7 @@ const navigation: Array<SingleNavItem | GroupNavItem> = [
     items: [
       { href: "/privacidad", label: "Privacidad" },
       { href: "/terminos", label: "Términos" },
+      { href: "/politicas-jugador", label: "Políticas del jugador" },
       { href: "/como-eliminar-datos", label: "Eliminar datos" },
     ],
   },

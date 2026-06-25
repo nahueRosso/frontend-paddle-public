@@ -7,10 +7,10 @@ import { Professor } from "@/types/professor";
 export function ProfessorCard({ prof }: { prof: Professor }) {
 
   return (
-    <Card className="overflow-hidden rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 transition-shadow hover:shadow-xl hover:shadow-emerald-100 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
+    <Card className="overflow-hidden rounded-2xl border-[#1E2028] bg-[#101216] transition-shadow hover:shadow-xl">
 
       {/* Imagen */}
-      <div className="relative h-56 w-full bg-emerald-50 dark:bg-slate-900/80">
+      <div className="relative h-56 w-full bg-[#1a1d24]">
 
         {prof.imageProfeUrl ? (
           <>
@@ -37,12 +37,12 @@ export function ProfessorCard({ prof }: { prof: Professor }) {
 
         <div className="flex items-center justify-between">
 
-          <h3 className="text-lg font-semibold dark:text-slate-100">
+          <h3 className="text-lg font-semibold">
             {prof.firstName} {prof.lastName}
           </h3>
 
           {prof.minPrice && (
-            <Badge className="border-0 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/12 dark:text-emerald-300 dark:hover:bg-emerald-500/12">
+            <Badge className="border-0 bg-[#D6FF3D]/15 text-[#D6FF3D] hover:bg-[#D6FF3D]/15">
               ${prof.minPrice}
               {prof.maxPrice && ` - ${prof.maxPrice}`}
             </Badge>
@@ -59,7 +59,7 @@ export function ProfessorCard({ prof }: { prof: Professor }) {
 
           {prof.categories?.map((cat) => (
 
-            <Badge key={cat} variant="secondary" className="bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <Badge key={cat} variant="secondary" className="bg-[#1a1d24] text-[#9CA3AF] bg-[#14161A]">
               {cat}
             </Badge>
 
@@ -70,7 +70,7 @@ export function ProfessorCard({ prof }: { prof: Professor }) {
         {/* descripcion */}
         {prof.shortDescription && (
 
-          <p className="text-sm text-muted-foreground dark:text-slate-400">
+          <p className="text-sm text-muted-foreground">
             {prof.shortDescription}
           </p>
 
@@ -79,7 +79,7 @@ export function ProfessorCard({ prof }: { prof: Professor }) {
         {/* cancha */}
         {prof.court && (
 
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-2 text-sm text-[#6B7280]">
 
             <MapPin className="h-4 w-4" />
             {prof.court}
@@ -89,7 +89,7 @@ export function ProfessorCard({ prof }: { prof: Professor }) {
         )}
 
         {/* duracion */}
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+        <div className="flex items-center gap-2 text-sm text-[#6B7280]">
 
           <Clock className="h-4 w-4" />
           Turnos de {prof.turnDuration} min
@@ -101,7 +101,7 @@ export function ProfessorCard({ prof }: { prof: Professor }) {
 
           {prof.days?.map((d) => (
 
-            <Badge key={d} variant="outline" className="border-emerald-200 text-emerald-700 dark:border-emerald-900/60 dark:text-emerald-300">
+            <Badge key={d} variant="outline" className="border-[#2a3036] text-[#D6FF3D] border-[#1E2028]">
               {/* {DAYS[d]} */}
             </Badge>
 
@@ -112,7 +112,7 @@ export function ProfessorCard({ prof }: { prof: Professor }) {
         {/* boton */}
         {prof.phoneNumber && (
 
-          <Button className="w-full gap-2 rounded-full bg-emerald-600 text-white hover:bg-emerald-500 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400">
+          <Button className="w-full gap-2 rounded-full bg-[#D6FF3D] text-[#0A0B0D] hover:bg-[#e4ff6a]">
 
             <Phone className="h-4 w-4" />
 

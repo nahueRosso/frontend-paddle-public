@@ -27,7 +27,6 @@ import {
 import { buildPendingPaymentOwnerIdentity } from "@/lib/pending-booking-payment";
 import { usePlayer } from "@/providers/player-provider";
 import VerifyClubPlayerDialog from "./verify-club-player-dialog";
-import { Slider } from "./ui/slider";
 import VerifyPlayerDialog from "./verify-player-dialog";
 
 type MatchRequestStatus =
@@ -178,6 +177,7 @@ export function ClubMatch() {
   );
   const [proposals, setProposals] = useState<MatchProposal[]>([]);
   const [isRefreshingMatch, setIsRefreshingMatch] = useState(false);
+  const [rangeTap, setRangeTap] = useState<"start" | "end">("start");
   const [isCancellingMatch, setIsCancellingMatch] = useState(false);
   const [proposalAction, setProposalAction] = useState<
     "confirm" | "reject" | null
@@ -614,18 +614,18 @@ export function ClubMatch() {
   if (submitted) {
     return (
       <div className="space-y-6">
-        <section className="rounded-[2rem] border border-emerald-100 bg-white/75 p-6 shadow-lg shadow-emerald-100/60 backdrop-blur dark:border-emerald-900/60 dark:bg-slate-950/75 dark:shadow-emerald-950/20">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 lg:text-3xl">
+        <section className="rounded-2xl border border-[#1E2028] bg-[#101216] p-6">
+          <h2 className="text-2xl font-semibold tracking-tight text-[#F2F3F5] lg:text-3xl">
             Buscar partido
           </h2>
-          <p className="mt-2 text-slate-600 dark:text-slate-400">
+          <p className="mt-2 text-[#6B7280]">
             Encontra companeros para jugar.
           </p>
         </section>
 
-        <Card className="w-full rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
+        <Card className="w-full rounded-2xl border-[#1E2028] bg-[#101216]">
           <CardContent className="flex flex-col items-center gap-5 py-16">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 animate-in zoom-in-50 duration-300 dark:bg-emerald-500/15 dark:text-emerald-300">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#D6FF3D]/15 text-[#D6FF3D] animate-in zoom-in-50 duration-300">
               {requestStatus === "awaiting_payment" ||
               requestStatus === "pending" ||
               requestStatus === "proposal_pending" ? (
@@ -635,7 +635,7 @@ export function ClubMatch() {
               )}
             </div>
             <div className="text-center animate-in fade-in slide-in-from-bottom-2 duration-500">
-              <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              <p className="text-lg font-semibold text-[#F2F3F5]">
                 {requestStatus === "awaiting_payment"
                   ? "Pago pendiente de acreditacion"
                   : requestStatus === "pending"
@@ -652,7 +652,7 @@ export function ClubMatch() {
                           ? "Rechazaste la propuesta"
                           : "Estamos buscando jugadores compatibles"}
               </p>
-              <p className="mt-1 max-w-sm text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+              <p className="mt-1 max-w-sm text-sm leading-relaxed text-[#6B7280]">
                 {requestStatus === "awaiting_payment"
                   ? "Estamos esperando la acreditacion del pago para ingresar a la busqueda de match."
                   : requestStatus === "pending"
@@ -672,13 +672,13 @@ export function ClubMatch() {
             </div>
 
             {requestStatus === "proposal_pending" && pendingProposal ? (
-              <div className="w-full max-w-md rounded-2xl border border-emerald-100 bg-emerald-50/60 px-5 py-4 text-sm animate-in fade-in slide-in-from-bottom-3 duration-500 dark:border-emerald-900/60 dark:bg-slate-900/70">
+              <div className="w-full max-w-md rounded-2xl border border-[#1E2028] bg-[#14161A]/60 px-5 py-4 text-sm animate-in fade-in slide-in-from-bottom-3 duration-500 border-[#1E2028] bg-[#14161A]">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="font-semibold text-slate-900 dark:text-slate-100">
+                    <p className="font-semibold text-[#F2F3F5]">
                       Hay un partido para confirmar
                     </p>
-                    <p className="mt-1 text-slate-500 dark:text-slate-400">
+                    <p className="mt-1 text-[#6B7280]">
                       Vence:{" "}
                       {new Intl.DateTimeFormat("es-AR", {
                         hour: "2-digit",
@@ -686,13 +686,13 @@ export function ClubMatch() {
                       }).format(new Date(pendingProposal.expiresAt))}
                     </p>
                   </div>
-                  <div className="rounded-xl border border-emerald-100 bg-white px-3 py-2 text-center font-semibold text-emerald-700 shadow-sm dark:border-emerald-900/60 dark:bg-slate-950 dark:text-emerald-300">
+                  <div className="rounded-xl border border-[#1E2028] bg-[#101216] px-3 py-2 text-center font-semibold text-[#D6FF3D] shadow-sm border-[#1E2028] bg-[#0A0B0D]">
                     {proposalCountdown}
                   </div>
                 </div>
 
                 {isProposalExpired ? (
-                  <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                  <p className="mt-4 rounded-xl border border-amber-900/60 bg-amber-950/30 px-3 py-2 text-amber-200">
                     Esta propuesta ya vencio. Estamos actualizando el estado.
                   </p>
                 ) : null}
@@ -701,7 +701,7 @@ export function ClubMatch() {
                   <Button
                     disabled={isProposalExpired || proposalAction !== null}
                     onClick={() => void handleProposalAction("confirm")}
-                    className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                    className="bg-[#D6FF3D] text-[#0A0B0D] hover:bg-[#e4ff6a]"
                   >
                     {proposalAction === "confirm" ? (
                       <>
@@ -716,7 +716,7 @@ export function ClubMatch() {
                     variant="outline"
                     disabled={proposalAction !== null}
                     onClick={() => void handleProposalAction("reject")}
-                    className="border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
+                    className="border-[#2a3036] bg-[#14161A] text-[#F2F3F5] hover:bg-[#1a1d24] hover:text-[#D6FF3D]"
                   >
                     {proposalAction === "reject" ? (
                       <>
@@ -731,23 +731,23 @@ export function ClubMatch() {
               </div>
             ) : null}
 
-            <div className="flex flex-col items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/50 px-6 py-4 text-sm animate-in fade-in slide-in-from-bottom-3 duration-700 dark:border-emerald-900/60 dark:bg-slate-900/70">
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#1E2028] bg-[#14161A]/50 px-6 py-4 text-sm animate-in fade-in slide-in-from-bottom-3 duration-700 border-[#1E2028] bg-[#14161A]">
               <div className="flex items-center gap-6">
                 <div className="text-center">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Categoria</p>
-                  <p className="font-medium text-slate-900 dark:text-slate-100">{playerCategoryLabel}</p>
+                  <p className="text-xs text-[#6B7280]">Categoria</p>
+                  <p className="font-medium text-[#F2F3F5]">{playerCategoryLabel}</p>
                 </div>
-                <div className="h-6 w-px bg-emerald-200 dark:bg-emerald-900/60" />
+                <div className="h-6 w-px bg-[#2a3036]" />
                 <div className="text-center">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Modalidad</p>
-                  <p className="font-medium text-slate-900 dark:text-slate-100">
+                  <p className="text-xs text-[#6B7280]">Modalidad</p>
+                  <p className="font-medium text-[#F2F3F5]">
                     {playerGenderLabel}
                   </p>
                 </div>
-                <div className="h-6 w-px bg-emerald-200 dark:bg-emerald-900/60" />
+                <div className="h-6 w-px bg-[#2a3036]" />
                 <div className="text-center">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Horario</p>
-                  <p className="font-medium text-slate-900 dark:text-slate-100">
+                  <p className="text-xs text-[#6B7280]">Horario</p>
+                  <p className="font-medium text-[#F2F3F5]">
                     {formatHour(timeRange[0])} - {formatHour(timeRange[1])}
                   </p>
                 </div>
@@ -755,22 +755,22 @@ export function ClubMatch() {
             </div>
 
             {error && (
-              <p className="max-w-md rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">
+              <p className="max-w-md rounded-2xl border border-rose-900/60 bg-rose-950/30 px-4 py-3 text-sm text-rose-300">
                 {error}
               </p>
             )}
 
             {requestStatus === "awaiting_payment" && pendingMatchEntry?.checkoutUrl ? (
-              <div className="w-full max-w-md rounded-2xl border border-amber-200 bg-amber-50/70 px-5 py-4 text-sm animate-in fade-in slide-in-from-bottom-3 duration-500 dark:border-amber-900/60 dark:bg-amber-950/30">
-                <p className="font-semibold text-amber-900 dark:text-amber-100">
+              <div className="w-full max-w-md rounded-2xl border border-amber-900/60 bg-amber-950/30 px-5 py-4 text-sm animate-in fade-in slide-in-from-bottom-3 duration-500">
+                <p className="font-semibold text-amber-100">
                   Falta acreditar el pago para entrar en la busqueda.
                 </p>
-                <p className="mt-1 text-amber-800 dark:text-amber-200">
+                <p className="mt-1 text-amber-200">
                   Si ya pagaste, esta pantalla se actualiza sola. Si no, podés retomar el checkout.
                 </p>
                 <Button
                   onClick={handleContinuePayment}
-                  className="mt-4 bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                  className="mt-4 bg-amber-500 text-white hover:bg-amber-400"
                 >
                   Continuar pago
                 </Button>
@@ -782,7 +782,7 @@ export function ClubMatch() {
                 variant="outline"
                 onClick={() => void refreshMatchFlow()}
                 disabled={isRefreshingMatch || isCancellingMatch}
-                className="border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
+                className="border-[#2a3036] bg-[#14161A] text-[#F2F3F5] hover:bg-[#1a1d24] hover:text-[#D6FF3D]"
               >
                 {isRefreshingMatch ? (
                   <>
@@ -798,7 +798,7 @@ export function ClubMatch() {
                   variant="outline"
                   onClick={() => void handleCancelPaymentRequest()}
                   disabled={isRefreshingMatch || isCancellingMatch}
-                  className="border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:text-rose-800 dark:border-rose-900/60 dark:bg-slate-900/80 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                  className="border-rose-900/60 bg-[#14161A] text-rose-300 hover:bg-rose-950/30 hover:text-rose-200 bg-[#14161A]"
                 >
                   {isCancellingMatch ? (
                     <>
@@ -814,7 +814,7 @@ export function ClubMatch() {
                 variant="outline"
                 onClick={handleReset}
                 disabled={isCancellingMatch}
-                className="border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
+                className="border-[#2a3036] bg-[#14161A] text-[#F2F3F5] hover:bg-[#1a1d24] hover:text-[#D6FF3D]"
               >
                 Enviar otra solicitud
               </Button>
@@ -827,110 +827,183 @@ export function ClubMatch() {
     );
   }
 
+  const MOCK_MATCHING_MATCHES = [
+    { id: 1, time: "19:00", players: ["LR", "MD", "JP"], cat: "4ª", sex: "Masculino", court: "Cancha 3", missing: 1 },
+    { id: 2, time: "20:30", players: ["TS", "NV"], cat: "4ª", sex: "Masculino", court: "Cancha 1", missing: 2 },
+    { id: 3, time: "21:00", players: ["SR", "PV"], cat: "4ª", sex: "Mixto", court: "Cancha 2", missing: 2 },
+    { id: 4, time: "21:30", players: ["AG", "BR"], cat: "4ª", sex: "Masculino", court: "Cancha 4", missing: 2 },
+    { id: 5, time: "22:00", players: ["DC", "EF", "GH"], cat: "4ª", sex: "Masculino", court: "Cancha 1", missing: 1 },
+  ];
+
+  const allHours: number[] = [];
+  for (let h = MIN_HOUR; h <= MAX_HOUR; h++) allHours.push(h);
+
+  const handleHourTap = (h: number) => {
+    if (rangeTap === "start") {
+      if (h >= timeRange[1]) {
+        setTimeRange([h, h + 1 <= MAX_HOUR ? h + 1 : MAX_HOUR]);
+      } else {
+        setTimeRange([h, timeRange[1]]);
+      }
+      setRangeTap("end");
+    } else {
+      if (h <= timeRange[0]) {
+        setTimeRange([h > MIN_HOUR ? h - 1 : MIN_HOUR, h]);
+      } else {
+        setTimeRange([timeRange[0], h]);
+      }
+      setRangeTap("start");
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <section className="rounded-[2rem] border border-emerald-100 bg-white/75 p-6 shadow-lg shadow-emerald-100/60 backdrop-blur dark:border-emerald-900/60 dark:bg-slate-950/75 dark:shadow-emerald-950/20">
-        <span className="hidden md:inline-flex rounded-full bg-emerald-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
-          Match inteligente
-        </span>
-        <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 lg:text-3xl">
-          Buscar partido
-        </h2>
-        <p className="mt-2 max-w-2xl text-slate-600 dark:text-slate-400">
-          Encontra companeros para jugar. Completa el formulario y te buscamos
-          un turno.
-        </p>
-      </section>
+      {/* Header */}
+      <div>
+        <h2 className="text-xl font-bold text-[#F2F3F5]">Armar partido</h2>
+        <p className="text-sm text-[#6B7280]">Buscamos según tu categoría y horario</p>
+      </div>
 
-      <Card className="w-full rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg text-slate-900 dark:text-slate-100">
-            <Handshake className="h-5 w-5 text-emerald-600" />
-            Datos del partido
-          </CardTitle>
-          <CardDescription className="text-slate-500 dark:text-slate-400">
-            Elegí tu categoria, el tipo de partido y el horario que preferis.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-[1fr_minmax(320px,420px)]">
+      {/* Preferences card */}
+      <div className="rounded-2xl border border-[#1E2028] bg-[#101216] p-5">
+        <p className="mb-4 text-[10px] font-semibold uppercase tracking-widest text-[#6B7280]">Tus preferencias</p>
 
-          <div className="space-y-2">
-            <Label className="dark:text-slate-100">Categoría</Label>
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-sm font-medium text-slate-800 dark:border-emerald-900/60 dark:bg-slate-900/70 dark:text-slate-100">
-              {player ? `${player.category} categoría` : "Disponible al verificar en este club"}
-            </div>
+        {/* Category + Gender row */}
+        <div className="mb-5 grid grid-cols-2 gap-3">
+          <div className="rounded-xl border border-[#1E2028] bg-[#0A0B0D] p-3">
+            <p className="text-[10px] text-[#6B7280]">Categoría</p>
+            <p className="text-lg font-bold text-[#F2F3F5]">
+              {player ? (
+                <><span className="text-2xl">{player.category}ª</span> <span className="text-xs font-normal text-[#6B7280]">por defecto</span></>
+              ) : "—"}
+            </p>
           </div>
-
-
-          <div className="space-y-2">
-            <Label className="dark:text-slate-100">Modalidad</Label>
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-sm font-medium text-slate-800 dark:border-emerald-900/60 dark:bg-slate-900/70 dark:text-slate-100">
+          <div className="rounded-xl border border-[#1E2028] bg-[#0A0B0D] p-3">
+            <p className="text-[10px] text-[#6B7280]">Sexo</p>
+            <p className="text-lg font-bold text-[#F2F3F5]">
               {player
-                ? player.gender === "male"
-                  ? "Masculino"
-                  : player.gender === "female"
-                    ? "Femenino"
-                    : "Mixto"
-                : "Se habilita al verificar tu jugador del club"}
-            </div>
+                ? player.gender === "male" ? "Masculino"
+                  : player.gender === "female" ? "Femenino"
+                  : "Mixto"
+                : "—"}
+            </p>
           </div>
+        </div>
 
-          <div className="space-y-4">
-            <Label className="dark:text-slate-100">Rango horario preferido</Label>
+        {/* Time range selector */}
+        <p className="mb-3 text-sm font-medium text-[#F2F3F5]">¿Cuándo podés jugar?</p>
 
-            {/* Slider */}
-            <Slider
-              min={MIN_HOUR}
-              max={MAX_HOUR}
-              step={1}
-              value={timeRange}
-              onValueChange={(value) => setTimeRange(value as [number, number])}
-              className="mt-4"
-            />
+        <div className="mb-2 flex gap-4 text-xs text-[#6B7280]">
+          <span>Desde: <span className="font-semibold text-[#D6FF3D]">{formatHour(timeRange[0])}</span></span>
+          <span>Hasta: <span className="font-semibold text-[#D6FF3D]">{formatHour(timeRange[1])}</span></span>
+        </div>
 
-            {/* Valores visuales */}
-            <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400">
-              <span>Desde: {formatHour(timeRange[0])}</span>
-              <span>Hasta: {formatHour(timeRange[1])}</span>
+        <div className="mb-5 grid grid-cols-5 gap-2">
+          {allHours.map((h) => {
+            const isStart = h === timeRange[0];
+            const isEnd = h === timeRange[1];
+            const isInRange = h > timeRange[0] && h < timeRange[1];
+            const now = new Date();
+            const cutoffMinutes = now.getHours() * 60 + now.getMinutes() + 30;
+            const hourMinutes = h * 60;
+            const isPast = hourMinutes < cutoffMinutes;
+
+            return (
+              <button
+                key={h}
+                onClick={() => !isPast && handleHourTap(h)}
+                disabled={isPast}
+                className={`rounded-xl px-3 py-1.5 text-xs font-medium transition ${
+                  isPast
+                    ? "border border-[#1E2028] bg-[#0A0B0D] text-[#3a3f48] cursor-not-allowed opacity-50"
+                    : isStart || isEnd
+                    ? "border border-[#D6FF3D] bg-[#D6FF3D]/20 text-[#D6FF3D]"
+                    : isInRange
+                    ? "border border-[#D6FF3D]/20 bg-[#D6FF3D]/8 text-[#D6FF3D]/70"
+                    : "border border-[#1E2028] bg-[#0A0B0D] text-[#6B7280] hover:border-[#2a3036]"
+                }`}
+              >
+                {formatHour(h)}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Create match button */}
+        <Button
+          className="w-full rounded-2xl border border-[#2a3036] bg-[#14161A] text-sm font-medium text-[#9CA3AF] hover:bg-[#1a1d24] hover:text-[#F2F3F5]"
+          variant="outline"
+          size="lg"
+          disabled={createMatchEntryIntentMutation.isPending}
+          onClick={handleSubmit}
+        >
+          {createMatchEntryIntentMutation.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Creando...
+            </>
+          ) : (
+            "+ Crear partido abierto"
+          )}
+        </Button>
+      </div>
+
+      {error && <p className="rounded-2xl border border-rose-900/60 bg-rose-950/30 px-4 py-3 text-sm text-rose-300 lg:col-span-full">{error}</p>}
+
+      {/* Matching matches (mock) */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-base font-semibold text-[#F2F3F5]">Partidos que coinciden</h3>
+          <span className="text-xs text-[#6B7280]">{MOCK_MATCHING_MATCHES.length} disponibles</span>
+        </div>
+        <div className="space-y-3">
+          {MOCK_MATCHING_MATCHES.map((match) => (
+            <div key={match.id} className="rounded-2xl border border-[#1E2028] bg-[#101216] p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold text-[#F2F3F5]">{match.time}</span>
+                  <span className="text-xs text-[#6B7280]">Hoy</span>
+                </div>
+                <span className="rounded-md bg-[#D6FF3D]/15 px-2 py-0.5 text-[10px] font-semibold text-[#D6FF3D]">
+                  Tu nivel
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-1.5">
+                    {match.players.map((p) => (
+                      <div key={p} className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#101216] bg-[#1a1d24] text-[9px] font-bold text-[#9CA3AF]">
+                        {p}
+                      </div>
+                    ))}
+                    {Array.from({ length: match.missing }).map((_, i) => (
+                      <div key={`m-${i}`} className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#101216] bg-[#1a1d24] text-[9px] text-[#4B5563]">+</div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-[#6B7280]">
+                    {match.cat} · {match.sex}<br />{match.court}
+                  </p>
+                </div>
+                <button className="rounded-full border border-[#D6FF3D]/40 bg-[#D6FF3D]/10 px-4 py-1.5 text-xs font-semibold text-[#D6FF3D] transition hover:bg-[#D6FF3D]/20">
+                  Unirme
+                </button>
+              </div>
             </div>
+          ))}
+        </div>
+      </div>
+      </div>
 
-            {/* Resumen destacado */}
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300">
-              Disponible entre {formatHour(timeRange[0])} y{" "}
-              {formatHour(timeRange[1])}
-            </div>
-          </div>
-
-          {/* Error */}
-          {error && <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">{error}</p>}
-
-          {/* Submit */}
-          <Button
-            className="w-full dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
-            size="lg"
-            disabled={createMatchEntryIntentMutation.isPending}
-            onClick={handleSubmit}
-          >
-            {createMatchEntryIntentMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enviando...
-              </>
-            ) : (
-              "Buscar partido"
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-        <VerifyPlayerDialog
-          open={verifyPlayer}
-          onClose={() => setVerifyPlayer(false)}
-        />
-        <VerifyClubPlayerDialog
-          slug={config.slug}
-          open={verifyClubPlayer}
-          onOpenChange={setVerifyClubPlayer}
-        />
+      <VerifyPlayerDialog
+        open={verifyPlayer}
+        onClose={() => setVerifyPlayer(false)}
+      />
+      <VerifyClubPlayerDialog
+        slug={config.slug}
+        open={verifyClubPlayer}
+        onOpenChange={setVerifyClubPlayer}
+      />
     </div>
   );
 }

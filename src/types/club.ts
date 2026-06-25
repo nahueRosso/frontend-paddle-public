@@ -1,4 +1,4 @@
-export type SectionId = "home" | "turnos"  | "clases" | "match"|"torneos"
+export type SectionId = "home" | "turnos"  | "clases" | "match"|"torneos" | "ranking" | "perfil"
 
 export interface RankingEntry {
   id: number

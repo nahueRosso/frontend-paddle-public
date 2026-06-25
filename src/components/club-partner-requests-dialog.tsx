@@ -186,7 +186,7 @@ export function ClubPartnerRequestsDialog() {
           }
         }}
       >
-        <DialogContent className="max-h-[85vh] overflow-y-auto border-emerald-100 bg-white text-slate-900 shadow-xl shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950 dark:text-slate-100 dark:shadow-emerald-950/20 sm:max-w-2xl">
+        <DialogContent className="max-h-[85vh] overflow-y-auto border-[#1E2028] bg-[#101216] text-[#F2F3F5] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Solicitudes de torneo pendientes</DialogTitle>
             <DialogDescription className="text-slate-500 dark:text-slate-400">
@@ -230,7 +230,7 @@ export function ClubPartnerRequestsDialog() {
           }
         }}
       >
-        <DialogContent className="max-h-[85vh] overflow-y-auto border-emerald-100 bg-white text-slate-900 shadow-xl shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950 dark:text-slate-100 dark:shadow-emerald-950/20 sm:max-w-xl">
+        <DialogContent className="max-h-[85vh] overflow-y-auto border-[#1E2028] bg-[#101216] text-[#F2F3F5] sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Confirmar inscripción</DialogTitle>
             <DialogDescription className="text-slate-500 dark:text-slate-400">
@@ -298,7 +298,7 @@ function GlobalPartnerRequestRow({
           type="button"
           onClick={onAccept}
           disabled={disabled}
-          className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+          className="bg-[#D6FF3D] text-[#0A0B0D] hover:bg-[#e4ff6a]"
         >
           Aceptar
         </Button>
@@ -337,7 +337,7 @@ function PendingRegistrationRow({
           type="button"
           onClick={onContinuePayment}
           disabled={isLoading}
-          className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+          className="bg-[#D6FF3D] text-[#0A0B0D] hover:bg-[#e4ff6a]"
         >
           {isLoading ? "Generando pago..." : "Pagar inscripción"}
         </Button>

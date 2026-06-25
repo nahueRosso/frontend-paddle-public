@@ -95,7 +95,7 @@ import type {
   TournamentResultTeam,
 } from "@/types/tournament";
 
-type TournamentView = "upcoming" | "ongoing" | "finished" | "ranking";
+type TournamentView = "upcoming" | "ongoing" | "finished";
 type EligiblePlayer = {
   category: number | null;
   gender: string;
@@ -113,10 +113,9 @@ type ReadOnlyGroupMatch = GroupMatchSummary & {
 };
 
 const VIEWS: { id: TournamentView; label: string }[] = [
-  { id: "upcoming", label: "Por empezar" },
+  { id: "upcoming", label: "Inscripciones" },
   { id: "ongoing", label: "En curso" },
   { id: "finished", label: "Finalizados" },
-  { id: "ranking", label: "Ranking" },
 ];
 
 const CATEGORIES = ["Todas", "1ra", "2da", "3ra", "4ta", "5ta", "6ta", "7ma", "8va"];
@@ -257,34 +256,26 @@ export function ClubTorneos() {
   }, [queryClient]);
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-[2rem] border border-emerald-100 bg-white/75 p-6 shadow-lg shadow-emerald-100/60 backdrop-blur dark:border-emerald-900/60 dark:bg-slate-950/75 dark:shadow-emerald-950/20">
-        <span className="hidden md:inline-flex rounded-full bg-emerald-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-          Comunidad competitiva
-        </span>
-        <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 lg:text-3xl">
-          Torneos
-        </h2>
-        <p className="mt-2 max-w-2xl text-slate-600 dark:text-slate-400">
-          Inscribite, seguí los torneos del club y consultá el ranking de jugadores.
-        </p>
-      </section>
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-xl font-bold text-[#F2F3F5]">Torneos</h2>
+        <p className="text-sm text-[#6B7280]">Inscripciones abiertas</p>
+      </div>
 
-      <div className="flex flex-wrap items-center gap-1 md:gap-2 rounded-[1.5rem] border border-emerald-100 bg-white/80 py-3 px-1 md:px-3 shadow-sm shadow-emerald-100/50 dark:border-emerald-900/60 dark:bg-slate-950/70 dark:shadow-emerald-950/10">
+      {/* View toggle */}
+      <div className="flex rounded-xl border border-[#1E2028] bg-[#101216] p-1 w-fit">
         {VIEWS.map((view) => (
-          <Button
+          <button
             key={view.id}
-            variant={activeView === view.id ? "default" : "outline"}
-            size="sm"
             onClick={() => setActiveView(view.id)}
-            className={
+            className={`rounded-lg px-4 py-1.5 text-xs font-medium transition ${
               activeView === view.id
-                ? "rounded-full bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
-                : "rounded-full border-emerald-200 bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
-            }
+                ? "bg-[#F2F3F5] text-[#0A0B0D]"
+                : "text-[#6B7280] hover:text-[#9CA3AF]"
+            }`}
           >
             {view.label}
-          </Button>
+          </button>
         ))}
       </div>
 
@@ -296,9 +287,6 @@ export function ClubTorneos() {
       ) : null}
       {activeView === "finished" ? (
         <TournamentList status="finished" />
-      ) : null}
-      {activeView === "ranking" ? (
-        <PlayerRanking players={players} loading={isLoadingPlayers} />
       ) : null}
     </div>
   );
@@ -433,8 +421,11 @@ function PlayerTournamentCard({
   ).length;
   const pendingTeams = (tournament.teams ?? []).length - approvedTeams;
 
+  const maxTeams = (tournament as Record<string, unknown>).maxTeams as number | undefined ?? (tournament.teams?.length ? Math.max(tournament.teams.length, approvedTeams + 4) : 32);
+  const progressPct = maxTeams > 0 ? Math.min((approvedTeams / maxTeams) * 100, 100) : 0;
+
   return (
-    <Card
+    <div
       role={onOpenDetails ? "button" : undefined}
       tabIndex={onOpenDetails ? 0 : undefined}
       onClick={onOpenDetails}
@@ -445,92 +436,86 @@ function PlayerTournamentCard({
           onOpenDetails();
         }
       }}
-      className={`overflow-hidden rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20 ${
-        onOpenDetails
-          ? "cursor-pointer transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-100/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:hover:shadow-emerald-950/30"
-          : ""
+      className={`overflow-hidden rounded-2xl border border-[#1E2028] bg-[#14161A] ${
+        onOpenDetails ? "cursor-pointer transition hover:border-[#2a3036]" : ""
       }`}
     >
-      <CardHeader className="space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <Badge className={getStatusClassName(status)}>
-            {getStatusLabel(status)}
-          </Badge>
-          <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-            <Users className="h-3.5 w-3.5" />
-            {approvedTeams} aprobados
+      {/* Gradient bar at top */}
+      <div className="h-2" style={{ background: "linear-gradient(90deg, #D6FF3D, #9fd0f0)" }} />
+
+      <div className="p-4">
+        {/* Title + status */}
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-bold text-[#F2F3F5]">{tournament.name}</h3>
+            <p className="mt-0.5 text-xs text-[#6B7280]">
+              {formatDate(tournament.startDate)} · {formatTournamentFormat(tournament.format)}
+            </p>
           </div>
+          <span className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-semibold ${
+            status === "upcoming"
+              ? "bg-[#D6FF3D]/13 text-[#D6FF3D]"
+              : status === "ongoing"
+              ? "bg-blue-500/13 text-blue-300"
+              : "bg-[#1E2028] text-[#6B7280]"
+          }`}>
+            {getStatusLabel(status)}
+          </span>
         </div>
 
-        <div>
-          <CardTitle className="text-xl text-slate-900 dark:text-slate-100">
-            {tournament.name}
-          </CardTitle>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            {formatTournamentType(tournament.type)} · {formatTournamentFormat(tournament.format)}
-          </p>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        <div className="grid gap-3 text-sm sm:grid-cols-2">
-          <InfoBox label="Categoria" value={formatTournamentCategory(tournament)} />
-          <InfoBox
-            label="Genero"
-            value={category ? formatGender(category.gender) : "Por suma"}
-          />
-          <InfoBox label="Inicio" value={formatDate(tournament.startDate)} />
-          <InfoBox label="Fin" value={formatDate(tournament.endDate)} />
+        {/* Tags */}
+        <div className="mb-3 flex flex-wrap gap-2">
+          <span className="rounded-lg border border-[#1E2028] bg-[#0F1114] px-2.5 py-1 text-[11px] text-[#9CA3AF]">
+            Cat. {formatTournamentCategory(tournament)}
+          </span>
+          {(tournament as Record<string, unknown>).registrationPrice != null && (
+            <span className="rounded-lg border border-[#1E2028] bg-[#0F1114] px-2.5 py-1 text-[11px] text-[#9CA3AF]">
+              ${Number((tournament as Record<string, unknown>).registrationPrice).toLocaleString()} / pareja
+            </span>
+          )}
         </div>
 
+        {/* Progress bar */}
+        <div className="mb-3 flex items-center gap-3">
+          <div className="flex-1 h-1.5 rounded-full bg-[#0F1114] overflow-hidden">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${progressPct}%`,
+                background: "linear-gradient(90deg, #9fd0f0, #D6FF3D)",
+              }}
+            />
+          </div>
+          <span className="text-xs text-[#6B7280] shrink-0">{approvedTeams}/{maxTeams}</span>
+        </div>
+
+        {/* Actions */}
         {status === "upcoming" ? (
           <>
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-sm dark:border-emerald-900/60 dark:bg-slate-900/70">
-              <p className="font-medium text-slate-900 dark:text-slate-100">
-                Cierre de inscripción
-              </p>
-              <p className="mt-1 text-slate-500 dark:text-slate-400">
-                {formatDate(tournament.registrationDeadline)}
-              </p>
-            </div>
-
             {!eligibility.canRegister && !eligibility.requiresClubVerification ? (
-              <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+              <p className="mb-3 rounded-xl border border-amber-900/60 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">
                 {eligibility.reason}
               </p>
             ) : null}
-
             <Button
-              className="w-full bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+              className="w-full rounded-xl bg-[#D6FF3D] text-[#0A0B0D] font-semibold hover:bg-[#e4ff6a]"
               disabled={!eligibility.canRegister && !eligibility.requiresClubVerification}
-              onClick={eligibility.requiresClubVerification ? onRequireClubVerification : onRegister}
+              onClick={(e) => {
+                e.stopPropagation();
+                (eligibility.requiresClubVerification ? onRequireClubVerification : onRegister)();
+              }}
             >
               Inscribirme
             </Button>
           </>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300">
-              {approvedTeams} aprobados
-            </Badge>
-            <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
-              {pendingTeams} pendientes
-            </Badge>
-          </div>
-        )}
-
-        {status === "finished" && tournament.results ? (
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-sm dark:border-emerald-900/60 dark:bg-slate-900/70">
-            <p className="font-medium text-slate-900 dark:text-slate-100">
-              Resultado
-            </p>
-            <p className="mt-1 text-slate-500 dark:text-slate-400">
-              Campeones: {formatTeamName(tournament.results.champion)}
-            </p>
+        ) : status === "finished" && tournament.results ? (
+          <div className="rounded-xl border border-[#1E2028] bg-[#0F1114] px-3 py-2 text-xs">
+            <span className="text-[#6B7280]">Campeones: </span>
+            <span className="font-medium text-[#F2F3F5]">{formatTeamName(tournament.results.champion)}</span>
           </div>
         ) : null}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -550,12 +535,12 @@ function FinishedTournamentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto border-emerald-100 bg-white text-slate-900 shadow-xl shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950 dark:text-slate-100 dark:shadow-emerald-950/20 sm:max-w-4xl">
+      <DialogContent className="max-h-[85vh] overflow-y-auto border-[#1E2028] bg-[#14161A] text-[#F2F3F5] shadow-xl shadow-emerald-100/60 border-[#1E2028] bg-[#0A0B0D]  sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>
             Resultados del torneo{tournament ? ` - ${tournament.name}` : ""}
           </DialogTitle>
-          <DialogDescription className="text-slate-500 dark:text-slate-400">
+          <DialogDescription className="text-[#6B7280]">
             Posiciones finales y puntos otorgados a los equipos que finalizaron.
           </DialogDescription>
         </DialogHeader>
@@ -573,7 +558,7 @@ function FinishedTournamentDialog({
             </div>
 
             {rows.length > 0 ? (
-              <Card className="overflow-hidden rounded-[1.25rem] border-emerald-100 bg-white/90 dark:border-emerald-900/60 dark:bg-slate-950/80">
+              <Card className="overflow-hidden rounded-[1.25rem] border-[#1E2028] bg-[#101216] border-[#1E2028] bg-[#101216]">
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader>
@@ -592,10 +577,10 @@ function FinishedTournamentDialog({
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col">
-                              <span className="font-medium text-slate-900 dark:text-slate-100">
+                              <span className="font-medium text-[#F2F3F5]">
                                 {row.teamName}
                               </span>
-                              <span className="text-xs text-slate-500 dark:text-slate-400 sm:hidden">
+                              <span className="text-xs text-[#6B7280] sm:hidden">
                                 {row.label}
                               </span>
                             </div>
@@ -605,15 +590,15 @@ function FinishedTournamentDialog({
                               variant={row.position === 1 ? "default" : "outline"}
                               className={
                                 row.position === 1
-                                  ? "bg-amber-500 text-slate-950 hover:bg-amber-500"
-                                  : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                  ? "bg-amber-500 text-[#0A0B0D] hover:bg-amber-500"
+                                  : "border-[#2a3036] bg-[#D6FF3D]/10 text-[#D6FF3D]"
                               }
                             >
                               {row.label}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            <span className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            <span className="font-mono text-sm font-semibold text-[#F2F3F5]">
                               {row.points.toLocaleString()}
                             </span>
                           </TableCell>
@@ -624,7 +609,7 @@ function FinishedTournamentDialog({
                 </CardContent>
               </Card>
             ) : (
-              <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+              <p className="rounded-2xl border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">
                 Este torneo todavía no tiene resultados cargados.
               </p>
             )}
@@ -635,7 +620,7 @@ function FinishedTournamentDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
+            className="border-[#2a3036] bg-[#14161A] text-[#F2F3F5] hover:bg-[#1a1d24] hover:text-[#D6FF3D]"
           >
             Cerrar
           </Button>
@@ -664,18 +649,18 @@ function OngoingTournamentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto border-emerald-100 bg-white text-slate-900 shadow-xl shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950 dark:text-slate-100 dark:shadow-emerald-950/20 sm:max-w-6xl">
+      <DialogContent className="max-h-[85vh] overflow-y-auto border-[#1E2028] bg-[#14161A] text-[#F2F3F5] shadow-xl shadow-emerald-100/60 border-[#1E2028] bg-[#0A0B0D]  sm:max-w-6xl">
         <DialogHeader>
           <DialogTitle>
             Torneo en curso{activeTournament ? ` - ${activeTournament.name}` : ""}
           </DialogTitle>
-          <DialogDescription className="text-slate-500 dark:text-slate-400">
+          <DialogDescription className="text-[#6B7280]">
             Fixture, tablas y cruces disponibles solo para consulta.
           </DialogDescription>
         </DialogHeader>
 
         {loading ? (
-          <div className="flex items-center gap-2 rounded-2xl border border-emerald-100 px-4 py-3 text-sm text-slate-500 dark:border-emerald-900/60 dark:text-slate-400">
+          <div className="flex items-center gap-2 rounded-2xl border border-[#1E2028] px-4 py-3 text-sm text-[#6B7280] border-[#1E2028]">
             <Loader2 className="h-4 w-4 animate-spin" />
             Cargando fixture...
           </div>
@@ -713,13 +698,13 @@ function OngoingTournamentDialog({
                 ) : null}
 
                 {!hasGroups && !hasPlayoff ? (
-                  <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                  <p className="rounded-2xl border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">
                     Este torneo todavía no tiene fixture disponible.
                   </p>
                 ) : null}
               </>
             ) : (
-              <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+              <p className="rounded-2xl border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">
                 No se encontró el fixture de este torneo.
               </p>
             )}
@@ -730,7 +715,7 @@ function OngoingTournamentDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
+            className="border-[#2a3036] bg-[#14161A] text-[#F2F3F5] hover:bg-[#1a1d24] hover:text-[#D6FF3D]"
           >
             Cerrar
           </Button>
@@ -744,10 +729,10 @@ function ReadOnlyGroupsSection({ tournament }: { tournament: TournamentGroup }) 
   return (
     <section className="space-y-3">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-300">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D6FF3D]">
           Grupos
         </p>
-        <h4 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+        <h4 className="text-base font-semibold text-[#F2F3F5]">
           Tabla y partidos de grupos
         </h4>
       </div>
@@ -778,27 +763,27 @@ function ReadOnlyGroupCard({
   const sortedTeams = [...group.teams].sort(compareGroupStandings);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-emerald-100 bg-white/90 shadow-sm dark:border-emerald-900/60 dark:bg-slate-950/80">
-      <div className="border-b border-emerald-100 px-5 py-4 dark:border-emerald-900/60">
+    <section className="overflow-hidden rounded-2xl border border-[#1E2028] bg-[#101216] shadow-sm border-[#1E2028] bg-[#101216]">
+      <div className="border-b border-[#1E2028] px-5 py-4 border-[#1E2028]">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-1">
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+            <p className="text-xs uppercase tracking-[0.18em] text-[#6B7280]">
               Zona {groupIndex + 1}
             </p>
-            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+            <h3 className="text-xl font-semibold text-[#F2F3F5]">
               {group.name || `Grupo ${groupIndex + 1}`}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-[#6B7280]">
               Categoria {String(group.category?.categoryLevel ?? "-")} ·{" "}
               {formatGender(group.category?.gender ?? "")}
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <Badge variant="outline" className="border-[#2a3036] bg-[#D6FF3D]/10 text-[#D6FF3D]">
               {group.teams.length} equipos
             </Badge>
-            <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-500/10 dark:text-blue-300">
+            <Badge variant="outline" className="border-blue-900/60 bg-blue-950/30 text-blue-300">
               Clasifican {qualifyPerGroup}
             </Badge>
           </div>
@@ -821,13 +806,13 @@ function ReadOnlyGroupMatches({
   groupIndex: number;
 }) {
   return (
-    <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3 dark:border-emerald-900/60 dark:bg-slate-900/50">
+    <div className="rounded-xl border border-[#1E2028] bg-[#14161A]/40 p-3 border-[#1E2028] bg-[#14161A]">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <p className="text-lg font-semibold text-[#F2F3F5]">
             Partidos
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-[#6B7280]">
             Fixture del grupo
           </p>
         </div>
@@ -841,14 +826,14 @@ function ReadOnlyGroupMatches({
           return (
             <div
               key={`${match.id}-${groupIndex}-${index}`}
-              className="rounded-xl border border-emerald-100 bg-white px-4 py-3 dark:border-emerald-900/60 dark:bg-slate-950/70"
+              className="rounded-xl border border-[#1E2028] bg-[#101216] px-4 py-3 border-[#1E2028] bg-[#101216]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  <p className="truncate text-sm font-semibold text-[#F2F3F5]">
                     Partido {index + 1}
                   </p>
-                  <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
+                  <p className="mt-1 truncate text-xs text-[#6B7280]">
                     {formatTeamSummaryName(match.team1, index * 2 + 1)} vs{" "}
                     {formatTeamSummaryName(match.team2, index * 2 + 2)}
                   </p>
@@ -860,13 +845,13 @@ function ReadOnlyGroupMatches({
                     variant="outline"
                     className={
                       hasResult
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300"
-                        : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200"
+                        ? "border-[#2a3036] bg-[#D6FF3D]/10 text-[#D6FF3D]"
+                        : "border-amber-900/60 bg-amber-950/30 text-amber-200"
                     }
                   >
                     {hasResult ? "Finalizado" : "Pendiente"}
                   </Badge>
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  <span className="text-xs font-semibold text-[#6B7280]">
                     {formatMatchScore(getGroupMatchScore(match))}
                   </span>
                 </div>
@@ -887,21 +872,21 @@ function ReadOnlyGroupStandings({
   qualifyPerGroup: number;
 }) {
   return (
-    <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3 dark:border-emerald-900/60 dark:bg-slate-900/50">
+    <div className="rounded-xl border border-[#1E2028] bg-[#14161A]/40 p-3 border-[#1E2028] bg-[#14161A]">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <p className="text-lg font-semibold text-[#F2F3F5]">
             Tabla
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-[#6B7280]">
             Posiciones actuales
           </p>
         </div>
-        <Trophy className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+        <Trophy className="h-4 w-4 text-[#6B7280]" />
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-emerald-100 dark:border-emerald-900/60">
-        <div className="grid grid-cols-[minmax(0,1.9fr)_42px_42px_42px_42px_58px] items-center gap-2 border-b border-emerald-100 bg-white/70 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:border-emerald-900/60 dark:bg-slate-950/70 dark:text-slate-400">
+      <div className="overflow-hidden rounded-lg border border-[#1E2028]">
+        <div className="grid grid-cols-[minmax(0,1.9fr)_42px_42px_42px_42px_58px] items-center gap-2 border-b border-[#1E2028] bg-[#14161A] px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-[#6B7280] border-[#1E2028] bg-[#101216]">
           <span>Equipo</span>
           <span className="text-center">PJ</span>
           <span className="text-center">PG</span>
@@ -910,7 +895,7 @@ function ReadOnlyGroupStandings({
           <span className="text-right">PTS</span>
         </div>
 
-        <div className="divide-y divide-emerald-100 dark:divide-emerald-900/60">
+        <div className="divide-y divide-[#1E2028]">
           {teams.map((team, index) => {
             const position = index + 1;
             const qualifies = position <= qualifyPerGroup;
@@ -919,23 +904,23 @@ function ReadOnlyGroupStandings({
             return (
               <div
                 key={`${team.id}-${index}`}
-                className="grid grid-cols-[minmax(0,1.9fr)_42px_42px_42px_42px_58px] items-center gap-2 bg-white px-3 py-3 dark:bg-slate-950/70"
+                className="grid grid-cols-[minmax(0,1.9fr)_42px_42px_42px_42px_58px] items-center gap-2 bg-[#101216] px-3 py-3 bg-[#101216]"
               >
                 <div className="flex min-w-0 items-start gap-3">
                   <span
                     className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
                       qualifies
-                        ? "bg-emerald-600 text-white"
-                        : "bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400"
+                        ? "bg-[#D6FF3D] text-[#0A0B0D]"
+                        : "bg-[#1a1d24] text-[#6B7280] bg-[#14161A]"
                     }`}
                   >
                     {position}
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+                    <p className="truncate text-sm font-medium text-[#F2F3F5]">
                       {formatTeamSummaryName(team.team, position)}
                     </p>
-                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                    <p className="truncate text-xs text-[#6B7280]">
                       {formatTeamSummaryPlayers(team.team)}
                     </p>
                   </div>
@@ -980,10 +965,10 @@ function ReadOnlyPlayoffSection({ tournament }: { tournament: TournamentGroup })
   return (
     <section className="space-y-3">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-300">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D6FF3D]">
           Playoff
         </p>
-        <h4 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+        <h4 className="text-base font-semibold text-[#F2F3F5]">
           Llave de eliminacion directa
         </h4>
       </div>
@@ -992,10 +977,10 @@ function ReadOnlyPlayoffSection({ tournament }: { tournament: TournamentGroup })
         {matchesByRound.map(({ round, matches }) => (
           <div
             key={round}
-            className="rounded-2xl border border-emerald-100 bg-white/90 p-4 shadow-sm dark:border-emerald-900/60 dark:bg-slate-950/80"
+            className="rounded-2xl border border-[#1E2028] bg-[#101216] p-4 shadow-sm border-[#1E2028] bg-[#101216]"
           >
             <div className="mb-3 flex items-center justify-between">
-              <p className="font-semibold text-slate-900 dark:text-slate-100">
+              <p className="font-semibold text-[#F2F3F5]">
                 {formatPlayoffRound(round)}
               </p>
               <Badge variant="outline">{matches.length} partidos</Badge>
@@ -1014,17 +999,17 @@ function ReadOnlyPlayoffSection({ tournament }: { tournament: TournamentGroup })
 
 function ReadOnlyPlayoffMatchCard({ match }: { match: PlayOffMatch }) {
   return (
-    <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 px-4 py-3 dark:border-emerald-900/60 dark:bg-slate-900/50">
+    <div className="rounded-xl border border-[#1E2028] bg-[#14161A]/40 px-4 py-3 border-[#1E2028] bg-[#14161A]">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6B7280]">
           Juego {match.matchNumber}
         </p>
         <Badge
           variant="outline"
           className={
             match.finished
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300"
-              : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200"
+              ? "border-[#2a3036] bg-[#D6FF3D]/10 text-[#D6FF3D]"
+              : "border-amber-900/60 bg-amber-950/30 text-amber-200"
           }
         >
           {match.finished ? "Finalizado" : "Pendiente"}
@@ -1068,8 +1053,8 @@ function PlayoffTeamLine({
     <div
       className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm ${
         isWinner
-          ? "bg-emerald-600 text-white"
-          : "bg-white text-slate-700 dark:bg-slate-950/70 dark:text-slate-200"
+          ? "bg-[#D6FF3D] text-[#0A0B0D]"
+          : "bg-[#14161A] text-[#9CA3AF] bg-[#101216]"
       }`}
     >
       <span className="truncate font-medium">
@@ -1541,20 +1526,20 @@ function TournamentRegisterDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto border-emerald-100 bg-white text-slate-900 shadow-xl shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950 dark:text-slate-100 dark:shadow-emerald-950/20 sm:max-w-3xl">
+      <DialogContent className="max-h-[85vh] overflow-y-auto border-[#1E2028] bg-[#14161A] text-[#F2F3F5] shadow-xl shadow-emerald-100/60 border-[#1E2028] bg-[#0A0B0D]  sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Inscribirse al torneo</DialogTitle>
-          <DialogDescription className="text-slate-500 dark:text-slate-400">
+          <DialogDescription className="text-[#6B7280]">
             Elegí cómo querés anotarte. Si enviás una solicitud, tu compañero debe aceptarla.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-sm dark:border-emerald-900/60 dark:bg-slate-900/70">
-            <p className="font-medium text-slate-900 dark:text-slate-100">
+          <div className="rounded-2xl border border-[#1E2028] bg-[#14161A] px-4 py-3 text-sm">
+            <p className="font-medium text-[#F2F3F5]">
               {tournament?.name}
             </p>
-            <p className="mt-1 text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-[#6B7280]">
               {tournament?.type === "sum"
                 ? "Torneo por suma. No hace falta elegir categoria."
                 : "Seleccioná la categoria para consultar tus opciones de inscripción."}
@@ -1569,7 +1554,7 @@ function TournamentRegisterDialog({
                 onValueChange={setSelectedCategoryId}
                 disabled={isActionPending}
               >
-                <SelectTrigger className="w-full border-emerald-200 bg-white dark:border-emerald-900/60 dark:bg-slate-900">
+                <SelectTrigger className="w-full border-[#1E2028] bg-[#101216]">
                   <SelectValue placeholder="Seleccionar categoria" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1591,14 +1576,14 @@ function TournamentRegisterDialog({
           ) : null}
 
           {registrationOptionsQuery.isLoading ? (
-            <div className="flex items-center gap-2 rounded-2xl border border-emerald-100 px-4 py-3 text-sm text-slate-500 dark:border-emerald-900/60 dark:text-slate-400">
+            <div className="flex items-center gap-2 rounded-2xl border border-[#1E2028] px-4 py-3 text-sm text-[#6B7280] border-[#1E2028]">
               <Loader2 className="h-4 w-4 animate-spin" />
               Consultando estado de inscripción...
             </div>
           ) : null}
 
           {registrationOptionsQuery.error ? (
-            <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">
+            <p className="rounded-2xl border border-rose-900/60 bg-rose-950/30 px-4 py-3 text-sm text-rose-300">
               {registrationOptionsQuery.error instanceof Error
                 ? registrationOptionsQuery.error.message
                 : "No se pudo consultar el estado de inscripción."}
@@ -1606,26 +1591,26 @@ function TournamentRegisterDialog({
           ) : null}
 
           {alreadyHasPartner ? (
-            <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <p className="rounded-2xl border border-[#2a3036] bg-[#14161A] px-4 py-3 text-sm text-[#D6FF3D] border-[#1E2028]">
               Ya tenés pareja en este torneo.
             </p>
           ) : null}
 
           {paymentResolved ? (
-            <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <p className="rounded-2xl border border-[#2a3036] bg-[#14161A] px-4 py-3 text-sm text-[#D6FF3D] border-[#1E2028]">
               Inscripcion paga.
             </p>
           ) : null}
 
           {alreadyHasPartner && pendingTournamentPayment?.checkoutUrl && !paymentResolved ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+            <div className="rounded-2xl border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-100">
               <p>Tu equipo tiene un pago pendiente.</p>
               <Button
                 type="button"
                 onClick={() => {
                   window.location.href = pendingTournamentPayment.checkoutUrl;
                 }}
-                className="mt-3 bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+                className="mt-3 bg-amber-500 text-white hover:bg-amber-400"
               >
                 Continuar pago
               </Button>
@@ -1633,7 +1618,7 @@ function TournamentRegisterDialog({
           ) : null}
 
           {!canRegister ? (
-            <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+            <p className="rounded-2xl border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">
               {options?.message ?? "No podés inscribirte en este momento."}
             </p>
           ) : null}
@@ -1650,8 +1635,8 @@ function TournamentRegisterDialog({
               }}
               className={
                 flow === "partner"
-                  ? "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
-                  : "border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
+                  ? "bg-[#D6FF3D] text-[#0A0B0D] hover:bg-[#e4ff6a]"
+                  : "border-[#2a3036] bg-[#14161A] text-[#F2F3F5] hover:bg-[#1a1d24] hover:text-[#D6FF3D]"
               }
             >
               Tengo compañero
@@ -1667,8 +1652,8 @@ function TournamentRegisterDialog({
               }}
               className={
                 flow === "available"
-                  ? "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
-                  : "border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
+                  ? "bg-[#D6FF3D] text-[#0A0B0D] hover:bg-[#e4ff6a]"
+                  : "border-[#2a3036] bg-[#14161A] text-[#F2F3F5] hover:bg-[#1a1d24] hover:text-[#D6FF3D]"
               }
             >
               No tengo compañero
@@ -1690,15 +1675,15 @@ function TournamentRegisterDialog({
           ) : null}
 
           {flow === "available" ? (
-            <div className="space-y-3 rounded-2xl border border-emerald-100 p-4 dark:border-emerald-900/60">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+            <div className="space-y-3 rounded-2xl border border-[#1E2028] p-4 border-[#1E2028]">
+              <p className="text-sm text-[#6B7280]">
                 Podés quedar en la lista para que otro jugador te elija y cree la pareja.
               </p>
               <Button
                 type="button"
                 onClick={handleBecomeAvailable}
                 disabled={isCheckingOptions || isActionPending || Boolean(currentAvailablePlayer)}
-                className="w-full bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                className="w-full bg-[#D6FF3D] text-[#0A0B0D] hover:bg-[#e4ff6a]"
               >
                 {becomeAvailableMutation.isPending ? (
                   <>
@@ -1721,7 +1706,7 @@ function TournamentRegisterDialog({
                     withdrawAvailableMutation.mutate(currentAvailablePlayer.id);
                   }}
                   disabled={isCheckingOptions || isActionPending}
-                  className="w-full border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
+                  className="w-full border-[#2a3036] bg-[#14161A] text-[#F2F3F5] hover:bg-[#1a1d24] hover:text-[#D6FF3D]"
                 >
                   {withdrawAvailableMutation.isPending ? (
                     <>
@@ -1765,13 +1750,13 @@ function TournamentRegisterDialog({
           />
 
           {error ? (
-            <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200">
+            <p className="rounded-2xl border border-rose-900/60 bg-rose-950/30 px-4 py-3 text-sm text-rose-300">
               {error}
             </p>
           ) : null}
 
           {success ? (
-            <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <p className="rounded-2xl border border-[#2a3036] bg-[#14161A] px-4 py-3 text-sm text-[#D6FF3D] border-[#1E2028]">
               {success}
             </p>
           ) : null}
@@ -1781,7 +1766,7 @@ function TournamentRegisterDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
+            className="border-[#2a3036] bg-[#14161A] text-[#F2F3F5] hover:bg-[#1a1d24] hover:text-[#D6FF3D]"
           >
             Cerrar
           </Button>
@@ -1813,7 +1798,7 @@ function PartnerSelectionPanel({
   onSubmit: () => void;
 }) {
   return (
-    <div className="space-y-3 rounded-2xl border border-emerald-100 p-4 dark:border-emerald-900/60">
+    <div className="space-y-3 rounded-2xl border border-[#1E2028] p-4 border-[#1E2028]">
       <div className="space-y-2">
         <Label>Buscar jugador elegible</Label>
         <Input
@@ -1821,12 +1806,12 @@ function PartnerSelectionPanel({
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Nombre o apellido"
           disabled={loading || disabled}
-          className="border-emerald-200 bg-white dark:border-emerald-900/60 dark:bg-slate-900"
+          className="border-[#1E2028] bg-[#101216]"
         />
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+        <div className="flex items-center gap-2 text-sm text-[#6B7280]">
           <Loader2 className="h-4 w-4 animate-spin" />
           Buscando jugadores...
         </div>
@@ -1842,18 +1827,18 @@ function PartnerSelectionPanel({
               onClick={() => onSelect(partner.id)}
               className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
                 selectedPartnerId === partner.id
-                  ? "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-200"
-                  : "border-emerald-100 bg-white text-slate-700 hover:bg-emerald-50 dark:border-emerald-900/60 dark:bg-slate-900/70 dark:text-slate-200"
+                  ? "border-emerald-500 bg-[#14161A] text-[#D6FF3D]"
+                  : "border-[#1E2028] bg-[#14161A] text-[#9CA3AF] hover:bg-[#14161A] border-[#1E2028] bg-[#14161A]"
               }`}
             >
               <span className="font-medium">{getRegistrationPlayerName(partner)}</span>
-              <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
+              <span className="ml-2 text-xs text-[#6B7280]">
                 {formatPlayerMeta(partner)}
               </span>
             </button>
           ))
         ) : (
-          <p className="rounded-lg border border-dashed border-emerald-200 px-3 py-4 text-center text-sm text-slate-500 dark:border-emerald-900/60 dark:text-slate-400">
+          <p className="rounded-lg border border-dashed border-[#2a3036] px-3 py-4 text-center text-sm text-[#6B7280] border-[#1E2028]">
             No hay compañeros elegibles para mostrar.
           </p>
         )}
@@ -1863,7 +1848,7 @@ function PartnerSelectionPanel({
         type="button"
         onClick={onSubmit}
         disabled={!selectedPartnerId || disabled}
-        className="w-full bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+        className="w-full bg-[#D6FF3D] text-[#0A0B0D] hover:bg-[#e4ff6a]"
       >
         {submitting ? (
           <>
@@ -1890,17 +1875,17 @@ function AvailablePlayersPanel({
   onPick: (availablePlayerId: string) => void;
 }) {
   return (
-    <div className="space-y-3 rounded-2xl border border-emerald-100 p-4 dark:border-emerald-900/60">
+    <div className="space-y-3 rounded-2xl border border-[#1E2028] p-4 border-[#1E2028]">
       <div>
-        <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+        <p className="text-sm font-medium text-[#F2F3F5]">
           Jugadores disponibles
         </p>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-[#6B7280]">
           Elegir uno crea la pareja automáticamente.
         </p>
       </div>
       {loading ? (
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+        <div className="flex items-center gap-2 text-sm text-[#6B7280]">
           <Loader2 className="h-4 w-4 animate-spin" />
           Cargando disponibles...
         </div>
@@ -1909,13 +1894,13 @@ function AvailablePlayersPanel({
           {players.map((available) => (
             <div
               key={available.id}
-              className="flex items-center justify-between gap-3 rounded-lg border border-emerald-100 px-3 py-2 text-sm dark:border-emerald-900/60"
+              className="flex items-center justify-between gap-3 rounded-lg border border-[#1E2028] px-3 py-2 text-sm border-[#1E2028]"
             >
               <div>
-                <p className="font-medium text-slate-900 dark:text-slate-100">
+                <p className="font-medium text-[#F2F3F5]">
                   {getAvailablePlayerName(available)}
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-[#6B7280]">
                   {formatPlayerMeta(available.player ?? available)}
                 </p>
               </div>
@@ -1924,7 +1909,7 @@ function AvailablePlayersPanel({
                 size="sm"
                 onClick={() => onPick(available.id)}
                 disabled={disabled}
-                className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                className="bg-[#D6FF3D] text-[#0A0B0D] hover:bg-[#e4ff6a]"
               >
                 Elegir
               </Button>
@@ -1932,7 +1917,7 @@ function AvailablePlayersPanel({
           ))}
         </div>
       ) : (
-        <p className="rounded-lg border border-dashed border-emerald-200 px-3 py-4 text-center text-sm text-slate-500 dark:border-emerald-900/60 dark:text-slate-400">
+        <p className="rounded-lg border border-dashed border-[#2a3036] px-3 py-4 text-center text-sm text-[#6B7280] border-[#1E2028]">
           Todavía no hay jugadores disponibles.
         </p>
       )}
@@ -1956,12 +1941,12 @@ function PartnerRequestsPanel({
   onReject: (requestId: string) => void;
 }) {
   return (
-    <div className="space-y-3 rounded-2xl border border-emerald-100 p-4 dark:border-emerald-900/60">
-      <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+    <div className="space-y-3 rounded-2xl border border-[#1E2028] p-4 border-[#1E2028]">
+      <p className="text-sm font-medium text-[#F2F3F5]">
         Solicitudes pendientes
       </p>
       {loading ? (
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+        <div className="flex items-center gap-2 text-sm text-[#6B7280]">
           <Loader2 className="h-4 w-4 animate-spin" />
           Cargando solicitudes...
         </div>
@@ -1978,13 +1963,13 @@ function PartnerRequestsPanel({
           ))}
         </div>
       ) : (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-[#6B7280]">
           No tenés solicitudes recibidas pendientes.
         </p>
       )}
       {sentRequests.length > 0 ? (
-        <div className="space-y-2 border-t border-emerald-100 pt-3 dark:border-emerald-900/60">
-          <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+        <div className="space-y-2 border-t border-[#1E2028] pt-3 border-[#1E2028]">
+          <p className="text-sm font-medium text-[#F2F3F5]">
             Solicitudes enviadas
           </p>
           {sentRequests.map((request) => (
@@ -2002,18 +1987,18 @@ function SentPartnerRequestRow({
   request: TournamentPartnerRequest;
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-emerald-100 px-3 py-2 text-sm dark:border-emerald-900/60 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-2 rounded-lg border border-[#1E2028] px-3 py-2 text-sm border-[#1E2028] sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p className="font-medium text-slate-900 dark:text-slate-100">
+        <p className="font-medium text-[#F2F3F5]">
           {getRegistrationPlayerName(getPartnerRequestRequested(request))}
         </p>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-[#6B7280]">
           {request.tournament?.name ?? "Torneo"} · {formatRequestCategory(request)}
         </p>
       </div>
       <Badge
         variant="outline"
-        className="w-fit border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200"
+        className="w-fit border-amber-900/60 bg-amber-950/30 text-amber-200"
       >
         Pendiente de aceptación
       </Badge>
@@ -2033,12 +2018,12 @@ function PartnerRequestRow({
   onReject: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-emerald-100 px-3 py-2 text-sm dark:border-emerald-900/60 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-lg border border-[#1E2028] px-3 py-2 text-sm border-[#1E2028] sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p className="font-medium text-slate-900 dark:text-slate-100">
+        <p className="font-medium text-[#F2F3F5]">
           {getRegistrationPlayerName(getPartnerRequestRequester(request))}
         </p>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-[#6B7280]">
           {request.tournament?.name ?? "Torneo"} · {formatRequestCategory(request)}
         </p>
       </div>
@@ -2049,7 +2034,7 @@ function PartnerRequestRow({
           onClick={onReject}
           disabled={disabled}
           variant="outline"
-          className="border-rose-200 bg-white text-rose-700 hover:bg-rose-50 dark:border-rose-900/60 dark:bg-slate-900 dark:text-rose-200"
+          className="border-rose-900/60 bg-[#14161A] text-rose-300 hover:bg-rose-950/30 bg-[#14161A]"
         >
           Rechazar
         </Button>
@@ -2058,7 +2043,7 @@ function PartnerRequestRow({
           size="sm"
           onClick={onAccept}
           disabled={disabled}
-          className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+          className="bg-[#D6FF3D] text-[#0A0B0D] hover:bg-[#e4ff6a]"
         >
           Aceptar
         </Button>
@@ -2106,7 +2091,7 @@ function PlayerRanking({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2 rounded-[1.5rem] border border-emerald-100 bg-white/80 p-3 shadow-sm shadow-emerald-100/50 dark:border-emerald-900/60 dark:bg-slate-950/70 dark:shadow-emerald-950/10">
+      <div className="flex flex-wrap items-center gap-2 rounded-[1.5rem] border border-[#1E2028] bg-[#14161A] p-3  border-[#1E2028] bg-[#101216] ">
         {CATEGORIES.map((cat) => (
           <Button
             key={cat}
@@ -2115,8 +2100,8 @@ function PlayerRanking({
             onClick={() => setSelectedCategory(cat)}
             className={
               selectedCategory === cat
-                ? "rounded-full bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
-                : "rounded-full border-emerald-200 bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-emerald-500/10"
+                ? "rounded-full bg-[#D6FF3D] text-[#0A0B0D] hover:bg-[#e4ff6a]"
+                : "rounded-full border-[#2a3036] bg-[#14161A] text-[#9CA3AF] hover:bg-[#14161A] hover:text-[#D6FF3D] border-[#1E2028] bg-[#14161A]"
             }
           >
             {cat}
@@ -2132,7 +2117,7 @@ function PlayerRanking({
           description="No hay jugadores registrados en esta categoria todavia."
         />
       ) : (
-        <Card className="overflow-hidden rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
+        <Card className="overflow-hidden rounded-2xl border-[#1E2028] bg-[#101216]">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
@@ -2151,10 +2136,10 @@ function PlayerRanking({
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium text-slate-900 dark:text-slate-100">
+                        <span className="font-medium text-[#F2F3F5]">
                           {entry.name}
                         </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400 sm:hidden">
+                        <span className="text-xs text-[#6B7280] sm:hidden">
                           {entry.category}
                         </span>
                       </div>
@@ -2165,7 +2150,7 @@ function PlayerRanking({
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className="font-mono text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <span className="font-mono text-sm font-semibold text-[#F2F3F5]">
                         {entry.points.toLocaleString()}
                       </span>
                     </TableCell>
@@ -2515,7 +2500,7 @@ function MatchBookingHint({
 }) {
   if (!booking) {
     return (
-      <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+      <div className="mt-2 flex items-center gap-2 text-[11px] text-[#6B7280]">
         <CalendarClock className="h-3.5 w-3.5" />
         Sin reserva asignada
       </div>
@@ -2523,12 +2508,12 @@ function MatchBookingHint({
   }
 
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
-      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-white px-2 py-1 dark:border-emerald-900/60 dark:bg-slate-950/70">
+    <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-[#6B7280]">
+      <span className="inline-flex items-center gap-1 rounded-full border border-[#1E2028] bg-[#101216] px-2 py-1 border-[#1E2028] bg-[#101216]">
         <MapPin className="h-3 w-3" />
         Cancha {booking.courtNumber}
       </span>
-      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-white px-2 py-1 dark:border-emerald-900/60 dark:bg-slate-950/70">
+      <span className="inline-flex items-center gap-1 rounded-full border border-[#1E2028] bg-[#101216] px-2 py-1 border-[#1E2028] bg-[#101216]">
         <CalendarClock className="h-3 w-3" />
         {formatBookingDate(booking.date)} · {booking.startTime}
         {booking.endTime ? ` - ${booking.endTime}` : ""}
@@ -2707,7 +2692,7 @@ function getStatusClassName(status: "upcoming" | "ongoing" | "finished") {
   }
 
   if (status === "ongoing") {
-    return "bg-emerald-600 text-white";
+    return "bg-[#D6FF3D] text-[#0A0B0D]";
   }
 
   return "bg-slate-600 text-white";
@@ -2733,9 +2718,9 @@ function getEmptyDescription(status: "upcoming" | "ongoing" | "finished") {
 
 function InfoBox({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 dark:border-emerald-900/60 dark:bg-slate-900/70">
-      <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
-      <p className="mt-1 font-medium text-slate-900 dark:text-slate-100">
+    <div className="rounded-2xl border border-[#1E2028] bg-[#14161A]/60 px-4 py-3 border-[#1E2028] bg-[#14161A]">
+      <p className="text-xs text-[#6B7280]">{label}</p>
+      <p className="mt-1 font-medium text-[#F2F3F5]">
         {value}
       </p>
     </div>
@@ -2745,14 +2730,14 @@ function InfoBox({ label, value }: { label: string; value: string }) {
 function PositionBadge({ position }: { position: number }) {
   if (position === 1) {
     return (
-      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-700">
+      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-200">
         1
       </span>
     );
   }
   if (position === 2) {
     return (
-      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600">
+      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#1a1d24] text-sm font-bold text-[#6B7280]">
         2
       </span>
     );
@@ -2765,7 +2750,7 @@ function PositionBadge({ position }: { position: number }) {
     );
   }
   return (
-    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+    <span className="text-sm font-medium text-[#6B7280]">
       {position}
     </span>
   );
@@ -2779,14 +2764,14 @@ function EmptyState({
   description: string;
 }) {
   return (
-    <Card className="rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
+    <Card className="rounded-2xl border-[#1E2028] bg-[#101216]">
       <CardContent className="flex flex-col items-center gap-3 py-16">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D6FF3D]/15 text-[#D6FF3D]">
           <Trophy className="h-6 w-6" />
         </div>
         <div className="text-center">
-          <p className="font-medium text-slate-900 dark:text-slate-100">{title}</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="font-medium text-[#F2F3F5]">{title}</p>
+          <p className="text-sm text-[#6B7280]">
             {description}
           </p>
         </div>
@@ -2797,7 +2782,7 @@ function EmptyState({
 
 function RankingSkeleton() {
   return (
-    <Card className="rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
+    <Card className="rounded-2xl border-[#1E2028] bg-[#101216]">
       <CardHeader>
         <Skeleton className="h-5 w-40" />
       </CardHeader>
@@ -2821,7 +2806,7 @@ function TournamentSkeleton() {
       {Array.from({ length: 3 }).map((_, index) => (
         <Card
           key={index}
-          className="rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80"
+          className="rounded-[1.75rem] border-[#1E2028] bg-[#101216]  border-[#1E2028] bg-[#101216]"
         >
           <CardContent className="space-y-4 p-6">
             <Skeleton className="h-6 w-24 rounded-full" />

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   CalendarDays,
   MapPin,
@@ -10,12 +11,28 @@ import {
   Timer,
   DollarSign,
   Navigation,
+  ArrowRight,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useClub } from "@/context/club-context";
+
+const MOCK_MATCHES = [
+  { id: 1, time: "19:00", players: ["LR", "MD", "JP"], cat: "4ª", sex: "Masculino", court: "Cancha 3", missing: 1 },
+  { id: 2, time: "20:30", players: ["TS", "NV"], cat: "4ª", sex: "Masculino", court: "Cancha 1", missing: 2 },
+  { id: 3, time: "21:00", players: ["SR", "PV"], cat: "4ª", sex: "Mixto", court: "Cancha 2", missing: 2 },
+];
+
+const quickActions = [
+  { emoji: "📅", label: "Reservar", section: "turnos" },
+  { emoji: "🤝", label: "Match", section: "match" },
+  { emoji: "👨‍🏫", label: "Profes", section: "clases" },
+  { emoji: "🏆", label: "Torneos", section: "torneos" },
+  { emoji: "📊", label: "Ranking", section: "torneos" },
+  { emoji: "👤", label: "Perfil", section: "home" },
+];
 
 export function ClubHome() {
   const { config } = useClub();
+  const [view, setView] = useState<"rapido" | "datos">("rapido");
 
   if (!config) return null;
 
@@ -37,161 +54,225 @@ export function ClubHome() {
     ? `https://www.google.com/maps/dir/?api=1&destination=${config.latitude},${config.longitude}${config.placeId ? `&destination_place_id=${config.placeId}` : ""}`
     : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(fullAddress)}`;
 
-  return (
-    <div className="space-y-5 sm:space-y-6 lg:space-y-8">
-      <section className="overflow-hidden rounded-[1.65rem] border border-emerald-100 bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-800 text-white shadow-xl shadow-emerald-950/10 sm:rounded-[2rem]">
-        <div className="grid gap-4 px-4 py-5 sm:gap-6 sm:px-6 sm:py-7 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:gap-8 lg:px-8 lg:py-10">
-          <div className="space-y-4 sm:space-y-5">
-            <span className="hidden md:inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-100 sm:px-4 sm:py-2 sm:text-xs sm:tracking-[0.24em]">
-              Espacio del club
-            </span>
-            <div className="space-y-2 sm:space-y-3">
-              <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl md:text-4xl">
-                {config.clubName}
-              </h1>
-              <p className="max-w-2xl text-sm leading-relaxed text-emerald-50/85 sm:text-base">
-                {config.slogan ||
-                  "Reserva tu cancha, consulta horarios y encontrá toda la información del club en un solo lugar."}
-              </p>
-            </div>
-          </div>
+  const handleSectionChange = (section: string) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("section", section);
+    window.location.href = url.toString();
+  };
 
-          <div className="hidden md:grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1">
-            <HighlightItem
-              label="Ubicacion"
-              value={fullAddress || "A confirmar"}
-            />
-            <HighlightItem
-              label="Contacto"
-              value={config.contactPhone || config.contactEmail || "Sin contacto publicado"}
-            />
+  return (
+    <div className="space-y-5">
+      {/* Header row: greeting + toggle */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm text-[#6B7280]">Hola, jugador 👋</p>
+          <h1 className="text-xl font-bold text-[#F2F3F5]">{config.clubName}</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium uppercase tracking-wider text-[#4B5563]">Vista</span>
+          <div className="flex rounded-xl border border-[#1E2028] bg-[#101216] p-1">
+            <button
+              onClick={() => setView("rapido")}
+              className={`rounded-lg px-4 py-1.5 text-xs font-medium transition ${
+                view === "rapido"
+                  ? "bg-[#F2F3F5] text-[#0A0B0D]"
+                  : "text-[#6B7280] hover:text-[#9CA3AF]"
+              }`}
+            >
+              Rápido
+            </button>
+            <button
+              onClick={() => setView("datos")}
+              className={`rounded-lg px-4 py-1.5 text-xs font-medium transition ${
+                view === "datos"
+                  ? "bg-[#F2F3F5] text-[#0A0B0D]"
+                  : "text-[#6B7280] hover:text-[#9CA3AF]"
+              }`}
+            >
+              Datos del club
+            </button>
           </div>
         </div>
-      </section>
-
-      <div
-        className={`grid grid-cols-3 md:grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 ${
-          showCourtPrice ? "lg:grid-cols-3" : "lg:grid-cols-2"
-        }`}
-      >
-        <StatCard
-          icon={LayoutGrid}
-          label="Canchas activas"
-          value={activeCourts.toString()}
-        />
-        <StatCard
-          icon={Timer}
-          label="Duracion de turno"
-          value={`${config.turnDuration} min`}
-        />
-        {showCourtPrice ? (
-          <StatCard
-            icon={DollarSign}
-            label="Precio base"
-            value={`$${publicBasePrice.toLocaleString()}`}
-          />
-        ) : null}
       </div>
 
-      <div className="grid gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6">
-        <Card className="rounded-[1.45rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20 sm:rounded-[1.75rem]">
-          <CardHeader className="pb-3 sm:pb-4">
-            <CardTitle className="text-base text-slate-900 dark:text-slate-100 sm:text-lg">
-              Informacion del club
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3.5 sm:space-y-4">
-            <InfoRow icon={MapPin} label="Direccion" value={fullAddress} />
-            <InfoRow
-              icon={Phone}
-              label="Telefono"
-              value={config.contactPhone ?? ""}
-            />
-            <InfoRow icon={Mail} label="Email" value={config.contactEmail ?? ""} />
-            <InfoRow
-              icon={Clock}
-              label="Horarios"
-              value={`${config.openingMorning} - ${config.closingMorning}`}
-            />
-            <OpenDaysBadges openDays={config.openDays} />
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden rounded-[1.45rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20 sm:rounded-[1.75rem]">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 sm:pb-4">
-            <CardTitle className="text-base text-slate-900 dark:text-slate-100 sm:text-lg">
-              Ubicacion
-            </CardTitle>
-            <a
-              href={directionsHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800 shadow-sm transition-colors hover:bg-emerald-100 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
+      {view === "rapido" ? (
+        <div className="grid gap-5 lg:grid-cols-[1fr_minmax(320px,400px)]">
+          {/* Left column: CTA + actions */}
+          <div className="space-y-5">
+            {/* CTA card */}
+            <div
+              className="cursor-pointer rounded-2xl border border-[#1E2028] bg-[#101216] p-5 transition hover:border-[#2a3036]"
+              onClick={() => handleSectionChange("turnos")}
             >
-              <Navigation className="h-3.5 w-3.5" />
-              Cómo llegar
-            </a>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="aspect-[4/3] w-full sm:aspect-video">
-              <iframe
-                title={`Mapa de ${config.clubName}`}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                loading="lazy"
-                allowFullScreen
-                referrerPolicy="no-referrer-when-downgrade"
-                src={mapSrc}
-              />
+              <h3 className="text-lg font-semibold text-[#F2F3F5]">Reservá tu primer turno</h3>
+              <p className="mt-1 text-sm text-[#6B7280]">
+                Mirá la disponibilidad de hoy en {config.clubName} →
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      <Card className="rounded-[1.45rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20 sm:rounded-[1.75rem]">
-        <CardHeader className="pb-3 sm:pb-4">
-          <CardTitle className="text-base text-slate-900 dark:text-slate-100 sm:text-lg">
-            Canchas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
-            {(config.courts ?? []).map((court, i) => (
-              <div
-                key={court.id ?? court.number ?? i}
-                className="flex items-start gap-3 rounded-[1.2rem] border border-emerald-100 bg-emerald-50/60 p-3.5 dark:border-emerald-900/60 dark:bg-slate-900/70 sm:items-center sm:rounded-2xl sm:p-4"
-              >
-                <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-bold sm:h-11 sm:w-11 ${
-                    court.active
-                      ? "bg-emerald-600 text-white"
-                      : "bg-slate-200 text-slate-500"
-                  }`}
+            {/* Quick actions grid with emojis */}
+            <div className="grid grid-cols-3 gap-3">
+              {quickActions.map((action) => (
+                <button
+                  key={action.label}
+                  onClick={() => handleSectionChange(action.section)}
+                  className="flex flex-col items-center gap-2 rounded-2xl border border-[#1E2028] bg-[#101216] p-4 transition hover:border-[#2a3036] hover:bg-[#14161A]"
                 >
-                  {court.number}
-                </div>
-                <div className="min-w-0 flex flex-col">
-                  <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                    {court.name || `Cancha ${court.number}`}
-                  </span>
-                  <span className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                    {[court.environment, court.structure, court.surface]
-                      .filter(Boolean)
-                      .join(" / ")}
-                    {!court.active && " / Inactiva"}
-                  </span>
-                  {showCourtPrice && court.price ? (
-                    <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                      ${court.price.toLocaleString()}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-            ))}
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#1a1d24]">
+                    <span className="text-xl">{action.emoji}</span>
+                  </div>
+                  <span className="text-xs font-medium text-[#9CA3AF]">{action.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Right column: Open matches */}
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-[#F2F3F5]">Partidos abiertos</h2>
+              <button
+                onClick={() => handleSectionChange("match")}
+                className="text-xs font-medium text-[#D6FF3D]"
+              >
+                Ver todos
+              </button>
+            </div>
+            <div className="space-y-3">
+              {MOCK_MATCHES.map((match) => (
+                <div
+                  key={match.id}
+                  className="flex items-center justify-between rounded-2xl border border-[#1E2028] bg-[#101216] px-4 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex -space-x-1.5">
+                      {match.players.map((p) => (
+                        <div
+                          key={p}
+                          className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#101216] bg-[#1a1d24] text-[9px] font-bold text-[#9CA3AF]"
+                        >
+                          {p}
+                        </div>
+                      ))}
+                      {match.missing > 0 && (
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#101216] bg-[#1a1d24] text-[9px] text-[#4B5563]">
+                          +
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-[#F2F3F5]">
+                        Hoy · {match.time}
+                      </p>
+                      <p className="text-xs text-[#6B7280]">
+                        {match.cat} · {match.sex} · {match.court}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="rounded-full border border-[#D6FF3D]/30 px-3 py-1 text-xs font-semibold text-[#D6FF3D]">
+                    Faltan {match.missing}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Stats row */}
+          <div className="grid grid-cols-3 gap-3">
+            <StatCard icon={LayoutGrid} label="Canchas activas" value={activeCourts.toString()} />
+            <StatCard icon={Timer} label="Duración turno" value={`${config.turnDuration} min`} />
+            {showCourtPrice && (
+              <StatCard icon={DollarSign} label="Precio base" value={`$${publicBasePrice.toLocaleString()}`} />
+            )}
+          </div>
+
+          {/* Club info + Map */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-2xl border border-[#1E2028] bg-[#101216] p-5">
+              <h3 className="mb-4 text-base font-semibold text-[#F2F3F5]">Información del club</h3>
+              <div className="space-y-3.5">
+                <InfoRow icon={MapPin} label="Dirección" value={fullAddress} />
+                <InfoRow icon={Phone} label="Teléfono" value={config.contactPhone ?? ""} />
+                <InfoRow icon={Mail} label="Email" value={config.contactEmail ?? ""} />
+                <InfoRow
+                  icon={Clock}
+                  label="Horarios"
+                  value={`${config.openingMorning} - ${config.closingMorning}`}
+                />
+                <OpenDaysBadges openDays={config.openDays} />
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-[#1E2028] bg-[#101216]">
+              <div className="flex items-center justify-between p-5 pb-3">
+                <h3 className="text-base font-semibold text-[#F2F3F5]">Ubicación</h3>
+                <a
+                  href={directionsHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#2a3036] bg-[#14161A] px-3 py-1.5 text-xs font-medium text-[#D6FF3D] no-underline transition hover:bg-[#1a1d24]"
+                >
+                  <Navigation className="h-3.5 w-3.5" />
+                  Cómo llegar
+                </a>
+              </div>
+              <div className="aspect-[4/3] w-full sm:aspect-video">
+                <iframe
+                  title={`Mapa de ${config.clubName}`}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={mapSrc}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Courts */}
+          <div className="rounded-2xl border border-[#1E2028] bg-[#101216] p-5">
+            <h3 className="mb-4 text-base font-semibold text-[#F2F3F5]">Canchas</h3>
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+              {(config.courts ?? []).map((court, i) => (
+                <div
+                  key={court.id ?? court.number ?? i}
+                  className="flex items-center gap-3 rounded-xl border border-[#1E2028] bg-[#0A0B0D] p-3.5"
+                >
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${
+                      court.active
+                        ? "bg-[#D6FF3D] text-[#0A0B0D]"
+                        : "bg-[#1a1d24] text-[#4B5563]"
+                    }`}
+                  >
+                    {court.number}
+                  </div>
+                  <div className="min-w-0 flex flex-col">
+                    <span className="text-sm font-medium text-[#F2F3F5]">
+                      {court.name || `Cancha ${court.number}`}
+                    </span>
+                    <span className="text-xs text-[#6B7280]">
+                      {[court.environment, court.structure, court.surface]
+                        .filter(Boolean)
+                        .join(" / ")}
+                      {!court.active && " / Inactiva"}
+                    </span>
+                    {showCourtPrice && court.price ? (
+                      <span className="text-xs font-semibold text-[#D6FF3D]">
+                        ${court.price.toLocaleString()}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -206,21 +287,13 @@ function StatCard({
   value: string;
 }) {
   return (
-    <Card className="rounded-[1.2rem] border-emerald-100 bg-white/85 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/75 dark:shadow-emerald-950/20 sm:rounded-[1.5rem]">
-      <CardContent className="flex h-5 md:h-18 items-center gap-3 p-4 sm:gap-4 sm:p-5">
-        <div className="hidden md:flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 sm:h-12 sm:w-12">
-          <Icon className="h-4 w-4 text-emerald-700 sm:h-5 sm:w-5" />
-        </div>
-        <div>
-          <p className="text-xl text-center md:text-start font-bold text-slate-900 dark:text-slate-100 sm:text-2xl">
-            {value}
-          </p>
-          <p className="text-xs text-center md:text-start text-slate-500 dark:text-slate-400 sm:text-sm">
-            {label}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="rounded-2xl border border-[#1E2028] bg-[#101216] p-4">
+      <div className="hidden md:flex h-10 w-10 items-center justify-center rounded-xl bg-[#1a1d24] mb-2">
+        <Icon className="h-4 w-4 text-[#D6FF3D]" />
+      </div>
+      <p className="text-xl text-center md:text-start font-bold text-[#F2F3F5]">{value}</p>
+      <p className="text-xs text-center md:text-start text-[#6B7280]">{label}</p>
+    </div>
   );
 }
 
@@ -235,14 +308,10 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#D6FF3D]" />
       <div className="min-w-0">
-        <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500 sm:text-xs sm:tracking-[0.2em]">
-          {label}
-        </p>
-        <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">
-          {value || "No disponible"}
-        </p>
+        <p className="text-[10px] font-medium uppercase tracking-widest text-[#4B5563]">{label}</p>
+        <p className="text-sm text-[#E4E5E7]">{value || "No disponible"}</p>
       </div>
     </div>
   );
@@ -257,9 +326,9 @@ function OpenDaysBadges({ openDays }: { openDays?: number[] }) {
   const days = openDays ?? WEEKDAY_ORDER;
   return (
     <div className="flex items-start gap-3">
-      <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+      <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-[#D6FF3D]" />
       <div className="min-w-0 space-y-1.5">
-        <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500 sm:text-xs sm:tracking-[0.2em]">
+        <p className="text-[10px] font-medium uppercase tracking-widest text-[#4B5563]">
           Días de apertura
         </p>
         <div className="flex flex-wrap gap-1.5">
@@ -270,8 +339,8 @@ function OpenDaysBadges({ openDays }: { openDays?: number[] }) {
                 key={day}
                 className={`rounded-md px-2 py-0.5 text-[11px] font-medium ${
                   isOpen
-                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
-                    : "bg-slate-100 text-slate-400 line-through dark:bg-slate-800 dark:text-slate-500"
+                    ? "bg-[#D6FF3D]/10 text-[#D6FF3D]"
+                    : "bg-[#1a1d24] text-[#4B5563] line-through"
                 }`}
               >
                 {WEEKDAY_LABELS[day]}
@@ -280,17 +349,6 @@ function OpenDaysBadges({ openDays }: { openDays?: number[] }) {
           })}
         </div>
       </div>
-    </div>
-  );
-}
-
-function HighlightItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[1.2rem] border border-white/10 bg-white/10 p-3.5 backdrop-blur sm:rounded-[1.5rem] sm:p-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-100/80 sm:text-xs sm:tracking-[0.24em]">
-        {label}
-      </p>
-      <p className="mt-2 text-sm leading-relaxed text-white">{value}</p>
     </div>
   );
 }

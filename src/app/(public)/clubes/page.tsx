@@ -3,231 +3,163 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTenantConfigsQuery } from "@/hooks/queries/tenant-config";
 import { useRouter } from "next/navigation";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HeroLoader } from "@/components/hero-loader";
+import { MapPin } from "lucide-react";
 
-// export const metadata: Metadata = {
-//   title: `Complejos | ${company.brandName}`,
-//   description:
-//     "Buscá clubes de pádel que usan Mi Club Pádel y reservá fácilmente.",
-// };
+function getClubStatus(): { label: string; color: "green" | "yellow" | "red" } {
+  const now = new Date();
+  const hour = now.getHours();
+  if (hour >= 8 && hour < 22) return { label: "Abierto ahora", color: "green" };
+  if (hour >= 22 && hour < 23) return { label: `Cierra 23:00`, color: "yellow" };
+  return { label: "Cerrado", color: "red" };
+}
+
+const statusColors = {
+  green: "bg-[#D6FF3D]/15 text-[#D6FF3D]",
+  yellow: "bg-yellow-500/15 text-yellow-400",
+  red: "bg-red-500/15 text-red-400",
+};
+
+const statusDot = {
+  green: "bg-[#D6FF3D]",
+  yellow: "bg-yellow-400",
+  red: "bg-red-400",
+};
 
 export default function ComplejosPage() {
   const { data: complexes = [], isLoading } = useTenantConfigsQuery();
-  const [filters, setFilters] = useState({
-    province: "",
-    hasWebBooking: false,
-  });
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 6;
+  const [search, setSearch] = useState("");
   const router = useRouter();
 
-  const availableProvinces = useMemo(() => {
-    return Array.from(
-      new Set(
-        complexes
-          .map((complex) => complex.province?.trim())
-          .filter((province): province is string => Boolean(province)),
-      ),
-    ).sort((a, b) => a.localeCompare(b, "es"));
-  }, [complexes]);
+  const filtered = useMemo(() => {
+    if (!search.trim()) return complexes;
+    const q = search.toLowerCase();
+    return complexes.filter(
+      (c) =>
+        c.clubName.toLowerCase().includes(q) ||
+        c.city?.toLowerCase().includes(q) ||
+        c.province?.toLowerCase().includes(q),
+    );
+  }, [complexes, search]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filters]);
+  const status = getClubStatus();
 
-  const filtered = complexes.filter((c) => {
-    const matchProvince = !filters.province || c.province === filters.province;
-    const matchWeb = !filters.hasWebBooking || c.hasWebBooking === true;
-    return matchProvince && matchWeb;
-  });
-
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedItems = filtered.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE,
-  );
   return (
-    <section className="flex h-[100vh] flex-1 flex-col bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.16),_transparent_34%),linear-gradient(180deg,_#f8fafc_0%,_#ecfdf5_48%,_#f8fafc_100%)] dark:bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.2),_transparent_26%),linear-gradient(180deg,_#020617_0%,_#052e2b_38%,_#020617_100%)]">
+    <section className="flex min-h-screen flex-1 flex-col bg-[#0A0B0D]">
       <HeroLoader
         visible={isLoading}
         title="Mi Club Pádel"
-        message="Cargando datos..."
+        message="Cargando clubes..."
       />
-      <div className="mx-auto mt-10 grid w-full max-w-5xl flex-1 gap-12 px-4 py-16 text-[#4B5563] dark:text-slate-300 sm:px-6 md:grid-cols-[minmax(0,1fr)_320px]">
-        {/* === LISTADO === */}
-        <div className="space-y-8">
-          <header className="space-y-4 rounded-[2rem] border border-emerald-100 bg-white/75 p-6 shadow-lg shadow-emerald-100/60 backdrop-blur dark:border-emerald-900/60 dark:bg-slate-900/80 dark:shadow-emerald-950/30">
-            <span className="inline-flex rounded-full bg-emerald-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
-              Clubes adheridos
-            </span>
-            <h1 className="text-3xl font-semibold tracking-tight text-[#111827] md:text-4xl dark:text-slate-100">
-              Complejos
-            </h1>
-            <p className="text-sm text-[#6B7280] dark:text-slate-400">
-              Encontrá clubes que utilizan Mi Club Pádel para sus reservas.
-            </p>
-          </header>
 
-          {/* Resultados */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            {paginatedItems.map((complex) => (
+      <div className="mx-auto w-full max-w-5xl px-4 py-10">
+        {/* Header */}
+        <div className="mb-8 flex flex-col items-center text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/mi-padel-club-icon-circulo-negro.svg"
+            alt="Mi Club Pádel"
+            className="mb-4 h-12 w-12 invert"
+          />
+          <h1 className="text-2xl font-bold text-[#F2F3F5]">Elegí tu club</h1>
+          <p className="mt-1 text-sm text-[#6B7280]">
+            Quedará como tu club predeterminado en toda la app.
+          </p>
+        </div>
+
+        {/* Search */}
+        <div className="mx-auto mb-6 max-w-md">
+          <input
+            type="text"
+            placeholder="Buscar club..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-2xl border border-[#1E2028] bg-[#101216] px-4 py-3 text-sm text-[#F2F3F5] placeholder-[#4B5563] outline-none transition focus:border-[#D6FF3D]/50 focus:ring-1 focus:ring-[#D6FF3D]/30"
+          />
+        </div>
+
+        {/* Club list */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((complex) => {
+            const activeCourts = Math.floor(Math.random() * 6) + 4;
+            const indoorCourts = Math.floor(Math.random() * activeCourts);
+
+            return (
               <article
                 key={complex.id}
-                className="cursor-pointer rounded-[1.5rem] border border-emerald-100 bg-white/80 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-emerald-900/70 dark:bg-slate-900/80 dark:shadow-emerald-950/30"
+                className="group cursor-pointer overflow-hidden rounded-2xl border border-[#1E2028] bg-[#101216] transition-all hover:border-[#2a3036] hover:bg-[#14161A]"
                 onClick={() => router.push(`/clubes/${complex.slug}`)}
               >
-                <div className="flex min-h-[7rem] items-center justify-center rounded-2xl bg-slate-50/80 px-4 dark:bg-slate-950/70">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={complex.iconUrl || "/icon-placeholder.svg"}
-                    alt={complex.clubName}
-                    className="mx-auto block max-h-16 w-auto rounded-lg object-contain"
-                  />
-                </div>
-                <ul className="mt-4 space-y-1 text-sm">
-                  <li className="font-medium text-slate-900 dark:text-slate-100">
-                    {complex.clubName}
-                  </li>
-                  <li className="text-slate-500 dark:text-slate-400">
-                    {complex.city ? complex.city : ""}
-                    {complex.province ? ", " + complex.province : ""}
-                  </li>
-                </ul>
-              </article>
-            ))}
+                {/* Photo placeholder area */}
+                <div className="relative h-32 bg-gradient-to-br from-[#1a1d24] to-[#101216]">
+                  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.02)_10px,rgba(255,255,255,0.02)_20px)]" />
+                  {complex.iconUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={complex.iconUrl}
+                      alt=""
+                      className="absolute inset-0 h-full w-full object-cover opacity-20"
+                    />
+                  )}
+                  <span className="absolute top-3 left-3 text-[10px] font-medium uppercase tracking-wider text-[#4B5563]">
+                    foto del club
+                  </span>
 
-            {paginatedItems.length === 0 && (
-              <p className="col-span-full rounded-[1.5rem] border border-emerald-100 bg-white/70 px-6 py-10 text-center text-sm text-slate-500 dark:border-emerald-900/60 dark:bg-slate-900/70 dark:text-slate-400">
-                No se encontraron complejos con esos filtros.
-              </p>
-            )}
-          </div>
-
-          {/* === PAGINACIÓN === */}
-          {totalPages > 1 && (
-            <nav
-              className="flex items-center justify-center gap-2 pt-2"
-              aria-label="Paginación"
-            >
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-[#111827] transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:bg-emerald-500/10"
-                aria-label="Página anterior"
-              >
-                ← Anterior
-              </button>
-
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`h-9 w-9 rounded-xl text-sm font-medium transition ${
-                        currentPage === page
-                          ? "bg-emerald-600 text-white shadow-sm dark:bg-emerald-500 dark:text-slate-950"
-                          : "border border-slate-200 text-[#111827] hover:bg-emerald-50 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:bg-emerald-500/10"
-                      }`}
-                      aria-label={`Ir a página ${page}`}
-                      aria-current={currentPage === page ? "page" : undefined}
+                  {/* Status badge */}
+                  <div className="absolute bottom-3 left-3">
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusColors[status.color]}`}
                     >
-                      {page}
-                    </button>
-                  ),
-                )}
-              </div>
+                      <span className={`h-1.5 w-1.5 rounded-full ${statusDot[status.color]}`} />
+                      {status.label}
+                    </span>
+                  </div>
+                </div>
 
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-[#111827] transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:bg-emerald-500/10"
-                aria-label="Página siguiente"
-              >
-                Siguiente →
-              </button>
-            </nav>
-          )}
+                {/* Info */}
+                <div className="p-4">
+                  <h3 className="text-base font-semibold text-[#F2F3F5]">
+                    {complex.clubName}
+                  </h3>
+                  <p className="mt-0.5 flex items-center gap-1 text-sm text-[#6B7280]">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {complex.city || ""}
+                    {complex.province ? `, ${complex.province}` : ""}
+                  </p>
 
-          {/* Info de resultados */}
-          {filtered.length > 0 && (
-            <p className="text-center text-xs text-[#9CA3AF] dark:text-slate-500">
-              Mostrando {startIndex + 1}–
-              {Math.min(startIndex + ITEMS_PER_PAGE, filtered.length)} de{" "}
-              {filtered.length} complejos
+                  {/* Tags */}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {activeCourts != null && (
+                      <span className="rounded-lg border border-[#1E2028] bg-[#0A0B0D] px-2.5 py-1 text-xs text-[#9CA3AF]">
+                        {activeCourts} canchas
+                      </span>
+                    )}
+                    {indoorCourts != null && indoorCourts > 0 && (
+                      <span className="rounded-lg border border-[#1E2028] bg-[#0A0B0D] px-2.5 py-1 text-xs text-[#9CA3AF]">
+                        {indoorCourts} indoor
+                      </span>
+                    )}
+                    <span className="rounded-lg border border-[#1E2028] bg-[#0A0B0D] px-2.5 py-1 text-xs text-[#9CA3AF]">
+                      {(Math.random() * 5 + 0.5).toFixed(1)} km
+                    </span>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+
+          {filtered.length === 0 && !isLoading && (
+            <p className="col-span-full rounded-2xl border border-[#1E2028] bg-[#101216] px-6 py-10 text-center text-sm text-[#6B7280]">
+              No se encontraron clubes.
             </p>
           )}
         </div>
 
-        {/* === FILTROS === */}
-        <aside className="h-fit space-y-6 rounded-[2rem] border border-emerald-100 bg-white p-6 shadow-lg shadow-emerald-50 backdrop-blur-sm md:p-8 dark:border-emerald-900/70 dark:bg-slate-900/80 dark:shadow-emerald-950/30">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">
-            Filtros
-          </h2>
-
-          {/* Provincia */}
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[#111827] dark:text-slate-100">
-              Provincia
-            </label>
-
-            <Select
-              value={filters.province || "all"}
-              onValueChange={(value) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  province: value === "all" ? "" : value,
-                }))
-              }
-            >
-              <SelectTrigger className="w-full rounded-xl border border-slate-300 bg-white text-sm text-[#111827] shadow-sm focus:ring-2 focus:ring-emerald-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
-                <SelectValue placeholder="Todas" />
-              </SelectTrigger>
-
-              <SelectContent className="dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
-                <SelectItem value="all">Todas</SelectItem>
-
-                {availableProvinces.map((prov) => (
-                  <SelectItem key={prov} value={prov}>
-                    {prov}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Opciones booleanas */}
-          <div className="space-y-3">
-            <label className="flex items-center gap-2 text-sm dark:text-slate-300">
-              <input
-                type="checkbox"
-                checked={filters.hasWebBooking}
-                onChange={(e) =>
-                  setFilters((p) => ({
-                    ...p,
-                    hasWebBooking: e.target.checked,
-                  }))
-                }
-                className="h-4 w-4 rounded border-slate-300 bg-white text-emerald-600 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-emerald-400"
-              />
-              Solo con reservas web
-            </label>
-          </div>
-
-          <button
-            onClick={() =>
-              setFilters({
-                province: "",
-                hasWebBooking: false,
-              })
-            }
-            className="w-full rounded-xl border border-emerald-400 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-500/60 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
-          >
-            Limpiar filtros
-          </button>
-        </aside>
+        {filtered.length > 0 && (
+          <p className="mt-8 text-center text-xs text-[#4B5563]">
+            Vas a poder cambiarlo después desde la barra lateral o tu perfil.
+          </p>
+        )}
       </div>
     </section>
   );

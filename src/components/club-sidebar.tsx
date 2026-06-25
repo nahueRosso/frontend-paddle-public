@@ -6,12 +6,14 @@ import {
   Trophy,
   GraduationCap,
   Handshake,
+  BarChart3,
+  User,
+  LogOut,
 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -23,11 +25,12 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { SectionId } from "@/types/club";
+import { useRouter } from "next/navigation";
 
 interface ClubSidebarProps {
   clubName: string;
+  clubCity?: string;
   activeSection: SectionId;
   onSectionChange: (section: SectionId) => void;
   icon?: string;
@@ -35,189 +38,99 @@ interface ClubSidebarProps {
 }
 
 const navItems = [
-  { id: "home" as const, label: "Inicio", icon: Home, disabled: false },
-  {
-    id: "turnos" as const,
-    label: "Turnos",
-    icon: CalendarDays,
-    disabled: false,
-  },
-  {
-    id: "clases" as const,
-    label: "Clases",
-    icon: GraduationCap,
-    disabled: false,
-  },
-  {
-    id: "match" as const,
-    label: "Buscar partido",
-    icon: Handshake,
-    disabled: false,
-  },
-  { id: "torneos" as const, label: "Torneos", icon: Trophy, disabled: false },
+  { id: "home" as const, label: "Inicio", icon: Home },
+  { id: "turnos" as const, label: "Reservar turno", icon: CalendarDays },
+  { id: "match" as const, label: "Match de partido", icon: Handshake },
+  { id: "clases" as const, label: "Profesores", icon: GraduationCap },
+  { id: "torneos" as const, label: "Torneos", icon: Trophy },
+  { id: "ranking" as const, label: "Ranking", icon: BarChart3 },
+  { id: "perfil" as const, label: "Perfil", icon: User },
 ];
-
-// export function ClubSidebar({ clubName, icon }: { clubName: string; icon?: string }) {
-//   const router = useRouter();
-//   const pathname = usePathname();
-
-//   const slug = pathname.split("/")[2];
-
-//   return (
-//     <Sidebar collapsible="icon">
-//       <SidebarHeader className="border-b border-sidebar-border">
-//         <div
-//           className="
-//   flex items-center gap-3 px-2 py-3
-//   group-data-[collapsible=icon]:justify-center
-//   group-data-[collapsible=icon]:px-0
-// "
-//         >
-//           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-
-//             <img src={icon || "/images.png"} className="h-4 w-4" />
-//           </div>
-//           <div className="flex flex-col gap-0.5 overflow-hidden group-data-[collapsible=icon]:hidden">
-//             <span className="truncate text-sm font-semibold text-sidebar-foreground">
-//               {clubName}
-//             </span>
-//             <span className="truncate text-xs text-sidebar-foreground/60">
-//               Club de Padel
-//             </span>
-//           </div>
-//         </div>
-//       </SidebarHeader>
-
-//       <SidebarContent>
-//         <SidebarGroup>
-//           <SidebarGroupLabel>Menu</SidebarGroupLabel>
-//           <SidebarMenu>
-//             {navItems.map((item) => {
-//               const href =
-//                 item.id === "home"
-//                   ? `/clubes/${slug}`
-//                   : `/clubes/${slug}/${item.id}`;
-
-//               const isActive = pathname === href;
-
-//               return (
-//                 <SidebarMenuItem key={item.id}>
-//                   <SidebarMenuButton
-//                     isActive={isActive}
-//                     onClick={() => router.push(href)}
-//                   >
-//                     <item.icon className="h-4 w-4" />
-//                     <span>{item.label}</span>
-//                   </SidebarMenuButton>
-//                 </SidebarMenuItem>
-//               );
-//             })}
-//           </SidebarMenu>
-//         </SidebarGroup>
-//       </SidebarContent>
-
-//       <SidebarFooter className="border-t border-sidebar-border group-data-[collapsible=icon]:hidden">
-//         <div className="px-2 py-3">
-//           <p className="text-xs text-sidebar-foreground/50">
-//             Powered by Mi Club Pádel
-//           </p>
-//         </div>
-//       </SidebarFooter>
-//     </Sidebar>
-//   );
-// }
 
 export function ClubSidebar({
   clubName,
+  clubCity,
   activeSection,
   onSectionChange,
   icon,
   visibleSections,
 }: ClubSidebarProps) {
+  const router = useRouter();
+
   const handleSectionChange = (sectionId: SectionId) => {
     onSectionChange(sectionId);
-
     const url = new URL(window.location.href);
     url.searchParams.set("section", sectionId);
-
     window.history.replaceState(null, "", url.toString());
   };
 
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-emerald-100 bg-white dark:border-emerald-950 dark:bg-slate-950"
+      className="border-r border-[#1E2028] bg-[#0A0B0D]"
     >
-      <SidebarHeader className="border-b border-emerald-100 bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-800 p-0 text-white dark:border-emerald-900/70 dark:from-slate-950 dark:via-emerald-950 dark:to-slate-900">
-        <div
-          className="
-  flex min-h-[92px] items-center gap-3 px-4 py-4
-  group-data-[collapsible=icon]:justify-center
-          group-data-[collapsible=icon]:px-0
-"
-        >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/15 backdrop-blur">
-            <Avatar className="h-7 w-7 rounded-xl">
-              <AvatarImage
-                src={icon}
-                alt={clubName}
-                className="rounded-xl object-cover"
-              />
-              <AvatarFallback className="rounded-xl bg-white/15">
+      <SidebarHeader className="border-b border-[#1E2028] bg-[#0A0B0D] p-0">
+        {/* Brand */}
+        <div className="flex min-h-[56px] items-center gap-3 px-4 py-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#1E2028] bg-[#101216]">
+            <Avatar className="h-6 w-6 rounded-lg">
+              <AvatarImage src={icon} alt={clubName} className="rounded-lg object-cover" />
+              <AvatarFallback className="rounded-lg bg-[#101216]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/mi-padel-club-icon-circulo-negro.svg"
-                  alt={clubName}
-                  className="h-5 w-5 opacity-80 invert"
-                />
+                <img src="/mi-padel-club-icon-circulo-negro.svg" alt="Mi Club Pádel" className="h-4 w-4 opacity-80 invert" />
               </AvatarFallback>
             </Avatar>
           </div>
-          <div className="flex flex-col gap-0.5 overflow-hidden group-data-[collapsible=icon]:hidden">
-            <span className="truncate text-sm font-semibold text-white">
-              {clubName}
-            </span>
-            <span className="truncate text-xs text-emerald-100/75">
-              Club de Padel
-            </span>
+          <div className="flex flex-col gap-0 overflow-hidden group-data-[collapsible=icon]:hidden">
+            <span className="truncate text-sm font-semibold text-[#F2F3F5]">Mi Club Pádel</span>
+          </div>
+        </div>
+
+        {/* Club selector card */}
+        <div className="border-t border-[#1E2028] px-3 py-3 group-data-[collapsible=icon]:hidden">
+          <div className="rounded-xl border border-[#1E2028] bg-[#101216] p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-medium uppercase tracking-widest text-[#6B7280]">Tu club</span>
+              <span className="rounded-md bg-[#D6FF3D]/15 px-2 py-0.5 text-[10px] font-semibold text-[#D6FF3D]">
+                Predeterminado
+              </span>
+            </div>
+            <p className="mt-1 text-sm font-medium text-[#F2F3F5]">{clubName}</p>
+            {clubCity && (
+              <p className="text-xs text-[#6B7280]">{clubCity}</p>
+            )}
+            <button
+              onClick={() => router.push("/clubes")}
+              className="mt-2 w-full rounded-lg border border-[#2a3036] bg-[#14161A] px-3 py-1.5 text-xs font-medium text-[#9CA3AF] transition hover:border-[#3a3f48] hover:text-[#F2F3F5]"
+            >
+              Cambiar de club
+            </button>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-white py-4 dark:bg-slate-950">
+      <SidebarContent className="bg-[#0A0B0D] py-2">
         <SidebarGroup className="px-3 py-0 group-data-[collapsible=icon]:px-2">
-          <SidebarGroupLabel className="px-2 pb-2 text-[11px] uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-400">
-            Navegacion
-          </SidebarGroupLabel>
           <SidebarMenu>
             {navItems
               .filter((item) => visibleSections.includes(item.id))
               .map((item) => {
-                const isActive = !item.disabled && activeSection === item.id;
+                const isActive = activeSection === item.id;
 
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
                       isActive={isActive}
-                      onClick={() => {
-                        if (!item.disabled) {
-                          handleSectionChange(item.id);
-                        }
-                      }}
-                      className={
-                        item.disabled
-                          ? "h-11 rounded-xl px-3 text-slate-700 cursor-not-allowed opacity-40 pointer-events-auto hover:bg-transparent dark:text-slate-400 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:justify-center"
-                          : "h-11 rounded-xl px-3 text-slate-700 data-[active=true]:bg-emerald-50 data-[active=true]:text-emerald-700 hover:bg-emerald-50/80 hover:text-emerald-700 dark:text-slate-300 dark:data-[active=true]:bg-emerald-500/12 dark:data-[active=true]:text-emerald-300 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:justify-center"
-                      }
-                      tooltip={item.disabled ? "Proximamente" : item.label}
+                      onClick={() => handleSectionChange(item.id)}
+                      className={`h-11 rounded-xl px-3 text-[#9CA3AF] hover:bg-[#14161A] hover:text-[#F2F3F5] ${
+                        isActive
+                          ? "bg-[#D6FF3D]/10 text-[#D6FF3D] hover:bg-[#D6FF3D]/15 hover:text-[#D6FF3D]"
+                          : ""
+                      } group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:justify-center`}
+                      tooltip={item.label}
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.label}</span>
-                      {item.disabled && (
-                        <span className="ml-auto text-[10px] uppercase tracking-wider font-medium text-sidebar-foreground/40">
-                          Pronto
-                        </span>
-                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -226,14 +139,18 @@ export function ClubSidebar({
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="mt-auto border-t border-emerald-100 bg-white p-3 dark:border-emerald-900/70 dark:bg-slate-950">
-        <ThemeToggle
-          className="mx-auto h-10 w-10 border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/70 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-slate-800"
-        />
-        <div className="px-1 py-1 group-data-[collapsible=icon]:hidden">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Powered by Mi Club Padel
-          </p>
+      <SidebarFooter className="mt-auto border-t border-[#1E2028] bg-[#0A0B0D] p-3">
+        <div className="flex items-center gap-3 rounded-xl px-2 py-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#D6FF3D] text-xs font-bold text-[#0A0B0D]">
+            V
+          </div>
+          <div className="flex flex-1 flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
+            <span className="truncate text-sm font-medium text-[#F2F3F5]">Vos</span>
+            <span className="truncate text-xs text-[#6B7280]">Cat. 4ª · Masculino</span>
+          </div>
+          <button className="text-[#6B7280] hover:text-[#F2F3F5] transition group-data-[collapsible=icon]:hidden">
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </SidebarFooter>
     </Sidebar>

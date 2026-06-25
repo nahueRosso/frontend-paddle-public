@@ -9,7 +9,7 @@ export function ProfessorsSkeleton() {
 
       {Array.from({ length: 3 }).map((_, i) => (
 
-        <Card key={i} className="overflow-hidden rounded-[1.75rem] border-emerald-100 bg-white/90 shadow-lg shadow-emerald-100/60 dark:border-emerald-900/60 dark:bg-slate-950/80 dark:shadow-emerald-950/20">
+        <Card key={i} className="overflow-hidden rounded-2xl border-[#1E2028] bg-[#101216]">
 
           <Skeleton className="h-48 w-full" />
 

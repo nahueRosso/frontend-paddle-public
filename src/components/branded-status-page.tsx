@@ -39,7 +39,7 @@ export function BrandedStatusPage({
 
       <div className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center gap-10 px-6 py-16 lg:flex-row lg:items-center lg:gap-16 lg:px-10">
         <div className="max-w-2xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-emerald-100 backdrop-blur">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#101216]/5 px-4 py-2 text-sm font-medium text-[#D6FF3D]">
             <span className="h-2 w-2 rounded-full bg-emerald-300" />
             {badge}
           </div>
@@ -75,7 +75,7 @@ export function BrandedStatusPage({
             <Button
               asChild
               variant="outline"
-              className="rounded-full border-white/15 bg-white/5 px-6 text-sm font-semibold text-white hover:bg-white/10 hover:text-white"
+              className="rounded-full border-white/15 bg-[#101216]/5 px-6 text-sm font-semibold text-white hover:bg-[#101216]/10 hover:text-white"
             >
               <Link href={secondaryHref}>
                 <Search className="mr-2 h-4 w-4" />
@@ -88,12 +88,12 @@ export function BrandedStatusPage({
         </div>
 
         <div className="w-full max-w-xl">
-          <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/6 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl">
+          <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#101216]/6 p-6 shadow-2xl shadow-black/30-xl">
             <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/70 to-transparent" />
 
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/10">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#101216]/10 ring-1 ring-white/10">
                   <Image
                     src="/mi-padel-club-icon.svg"
                     alt={company.brandName}
@@ -106,13 +106,13 @@ export function BrandedStatusPage({
                   <p className="text-lg font-semibold text-white">
                     {company.brandName}
                   </p>
-                  <p className="text-sm text-emerald-100/75">
+                  <p className="text-sm text-[#D6FF3D]/75">
                     Reservas, turnos y operación digital
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-amber-100">
+              <div className="rounded-full border border-amber-900/60/20 bg-amber-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-amber-100">
                 {code}
               </div>
             </div>
@@ -152,7 +152,7 @@ export function BrandedStatusPage({
             </div>
 
             <div className="mt-6 rounded-3xl border border-emerald-300/10 bg-emerald-400/8 p-5">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-100/70">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#D6FF3D]/70">
                 Soporte
               </p>
               <p className="mt-2 text-sm leading-7 text-slate-200">
