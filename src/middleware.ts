@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 const DISABLED_PATHS = ["/aprobacion", "/chatbot"];
-const DISABLED_PREFIXES = ["/dashboard"];
+const DISABLED_PREFIXES = ["/dashboard", "/clubes"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -16,13 +16,18 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (pathname === "/clubes" || pathname.startsWith("/clubes/")) {
+    const subpath = pathname.replace(/^\/clubes/, "") || "/";
+    return NextResponse.redirect(`https://app.miclubpadel.com${subpath}`);
+  }
+
   const target = request.nextUrl.clone();
-  target.pathname = pathname.startsWith("/dashboard") ? "/clubes" : "/";
+  target.pathname = "/";
   target.search = "";
 
   return NextResponse.redirect(target);
 }
 
 export const config = {
-  matcher: ["/aprobacion", "/chatbot", "/dashboard/:path*"],
+  matcher: ["/aprobacion", "/chatbot", "/dashboard/:path*", "/clubes", "/clubes/:path*"],
 };

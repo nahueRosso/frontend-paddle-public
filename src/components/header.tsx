@@ -187,12 +187,12 @@ export function Header() {
             ))}
 
             <li>
-              <Link
-                href="/clubes"
+              <a
+                href="https://app.miclubpadel.com"
                 className="rounded-full border border-emerald-400 px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 dark:border-emerald-500/60 dark:text-emerald-300 dark:hover:bg-emerald-500/10 dark:focus-visible:ring-offset-slate-950"
               >
                 Canchas
-              </Link>
+              </a>
             </li>
             <li>
               <ThemeToggle />
@@ -345,13 +345,13 @@ export function Header() {
               </ul>
 
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <Link
-                  href="/clubes"
+                <a
+                  href="https://app.miclubpadel.com"
                   className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
                   onClick={closeMenu}
                 >
                   Canchas
-                </Link>
+                </a>
                 <div className="flex items-center justify-center rounded-2xl border border-slate-200/90 bg-white/80 dark:border-slate-800 dark:bg-slate-950/70">
                   <ThemeToggle className="h-11 w-full rounded-2xl border-0 bg-transparent shadow-none hover:bg-transparent dark:bg-transparent dark:hover:bg-transparent" />
                 </div>

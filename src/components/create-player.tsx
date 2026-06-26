@@ -204,7 +204,7 @@ export default function CreatePlayer({ slug }: { slug: string }) {
     const response = await createPlayerMutation.mutateAsync({ slug, payload });
     setPlayerSession(response);
     await ensureClubPlayerSession();
-    window.location.href = "/clubes";
+    window.location.href = "https://app.miclubpadel.com";
   };
 
   const verificationOpen =
@@ -227,7 +227,7 @@ export default function CreatePlayer({ slug }: { slug: string }) {
             type="button"
             variant="ghost"
             className="rounded-full px-3 text-slate-700 hover:bg-white/70 hover:text-emerald-700 dark:text-slate-200 dark:hover:bg-slate-900/70 dark:hover:text-emerald-300"
-            onClick={() => router.push(`/clubes`)}
+            onClick={() => window.location.href = "https://app.miclubpadel.com"}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Ir atrás
@@ -393,7 +393,7 @@ export default function CreatePlayer({ slug }: { slug: string }) {
                   type="button"
                   variant="outline"
                   className="rounded-xl border-emerald-200 bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/60 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-emerald-500/10"
-                  onClick={() => router.push(`/clubes`)}
+                  onClick={() => window.location.href = "https://app.miclubpadel.com"}
                 >
                   Cancelar
                 </Button>
@@ -536,7 +536,7 @@ export default function CreatePlayer({ slug }: { slug: string }) {
                               const response = await createPlayerMutation.mutateAsync({ slug, payload });
                               setPlayerSession(response);
                               await ensureClubPlayerSession();
-                              window.location.href = "/clubes";
+                              window.location.href = "https://app.miclubpadel.com";
                             })();
                           }}
                           disabled={isSubmitting}

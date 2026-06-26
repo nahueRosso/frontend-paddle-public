@@ -94,7 +94,7 @@ export function ClubPlayerGate({
           setPlayerAuthMessage(
             ensuredClubSession.message ?? "Necesitas volver a iniciar sesion.",
           );
-          router.replace(buildLoginRedirectUrl(`/clubes/${slug}`));
+          window.location.href = `https://app.miclubpadel.com/${slug}`;
           return;
         }
 
@@ -163,7 +163,7 @@ export function ClubPlayerGate({
           setPlayerSession(null);
           setPlayerAuthStatus("unauthenticated");
           setPlayerAuthMessage(error.message);
-          router.replace(buildLoginRedirectUrl(`/clubes/${slug}`));
+          window.location.href = `https://app.miclubpadel.com/${slug}`;
           return;
         }
 

@@ -100,7 +100,7 @@ export function ClubSidebar({
               <p className="text-xs text-[#6B7280]">{clubCity}</p>
             )}
             <button
-              onClick={() => router.push("/clubes")}
+              onClick={() => window.location.href = "https://app.miclubpadel.com"}
               className="mt-2 w-full rounded-lg border border-[#2a3036] bg-[#14161A] px-3 py-1.5 text-xs font-medium text-[#9CA3AF] transition hover:border-[#3a3f48] hover:text-[#F2F3F5]"
             >
               Cambiar de club

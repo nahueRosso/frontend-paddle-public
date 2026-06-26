@@ -27,7 +27,7 @@ export function BrandedStatusPage({
   detail,
   primaryHref = "/",
   primaryLabel = "Volver al inicio",
-  secondaryHref = "/clubes",
+  secondaryHref = "https://app.miclubpadel.com",
   secondaryLabel = "Ver clubes",
   extraAction,
 }: BrandedStatusPageProps) {

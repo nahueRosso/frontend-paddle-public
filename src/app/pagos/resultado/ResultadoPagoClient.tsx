@@ -133,8 +133,8 @@ export default function ResultadoPagoClient() {
   }, [backendResponse, externalReference]);
 
   const clubHref = pendingPayment?.slug
-    ? `/clubes/${pendingPayment.slug}/turnos`
-    : "/clubes";
+    ? `https://app.miclubpadel.com/${pendingPayment.slug}/turnos`
+    : "https://app.miclubpadel.com";
 
   const uiState = normalizeBackendStatus(backendResponse, queryStatus);
   const shouldPoll =
