@@ -11,6 +11,9 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+
+  console.log('hay un error');
+  
   return (
     <BrandedStatusPage
       badge="Mi Club Padel | Error"
