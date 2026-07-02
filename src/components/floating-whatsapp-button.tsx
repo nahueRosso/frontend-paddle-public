@@ -36,7 +36,7 @@ function FloatingWhatsappButtonComponent() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={whatsappButtonLabel}
-      className="group fixed bottom-6 right-6 z-40 inline-flex items-center gap-0 overflow-hidden rounded-full bg-[#DCF8C6]/0 text-sm font-semibold text-emerald-950 shadow-lg shadow-emerald-500/30 transition hover:scale-[1.03] hover:bg-[#DCF8C6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 dark:bg-slate-950/10 dark:text-emerald-100 dark:hover:bg-emerald-500/15"
+      className="group fixed bottom-6 right-6 z-40 inline-flex items-center gap-0 overflow-hidden rounded-full bg-transparent text-sm font-semibold text-emerald-100 shadow-lg shadow-emerald-500/30 transition hover:scale-[1.03] hover:bg-emerald-500/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
@@ -50,7 +50,7 @@ function FloatingWhatsappButtonComponent() {
       </span>
       <span
         aria-hidden="true"
-        className="ml-0 mr-0 max-w-0 overflow-hidden whitespace-nowrap pr-0 text-emerald-950 opacity-0 transition-all duration-300 ease-out group-hover:ml-3 group-hover:mr-3 group-hover:max-w-[250px] group-hover:pr-1 group-hover:opacity-100 group-focus-visible:ml-3 group-focus-visible:max-w-[220px] group-focus-visible:pr-1 group-focus-visible:opacity-100 dark:text-emerald-100"
+        className="ml-0 mr-0 max-w-0 overflow-hidden whitespace-nowrap pr-0 text-emerald-100 opacity-0 transition-all duration-300 ease-out group-hover:ml-3 group-hover:mr-3 group-hover:max-w-[250px] group-hover:pr-1 group-hover:opacity-100 group-focus-visible:ml-3 group-focus-visible:max-w-[220px] group-focus-visible:pr-1 group-focus-visible:opacity-100"
       >
         {whatsappButtonLabel}
       </span>

@@ -5,7 +5,7 @@ import { company } from "@/config/company";
 const sanitizedDomain = company.domain.replace(/[{}]/g, "").trim();
 const baseUrl = sanitizedDomain ? `https://${sanitizedDomain}` : "https://example.com";
 
-const routes = ["/", "/contacto", "/privacidad", "/terminos"];
+const routes = ["/", "/privacidad", "/terminos", "/politicas-jugador", "/como-eliminar-datos"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();

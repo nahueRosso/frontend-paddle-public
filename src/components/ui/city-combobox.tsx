@@ -129,12 +129,11 @@ export function CityCombobox({
           aria-expanded={open}
           disabled={disabled || !province}
           className={cn(
-            "border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm",
-            "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-            "dark:bg-input/30",
+            "h-9 w-full min-w-0 rounded-md border border-white/10 bg-[#0A0B0D] px-3 py-1 text-sm text-[#E4E5E7] shadow-xs transition-[color,box-shadow] outline-none",
+            "focus-visible:border-[#D6FF3D]/50 focus-visible:ring-[#D6FF3D]/20 focus-visible:ring-[3px]",
             "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
             "flex items-center justify-between gap-2",
-            !value && "text-muted-foreground",
+            !value && "text-[#6B7280]",
           )}
         >
           <span className="truncate text-left">
@@ -144,7 +143,7 @@ export function CityCombobox({
         </button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[--radix-popover-trigger-width] rounded-md border border-emerald-100 bg-white p-0 shadow-md dark:border-emerald-900/60 dark:bg-slate-950 dark:text-slate-100"
+        className="w-[--radix-popover-trigger-width] rounded-md border border-white/10 bg-[#111417] p-0 text-[#E4E5E7] shadow-md"
         align="start"
       >
         <Command shouldFilter={true} className="bg-transparent text-inherit">

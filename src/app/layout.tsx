@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 
 import { company } from "@/config/company";
 import { cn } from "@/lib/utils";
@@ -15,30 +15,19 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-space-grotesk",
+  weight: ["500", "600", "700"],
+});
+
 const sanitizedDomain = company.domain.replace(/[{}]/g, "").trim();
 const siteUrl = sanitizedDomain
   ? `https://${sanitizedDomain}`
   : "https://example.com";
 
 const fbDomainVerification = process.env.FB_DOMAIN_VERIFICATION;
-const themeInitScript = `
-(() => {
-  try {
-    const storageKey = "app-shell-theme";
-    const storedTheme = window.localStorage.getItem(storageKey);
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const theme =
-      storedTheme === "dark" || storedTheme === "light"
-        ? storedTheme
-        : prefersDark
-          ? "dark"
-          : "light";
-    const isDark = theme === "dark";
-    document.documentElement.classList.toggle("dark", isDark);
-    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
-  } catch (_) {}
-})();
-`;
 
 const organizationSchema = {
   "@context": "https://schema.org",
@@ -70,8 +59,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="es"
-      suppressHydrationWarning
-      className={cn("scroll-smooth", inter.variable)}
+      className={cn("dark scroll-smooth", inter.variable, spaceGrotesk.variable)}
     >
       <head>
         {fbDomainVerification ? (
@@ -81,11 +69,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           />
         ) : null}
         <script
-          dangerouslySetInnerHTML={{
-            __html: themeInitScript,
-          }}
-        />
-        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(organizationSchema),
@@ -94,7 +77,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body
         className={cn(
-          "min-h-screen bg-[#F9FAFB] text-[#111827] antialiased dark:bg-slate-950 dark:text-slate-100",
+          "min-h-screen bg-[#0A0B0D] text-[#E4E5E7] antialiased",
           inter.className,
         )}
       >

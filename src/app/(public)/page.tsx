@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
-import HeroSection from "@/components/HeroSection";
+import { LandingPage } from "@/components/landing/landing-page";
 
 export const metadata: Metadata = {
-  title: "Mi Club Pádel — Reservas y gestión para clubes",
+  title: "Mi Club Padel — Tu club de pádel, en piloto automático",
   description:
-    "Automatizá tus reservas, pagos y operación diaria con Mi Club Pádel. Plataforma argentina para clubes con gestión de turnos y cobros online.",
+    "Automatizá reservas, cobros y atención por WhatsApp con IA. Plataforma argentina para clubes de pádel con gestión de turnos, torneos, clases y cobros por Mercado Pago.",
   alternates: {
     canonical: "/",
   },
@@ -14,22 +14,22 @@ export const metadata: Metadata = {
     follow: true,
   },
   openGraph: {
-    title: "Mi Club Pádel — Reservas y gestión para clubes",
+    title: "Mi Club Padel — Tu club de pádel, en piloto automático",
     description:
-      "Automatizá tus reservas, pagos y operación diaria con Mi Club Pádel. Plataforma argentina para clubes con gestión de turnos y cobros online.",
+      "Reservas, torneos, canchas, clases y cobros — todo desde una sola web. Bot de WhatsApp con IA que reserva y cobra la seña por Mercado Pago, solo, las 24 horas.",
     url: "/",
-    siteName: "Mi Club Pádel",
+    siteName: "Mi Club Padel",
     locale: "es_AR",
     type: "website",
     images: [
       {
         url: "/mi-padel-club-icon-circulo-negro.svg",
-        alt: "Mi Club Pádel - Reservas y gestión para clubes",
+        alt: "Mi Club Padel — Plataforma de gestión para clubes de pádel",
       },
     ],
   },
 };
 
 export default function HomePage() {
-  return <HeroSection />;
+  return <LandingPage />;
 }

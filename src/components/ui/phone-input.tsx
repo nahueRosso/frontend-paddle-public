@@ -123,7 +123,7 @@ export function PhoneInput({
       >
         <SelectTrigger
           className={cn(
-            "h-9 shrink-0 rounded-r-none border-r-0 px-2 text-sm focus:z-10",
+            "h-9 shrink-0 rounded-r-none border-r-0 border-white/10 bg-[#0A0B0D] px-2 text-sm text-[#E4E5E7] focus:z-10",
             error && "border-destructive",
           )}
           aria-label="Seleccionar país"
@@ -131,7 +131,7 @@ export function PhoneInput({
           <SelectValue>
             <span className="flex items-center gap-1.5">
               <span className="text-base leading-none">{selectedCountry.flag}</span>
-              <span className="text-muted-foreground">{selectedCountry.dial}</span>
+              <span className="text-[#9CA3AF]">{selectedCountry.dial}</span>
             </span>
           </SelectValue>
         </SelectTrigger>
@@ -140,8 +140,8 @@ export function PhoneInput({
             <SelectItem key={country.code} value={country.code}>
               <span className="flex items-center gap-2">
                 <span className="text-base">{country.flag}</span>
-                <span>{country.name}</span>
-                <span className="text-muted-foreground">{country.dial}</span>
+                <span className="text-[#E4E5E7]">{country.name}</span>
+                <span className="text-[#6B7280]">{country.dial}</span>
               </span>
             </SelectItem>
           ))}
@@ -159,11 +159,10 @@ export function PhoneInput({
           placeholder={placeholder ?? "Ej: 91122334455"}
           aria-invalid={error}
           className={cn(
-            "border-input dark:bg-input/30 h-9 w-full rounded-l-none rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none",
-            "placeholder:text-muted-foreground",
-            "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+            "h-9 w-full rounded-l-none rounded-md border border-white/10 bg-[#0A0B0D] px-3 py-1 text-sm text-[#E4E5E7] shadow-xs transition-[color,box-shadow] outline-none",
+            "placeholder:text-[#6B7280]",
+            "focus-visible:border-[#D6FF3D]/50 focus-visible:ring-[#D6FF3D]/20 focus-visible:ring-[3px]",
             "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
-            "aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
             inputClassName,
           )}
         />
