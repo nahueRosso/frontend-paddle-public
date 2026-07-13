@@ -1,5 +1,5 @@
 import { ClubesFetch, TenantConfig, TenantPublic } from "@/types/tenant-config";
-import { fetchWithTenantAdmin } from "../fetchWithTenantAdmin";
+import { API_URL, fetchWithTenantAdmin } from "../fetchWithTenantAdmin";
 
 export type TenantConfigQueryResponse =
   | { exists: false; data: null }
@@ -63,8 +63,7 @@ export type CourtHoursConfigResponse = {
 export async function getTenant(tenant: string): Promise<TenantPublic | null> {
   try {
     const res = await fetch(
-      // `${process.env.NEXT_PUBLIC_API_URL}/config`,
-      `${process.env.NEXT_PUBLIC_API_URL}/config/slug/${tenant}`,
+      `${API_URL}/config/slug/${tenant}`,
       {
         cache: "no-store", // dinámico (sin cache)
       }

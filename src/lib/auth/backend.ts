@@ -1,8 +1,10 @@
 const isDev = process.env.NEXT_PUBLIC_DEV === "true";
 
-export const API_URL = isDev
+const API_BASE_URL = isDev
   ? process.env.NEXT_PUBLIC_API_URL ?? "http://172.18.80.1:5000"
   : "https://api.miclubpadel.com";
+
+export const API_URL = `${API_BASE_URL}/api/v1`;
 
 export const DEFAULT_TENANT_SCHEMA =
   process.env.NEXT_PUBLIC_TENANT_SCHEMA ?? "public";
