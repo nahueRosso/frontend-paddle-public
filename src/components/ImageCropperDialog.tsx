@@ -134,6 +134,8 @@ export function ImageCropperDialog({
         position: "absolute",
         width: nat.w * displayScale,
         height: nat.h * displayScale,
+        maxWidth: "none",
+        maxHeight: "none",
         left: (CONTAINER_W - nat.w * displayScale) / 2 + offset.x,
         top: (containerH - nat.h * displayScale) / 2 + offset.y,
         userSelect: "none",
@@ -143,18 +145,18 @@ export function ImageCropperDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onCancel(); }}>
-      <DialogContent className="max-w-[420px]">
+      <DialogContent className="max-w-[420px] border-white/[0.07] bg-[#0A0B0D] text-[#E4E5E7]">
         <DialogHeader>
-          <DialogTitle>Ajustar imagen</DialogTitle>
+          <DialogTitle className="text-[#F2F3F5]">Ajustar imagen</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-[#9CA3AF]">
             Arrastrá para encuadrar y usá el zoom para ajustar.
           </p>
 
           <div
-            className="relative mx-auto overflow-hidden rounded-xl cursor-grab active:cursor-grabbing bg-gray-100 dark:bg-slate-800"
+            className="relative mx-auto overflow-hidden rounded-xl cursor-grab active:cursor-grabbing bg-[#101216]"
             style={{ width: CONTAINER_W, height: containerH, touchAction: "none" }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
@@ -186,13 +188,13 @@ export function ImageCropperDialog({
 
             {!nat && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs text-muted-foreground">Cargando...</span>
+                <span className="text-xs text-[#9CA3AF]">Cargando...</span>
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-3 px-1">
-            <span className="text-xs text-muted-foreground shrink-0">Zoom</span>
+            <span className="text-xs text-[#9CA3AF] shrink-0">Zoom</span>
             <input
               type="range"
               min={1}
@@ -200,22 +202,26 @@ export function ImageCropperDialog({
               step={0.05}
               value={zoom}
               onChange={(e) => handleZoom(Number(e.target.value))}
-              className="flex-1 accent-emerald-500"
+              className="flex-1 accent-[#D6FF3D]"
             />
-            <span className="text-xs text-muted-foreground w-8 text-right shrink-0">
+            <span className="text-xs text-[#9CA3AF] w-8 text-right shrink-0">
               {zoom.toFixed(1)}x
             </span>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            className="rounded-xl border-white/10 bg-[#111417] text-[#9CA3AF] hover:bg-[#1A1D21]"
+          >
             Cancelar
           </Button>
           <Button
             disabled={!nat}
             onClick={handleConfirm}
-            className="bg-emerald-500 text-white hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+            className="rounded-xl bg-[#D6FF3D] font-semibold text-[#0A0B0D] hover:bg-[#e4ff6a]"
           >
             Confirmar recorte
           </Button>
