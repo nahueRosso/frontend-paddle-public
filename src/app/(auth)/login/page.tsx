@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Lock } from "lucide-react";
@@ -56,8 +57,14 @@ function LoginPageContent() {
         <div className="mx-auto w-full max-w-md">
           {/* Logo */}
           <div className="mb-10 flex items-center gap-3">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#D6FF3D]">
-              <span className="block h-5 w-5 rounded-full bg-[#0A0B0D]" />
+            <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#D6FF3D]">
+              <Image
+                src="/mi-padel-club-icon-black.svg"
+                alt="Mi Club Padel"
+                width={19}
+                height={23}
+                priority
+              />
             </span>
             <div className="leading-tight">
               <span className="font-heading text-base font-bold text-[#F2F3F5]">
