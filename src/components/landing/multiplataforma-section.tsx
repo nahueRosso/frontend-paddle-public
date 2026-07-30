@@ -1,7 +1,16 @@
 "use client";
 
 import { Monitor, Smartphone, MessageCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
+import { cn } from "@/lib/utils";
 
 type Channel = {
   icon: typeof Monitor;
@@ -115,7 +124,47 @@ const CHANNELS: Channel[] = [
   },
 ];
 
+function ChannelCard({ ch }: { ch: Channel }) {
+  return (
+    <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-[#101216] transition-colors hover:border-[#D6FF3D]/20">
+      {/* Info - top */}
+      <div className="p-5">
+        <div className="mb-3 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D6FF3D]/10">
+            <ch.icon className="h-5 w-5 text-[#D6FF3D]" />
+          </div>
+          <h3 className="text-lg font-semibold text-[#F2F3F5]">{ch.title}</h3>
+          {ch.badge ? (
+            <span className="rounded-md bg-[#D6FF3D]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#D6FF3D]">
+              {ch.badge}
+            </span>
+          ) : null}
+        </div>
+        <p className="text-sm leading-relaxed text-[#6B7280]">{ch.description}</p>
+      </div>
+
+      {/* Mock - bottom */}
+      <div className="mt-auto border-t border-white/[0.07] bg-[#0A0B0D]">
+        <div className="min-h-[130px]">{ch.mockContent}</div>
+      </div>
+    </div>
+  );
+}
+
 export function MultiplataformaSection() {
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [carouselSlide, setCarouselSlide] = useState(0);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    const onSelect = () => setCarouselSlide(carouselApi.selectedScrollSnap());
+    onSelect();
+    carouselApi.on("select", onSelect);
+    return () => {
+      carouselApi.off("select", onSelect);
+    };
+  }, [carouselApi]);
+
   return (
     <section id="plataforma" className="scroll-mt-20 py-24">
       <div className="mx-auto max-w-[1180px] px-6">
@@ -130,33 +179,37 @@ export function MultiplataformaSection() {
           Todo sincronizado, en tiempo real, sin pisarse.
         </p>
 
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
-          {CHANNELS.map((ch) => (
-            <div
-              key={ch.title}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-[#101216] transition-colors hover:border-[#D6FF3D]/20"
-            >
-              {/* Info - top */}
-              <div className="p-5">
-                <div className="mb-3 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D6FF3D]/10">
-                    <ch.icon className="h-5 w-5 text-[#D6FF3D]" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-[#F2F3F5]">{ch.title}</h3>
-                  {ch.badge ? (
-                    <span className="rounded-md bg-[#D6FF3D]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#D6FF3D]">
-                      {ch.badge}
-                    </span>
-                  ) : null}
-                </div>
-                <p className="text-sm leading-relaxed text-[#6B7280]">{ch.description}</p>
-              </div>
+        {/* Mobile: swipeable carousel */}
+        <div className="mt-14 md:hidden">
+          <Carousel setApi={setCarouselApi} opts={{ align: "start" }}>
+            <CarouselContent>
+              {CHANNELS.map((ch) => (
+                <CarouselItem key={ch.title} className="basis-[85%]">
+                  <ChannelCard ch={ch} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+          <div className="mt-5 flex justify-center gap-2">
+            {CHANNELS.map((ch, i) => (
+              <button
+                key={ch.title}
+                type="button"
+                aria-label={`Ver ${ch.title}`}
+                onClick={() => carouselApi?.scrollTo(i)}
+                className={cn(
+                  "h-1.5 rounded-full transition-all",
+                  carouselSlide === i ? "w-6 bg-[#D6FF3D]" : "w-1.5 bg-white/20",
+                )}
+              />
+            ))}
+          </div>
+        </div>
 
-              {/* Mock - bottom */}
-              <div className="mt-auto border-t border-white/[0.07] bg-[#0A0B0D]">
-                <div className="min-h-[130px]">{ch.mockContent}</div>
-              </div>
-            </div>
+        {/* md and up: grid */}
+        <div className="mt-14 hidden gap-6 md:grid md:grid-cols-3">
+          {CHANNELS.map((ch) => (
+            <ChannelCard key={ch.title} ch={ch} />
           ))}
         </div>
       </div>

@@ -63,17 +63,17 @@ export function FeaturesSection() {
           lugar, automatizada de punta a punta.
         </p>
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
           {FEATURES.map((f) => (
             <div
               key={f.title}
-              className="group rounded-2xl border border-white/[0.07] bg-[#101216] p-6 transition-colors hover:border-[#D6FF3D]/20"
+              className="group rounded-2xl border border-white/[0.07] bg-[#101216] p-4 transition-colors hover:border-[#D6FF3D]/20 sm:p-6"
             >
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#D6FF3D]/10 transition-colors group-hover:bg-[#D6FF3D]/20">
-                <f.icon className="h-5 w-5 text-[#D6FF3D]" />
+              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-[#D6FF3D]/10 transition-colors group-hover:bg-[#D6FF3D]/20 sm:mb-4 sm:h-11 sm:w-11">
+                <f.icon className="h-4 w-4 text-[#D6FF3D] sm:h-5 sm:w-5" />
               </div>
-              <h3 className="text-lg font-semibold text-[#F2F3F5]">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">{f.description}</p>
+              <h3 className="text-sm font-semibold text-[#F2F3F5] sm:text-lg">{f.title}</h3>
+              <p className="mt-2 text-xs leading-relaxed text-[#6B7280] sm:text-sm">{f.description}</p>
             </div>
           ))}
         </div>

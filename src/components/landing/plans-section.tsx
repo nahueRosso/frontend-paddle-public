@@ -16,6 +16,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
+import {
   useCancelPlanMutation,
   useChangePlanMutation,
 } from "@/hooks/mutations/plan";
@@ -48,36 +54,34 @@ const basePlans: Plan[] = [
     id: "plan-1",
     title: "Esencial",
     description:
-      "La base operativa para digitalizar el club. Incluye gestión de reservas, canchas, jugadores, partidos y torneos, sin pagos online ni automatización por WhatsApp.",
-    shortDescription: "La base para digitalizar el club: reservas, canchas, jugadores, partidos y torneos.",
+      "Ideal para clubes de 1 cancha. Incluye pagos online con Mercado Pago, automatización por WhatsApp e IA, más la gestión completa de reservas, jugadores, partidos y torneos.",
+    shortDescription: "Para clubes de 1 cancha: pagos online, WhatsApp automatizado e IA incluidos.",
     price: 50,
     currency: "USD",
     frequency: "mes",
     buttonLabel: "Empezar",
     features: [
-      "Panel administrativo completo",
-      "Reservas, canchas y horarios",
-      "Jugadores, partidos y torneos",
-      "Precios y disponibilidad",
-      "Reservas visibles desde la web",
+      "1 cancha",
+      "20 tokens de IA por mes",
+      "Pagos online con Mercado Pago",
+      "Automatización por WhatsApp",
+      "Reservas, jugadores, partidos y torneos",
     ],
   },
   {
     id: "plan-2",
     title: "Cobros",
     description:
-      "Incluye todo lo del plan Esencial y suma Mercado Pago para cobrar reservas, partidos y torneos de forma más simple y automática.",
-    shortDescription: "Todo lo de Esencial y suma Mercado Pago para cobrar reservas, partidos y torneos automático.",
+      "Para clubes de hasta 3 canchas. Incluye todo lo del plan Esencial con más capacidad de canchas y de tokens de IA por mes.",
+    shortDescription: "Hasta 3 canchas, con todo lo de Esencial y más tokens de IA por mes.",
     price: 70,
     currency: "USD",
     frequency: "mes",
     buttonLabel: "Probar gratis",
     features: [
+      "Hasta 3 canchas",
+      "50 tokens de IA por mes",
       "Todo lo del plan Esencial",
-      "Integración con Mercado Pago",
-      "Cobro de reservas online",
-      "Cobro de partidos y torneos",
-      "Confirmación automática de pagos",
     ],
     highlight: true,
   },
@@ -85,36 +89,34 @@ const basePlans: Plan[] = [
     id: "plan-3",
     title: "Automatizado",
     description:
-      "Incluye todo lo del plan Cobros y agrega atención automatizada por WhatsApp para consultas, reservas y coordinación con jugadores.",
-    shortDescription: "Todo lo de Cobros y agrega atención automatizada por WhatsApp con IA.",
+      "Para clubes de hasta 8 canchas. Incluye todo lo del plan Cobros con más capacidad de canchas y de tokens de IA por mes.",
+    shortDescription: "Hasta 8 canchas, con todo lo de Cobros y más tokens de IA por mes.",
     price: 85,
     currency: "USD",
     frequency: "mes",
     buttonLabel: "Elegir plan",
     features: [
+      "Hasta 8 canchas",
+      "100 tokens de IA por mes",
       "Todo lo del plan Cobros",
-      "Automatización por WhatsApp",
-      "Reservas desde WhatsApp",
-      "Atención automatizada a jugadores",
-      "Funcionalidad Match",
     ],
   },
   {
     id: "plan-4",
     title: "Premium",
     description:
-      "Incluye todo lo del plan Automatizado y suma una operación más dedicada, con número propio para el club y una experiencia exclusiva de atención y gestión.",
-    shortDescription: "Todo lo de Automatizado y suma número propio del club y una operación dedicada.",
+      "Para clubes de más de 8 canchas. Cantidad de canchas y tokens de IA a medida, con número propio del club y una operación dedicada.",
+    shortDescription: "Más de 8 canchas, canchas y tokens de IA a medida — a consultar.",
     price: 100,
     currency: "USD",
     frequency: "mes",
     buttonLabel: "Hablar con ventas",
     features: [
+      "Más de 8 canchas — a consultar",
+      "Tokens de IA a medida",
       "Todo lo del plan Automatizado",
       "Número de WhatsApp propio del club",
-      "Canal de atención exclusivo",
-      "Operación premium para el admin",
-      "Gestión dedicada",
+      "Operación dedicada",
     ],
   },
 ];
@@ -133,6 +135,8 @@ export function PlansSection() {
   const [redirecting, setRedirecting] = useState(false);
   const [isChangingPlan, setIsChangingPlan] = useState(false);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [carouselSlide, setCarouselSlide] = useState(0);
 
   const changePlanMutation = useChangePlanMutation();
   const cancelPlanMutation = useCancelPlanMutation();
@@ -179,6 +183,16 @@ export function PlansSection() {
       setError((c) => c ?? "No pudimos actualizar los precios de los planes.");
     }
   }, [paymentsPlansError]);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    const onSelect = () => setCarouselSlide(carouselApi.selectedScrollSnap());
+    onSelect();
+    carouselApi.on("select", onSelect);
+    return () => {
+      carouselApi.off("select", onSelect);
+    };
+  }, [carouselApi]);
 
   const formatDate = (value?: string | null) => {
     if (!value) return "Sin fecha de vencimiento";
@@ -420,9 +434,9 @@ export function PlansSection() {
               </div>
             ) : null}
 
-            {/* 4-column grid */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {plans.map((plan) => {
+            {/* Plan cards: swipeable carousel on mobile, grid from sm: up */}
+            {(() => {
+              const renderPlanCard = (plan: Plan) => {
                 const isSelected = selectedPlanId === plan.id;
                 const isChangeFlow = Boolean(isApprovedPlan && isChangingPlan);
                 const isContactPlan = plan.id === "plan-4";
@@ -432,7 +446,7 @@ export function PlansSection() {
                   <article
                     key={plan.id}
                     className={cn(
-                      "relative flex flex-col rounded-2xl border border-white/[0.07] bg-[#101216] p-6 transition hover:border-[#D6FF3D]/20",
+                      "relative flex h-full flex-col rounded-2xl border border-white/[0.07] bg-[#101216] p-6 transition hover:border-[#D6FF3D]/20",
                       plan.highlight && "border-[#D6FF3D]/40 ring-1 ring-[#D6FF3D]/20",
                       plan.locked && "opacity-70",
                       isSelected && !isChangeFlow && "border-[#D6FF3D] ring-2 ring-[#D6FF3D]/40",
@@ -529,8 +543,44 @@ export function PlansSection() {
                     </div>
                   </article>
                 );
-              })}
-            </div>
+              };
+
+              return (
+                <>
+                  {/* Mobile: swipeable carousel */}
+                  <div className="sm:hidden">
+                    <Carousel setApi={setCarouselApi} opts={{ align: "start" }}>
+                      <CarouselContent className="items-stretch pt-4">
+                        {plans.map((plan) => (
+                          <CarouselItem key={plan.id} className="basis-[85%]">
+                            {renderPlanCard(plan)}
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                    </Carousel>
+                    <div className="mt-5 flex justify-center gap-2">
+                      {plans.map((plan, i) => (
+                        <button
+                          key={plan.id}
+                          type="button"
+                          aria-label={`Ver plan ${plan.title}`}
+                          onClick={() => carouselApi?.scrollTo(i)}
+                          className={cn(
+                            "h-1.5 rounded-full transition-all",
+                            carouselSlide === i ? "w-6 bg-[#D6FF3D]" : "w-1.5 bg-white/20",
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* sm and up: grid */}
+                  <div className="hidden gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-4">
+                    {plans.map((plan) => renderPlanCard(plan))}
+                  </div>
+                </>
+              );
+            })()}
 
             {/* Footer note */}
             <p className="mt-8 text-center text-sm text-[#6B7280]">

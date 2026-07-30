@@ -51,6 +51,7 @@ import {
   fetchTournamentPartnerRequests,
   fetchTournamentRegistrationOptions,
   pickTournamentAvailablePlayer,
+  registerTournamentAmericanoPlayer,
   rejectTournamentPartnerRequest,
   type BillingTournamentStatusResponse,
   type TournamentActionResponse,
@@ -94,6 +95,7 @@ import type {
   TournamentCategory,
   TournamentResultTeam,
 } from "@/types/tournament";
+import type { AmericanoMatch, AmericanoPlayerRef } from "@/types/tournament-americano";
 
 type TournamentView = "upcoming" | "ongoing" | "finished";
 type EligiblePlayer = {
@@ -360,15 +362,27 @@ function TournamentList({
         ))}
       </div>
 
-      <TournamentRegisterDialog
-        tournament={selectedRegisterTournament}
-        open={Boolean(selectedRegisterTournament)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedRegisterTournament(null);
-          }
-        }}
-      />
+      {selectedRegisterTournament?.format === "americano" ? (
+        <AmericanoRegisterDialog
+          tournament={selectedRegisterTournament}
+          open={Boolean(selectedRegisterTournament)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedRegisterTournament(null);
+            }
+          }}
+        />
+      ) : (
+        <TournamentRegisterDialog
+          tournament={selectedRegisterTournament}
+          open={Boolean(selectedRegisterTournament)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedRegisterTournament(null);
+            }
+          }}
+        />
+      )}
 
       <VerifyClubPlayerDialog
         slug={config.slug}
@@ -470,7 +484,8 @@ function PlayerTournamentCard({
           </span>
           {(tournament as Record<string, unknown>).registrationPrice != null && (
             <span className="rounded-lg border border-[#1E2028] bg-[#0F1114] px-2.5 py-1 text-[11px] text-[#9CA3AF]">
-              ${Number((tournament as Record<string, unknown>).registrationPrice).toLocaleString()} / pareja
+              ${Number((tournament as Record<string, unknown>).registrationPrice).toLocaleString()}{" "}
+              / {tournament.format === "americano" ? "jugador" : "pareja"}
             </span>
           )}
         </div>
@@ -646,6 +661,7 @@ function OngoingTournamentDialog({
   const activeTournament = fixtureTournament ?? tournament;
   const hasGroups = Boolean(fixtureTournament?.groups?.length);
   const hasPlayoff = Boolean(fixtureTournament?.playOff?.matches?.length);
+  const hasAmericano = Boolean(fixtureTournament?.americano?.rounds?.length);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -697,7 +713,11 @@ function OngoingTournamentDialog({
                   <ReadOnlyPlayoffSection tournament={fixtureTournament} />
                 ) : null}
 
-                {!hasGroups && !hasPlayoff ? (
+                {hasAmericano ? (
+                  <ReadOnlyAmericanoSection tournament={fixtureTournament} />
+                ) : null}
+
+                {!hasGroups && !hasPlayoff && !hasAmericano ? (
                   <p className="rounded-2xl border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">
                     Este torneo todavía no tiene fixture disponible.
                   </p>
@@ -942,6 +962,180 @@ function ReadOnlyGroupStandings({
   );
 }
 
+function formatAmericanoPlayerName(player: AmericanoPlayerRef) {
+  return `${player.firstName ?? ""} ${player.lastName ?? ""}`.trim() || "Jugador";
+}
+
+function formatAmericanoPairLabel(pair: [AmericanoPlayerRef, AmericanoPlayerRef]) {
+  return pair.map(formatAmericanoPlayerName).join(" / ");
+}
+
+function ReadOnlyAmericanoSection({ tournament }: { tournament: TournamentGroup }) {
+  const { rounds, standings } = tournament.americano ?? { rounds: [], standings: [] };
+
+  const sortedStandings = [...standings].sort((a, b) => {
+    if (b.gamesWon !== a.gamesWon) return b.gamesWon - a.gamesWon;
+    return (b.gamesWon - b.gamesLost) - (a.gamesWon - a.gamesLost);
+  });
+
+  return (
+    <section className="space-y-3">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D6FF3D]">
+          Americano
+        </p>
+        <h4 className="text-base font-semibold text-[#F2F3F5]">
+          Rondas y posiciones
+        </h4>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
+        <div className="rounded-xl border border-[#1E2028] bg-[#14161A]/40 p-3 border-[#1E2028] bg-[#14161A]">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <p className="text-lg font-semibold text-[#F2F3F5]">Rondas</p>
+              <p className="text-xs text-[#6B7280]">Parejas rotativas por ronda</p>
+            </div>
+            <Badge variant="outline">{rounds.length}</Badge>
+          </div>
+
+          <div className="space-y-4">
+            {rounds.map((round) => (
+              <div
+                key={round.id}
+                className="overflow-hidden rounded-xl border border-[#1E2028] bg-[#101216] border-[#1E2028] bg-[#101216]"
+              >
+                <div className="border-b border-[#1E2028] px-4 py-2 border-[#1E2028]">
+                  <p className="text-sm font-semibold text-[#F2F3F5]">
+                    Ronda {round.roundNumber}
+                  </p>
+                </div>
+                <div className="space-y-2 p-3">
+                  {round.matches.map((match: AmericanoMatch, index: number) => {
+                    const hasResult = Boolean(match.finished);
+                    return (
+                      <div
+                        key={match.id}
+                        className="rounded-xl border border-[#1E2028] bg-[#0A0B0D] px-4 py-3 border-[#1E2028]"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-[#F2F3F5]">
+                              Partido {index + 1}
+                            </p>
+                            <p className="mt-1 truncate text-xs text-[#6B7280]">
+                              {formatAmericanoPairLabel(match.pair1)} vs{" "}
+                              {formatAmericanoPairLabel(match.pair2)}
+                            </p>
+                            {match.courtNumber != null && match.scheduledStartTime ? (
+                              <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-[#6B7280]">
+                                <span className="inline-flex items-center gap-1 rounded-full border border-[#1E2028] bg-[#101216] px-2 py-1">
+                                  <MapPin className="h-3 w-3" />
+                                  Cancha {match.courtNumber}
+                                </span>
+                                <span className="inline-flex items-center gap-1 rounded-full border border-[#1E2028] bg-[#101216] px-2 py-1">
+                                  <CalendarClock className="h-3 w-3" />
+                                  {match.scheduledStartTime}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="mt-2 flex items-center gap-2 text-[11px] text-[#6B7280]">
+                                <CalendarClock className="h-3.5 w-3.5" />
+                                Sin programar
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex shrink-0 flex-col items-end gap-2">
+                            <Badge
+                              variant="outline"
+                              className={
+                                hasResult
+                                  ? "border-[#2a3036] bg-[#D6FF3D]/10 text-[#D6FF3D]"
+                                  : "border-amber-900/60 bg-amber-950/30 text-amber-200"
+                              }
+                            >
+                              {hasResult ? "Finalizado" : "Pendiente"}
+                            </Badge>
+                            {hasResult && match.score?.sets ? (
+                              <span className="text-xs font-semibold text-[#6B7280]">
+                                {match.score.sets
+                                  .map((set) => `${set.pair1}-${set.pair2}`)
+                                  .join(" ")}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {rounds.length === 0 ? (
+              <p className="text-sm text-[#6B7280]">
+                Todavía no se generaron las rondas de este Americano.
+              </p>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-[#1E2028] bg-[#14161A]/40 p-3 border-[#1E2028] bg-[#14161A]">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <p className="text-lg font-semibold text-[#F2F3F5]">Posiciones</p>
+              <p className="text-xs text-[#6B7280]">Ranking por games ganados</p>
+            </div>
+            <Trophy className="h-4 w-4 text-[#6B7280]" />
+          </div>
+
+          <div className="overflow-hidden rounded-lg border border-[#1E2028]">
+            <div className="grid grid-cols-[minmax(0,1.9fr)_42px_42px_42px_58px] items-center gap-2 border-b border-[#1E2028] bg-[#14161A] px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-[#6B7280] border-[#1E2028] bg-[#101216]">
+              <span>Jugador</span>
+              <span className="text-center">PJ</span>
+              <span className="text-center">PG</span>
+              <span className="text-center">PP</span>
+              <span className="text-right">Games</span>
+            </div>
+
+            <div className="divide-y divide-[#1E2028]">
+              {sortedStandings.map((standing, index) => (
+                <div
+                  key={standing.id}
+                  className="grid grid-cols-[minmax(0,1.9fr)_42px_42px_42px_58px] items-center gap-2 bg-[#101216] px-3 py-3 bg-[#101216]"
+                >
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1a1d24] text-[11px] font-semibold text-[#6B7280] bg-[#14161A]">
+                      {index + 1}
+                    </span>
+                    <p className="truncate text-sm font-medium text-[#F2F3F5]">
+                      {formatAmericanoPlayerName(standing.player)}
+                    </p>
+                  </div>
+
+                  <span className="text-center text-sm">{standing.matchesPlayed}</span>
+                  <span className="text-center text-sm">{standing.matchesWon}</span>
+                  <span className="text-center text-sm">{standing.matchesLost}</span>
+                  <span className="text-right text-base font-semibold">
+                    {standing.gamesWon}
+                  </span>
+                </div>
+              ))}
+
+              {sortedStandings.length === 0 ? (
+                <p className="p-3 text-sm text-[#6B7280]">
+                  Todavía no hay jugadores inscriptos.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function ReadOnlyPlayoffSection({ tournament }: { tournament: TournamentGroup }) {
   const matchesByRound = React.useMemo(() => {
     const map = new Map<number, PlayOffMatch[]>();
@@ -1062,6 +1256,134 @@ function PlayoffTeamLine({
       </span>
       <span className="shrink-0 font-mono text-xs font-semibold">{score}</span>
     </div>
+  );
+}
+
+function AmericanoRegisterDialog({
+  tournament,
+  open,
+  onOpenChange,
+}: {
+  tournament: Tournament | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { playerId } = usePlayerSafe();
+  const { config } = useClub();
+  const queryClient = useQueryClient();
+  const [selectedCategoryId, setSelectedCategoryId] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [success, setSuccess] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
+
+  const categories = tournament?.categories ?? [];
+  const needsCategorySelection = categories.length > 1;
+
+  React.useEffect(() => {
+    setSelectedCategoryId(getTournamentCategoryId(categories[0]) ?? "");
+    setError("");
+    setSuccess("");
+  }, [tournament?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const tournamentRecord = tournament as Record<string, unknown> | null;
+  const hasFee =
+    Boolean(tournamentRecord?.hasRegistrationFee) &&
+    Number(tournamentRecord?.registrationPrice ?? 0) > 0;
+
+  const handleRegister = async () => {
+    if (!tournament || !playerId) return;
+    if (needsCategorySelection && !selectedCategoryId) {
+      setError("Elegí una categoria para inscribirte.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+    try {
+      await registerTournamentAmericanoPlayer({
+        tournamentId: tournament.id,
+        playerId,
+        categoryId: selectedCategoryId || undefined,
+      });
+      setSuccess("¡Listo! Quedaste anotado en el Americano.");
+      await queryClient.invalidateQueries({ queryKey: tournamentKeys.list(config.tenantId) });
+    } catch (err) {
+      setError(getTournamentActionErrorMessage(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="border-[#1E2028] bg-[#0A0B0D] text-[#F2F3F5] sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            Anotarme{tournament ? ` - ${tournament.name}` : ""}
+          </DialogTitle>
+          <DialogDescription className="text-[#6B7280]">
+            Inscripción individual. Las parejas se arman por ronda una vez cerrada la inscripción.
+          </DialogDescription>
+        </DialogHeader>
+
+        {needsCategorySelection && (
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-[#9CA3AF]">Categoria</label>
+            <select
+              className="w-full rounded-lg border border-[#1E2028] bg-[#101216] px-3 py-2 text-sm text-[#F2F3F5]"
+              value={selectedCategoryId}
+              onChange={(e) => setSelectedCategoryId(e.target.value)}
+            >
+              {categories.map((category) => (
+                <option
+                  key={getTournamentCategoryId(category) ?? category.categoryLevel}
+                  value={getTournamentCategoryId(category) ?? ""}
+                >
+                  {formatTournamentCategoryOption(category)}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {hasFee ? (
+          <p className="rounded-xl border border-[#1E2028] bg-[#101216] px-3 py-2 text-xs text-[#9CA3AF]">
+            Este torneo tiene inscripción paga. El club te va a contactar para coordinar el pago.
+          </p>
+        ) : null}
+
+        {error ? (
+          <p className="rounded-xl border border-amber-900/60 bg-amber-950/30 px-3 py-2 text-xs text-amber-200">
+            {error}
+          </p>
+        ) : null}
+
+        {success ? (
+          <p className="rounded-xl border border-[#2a3036] bg-[#D6FF3D]/10 px-3 py-2 text-xs text-[#D6FF3D]">
+            {success}
+          </p>
+        ) : null}
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="border-[#2a3036] bg-[#14161A] text-[#F2F3F5] hover:bg-[#1a1d24] hover:text-[#D6FF3D]"
+          >
+            {success ? "Cerrar" : "Cancelar"}
+          </Button>
+          {!success && (
+            <Button
+              className="bg-[#D6FF3D] text-[#0A0B0D] font-semibold hover:bg-[#e4ff6a]"
+              disabled={submitting || !playerId}
+              onClick={() => void handleRegister()}
+            >
+              {submitting ? "Anotando..." : "Confirmar inscripcion"}
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -2484,9 +2806,12 @@ function formatBookingDate(date?: string) {
   if (!date) return "Sin fecha";
 
   try {
+    // "date" es "YYYY-MM-DD" puro: forzamos UTC para no correr el dia
+    // hacia atras en timezones detras de UTC (ej. Argentina).
     return new Date(date).toLocaleDateString("es-AR", {
       day: "2-digit",
       month: "short",
+      timeZone: "UTC",
     });
   } catch {
     return date;
@@ -2533,6 +2858,7 @@ function formatPlayoffRound(round: number) {
 function formatOngoingTournamentStage(status?: string) {
   if (status === "group_stage") return "Fase de grupos";
   if (status === "playoff") return "Playoff";
+  if (status === "americano") return "Americano en curso";
   if (status === "finished") return "Finalizado";
   if (status === "registration") return "Inscripcion";
   return "En curso";
@@ -2651,14 +2977,18 @@ function formatTournamentFormat(format: string) {
   if (format === "single_elimination") return "Eliminacion simple";
   if (format === "group_stage") return "Fase de grupos";
   if (format === "group_stage_playoff") return "Grupos + playoff";
+  if (format === "americano") return "Americano";
   return format;
 }
 
 function formatDate(date: string) {
+  // Fecha pura (sin hora), serializada en UTC medianoche. Forzamos UTC
+  // para no correr el dia hacia atras en timezones detras de UTC.
   return new Date(date).toLocaleDateString("es-AR", {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 

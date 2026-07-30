@@ -1,5 +1,7 @@
 //types/tournament-group.ts
 
+import { AmericanoData } from "./tournament-americano";
+
 export type PlayerGender = "male" | "female";
 export type CategoryGender = "male" | "female" | "mixed" | "mixed-only";
 export type Round = 2 | 4 | 8 | 16 | 32 | number;
@@ -7,12 +9,14 @@ export type Round = 2 | 4 | 8 | 16 | 32 | number;
 export type TournamentFormat =
   | "single_elimination"
   | "group_stage"
-  | "group_stage_playoff";
+  | "group_stage_playoff"
+  | "americano";
 
 export type TournamentStatus =
   | "registration"
   | "group_stage"
   | "playoff"
+  | "americano"
   | "finished";
 
 export type SourceType = "direct" | "group";
@@ -208,12 +212,17 @@ export interface TournamentGroup {
   endDate: string;
   groupsCount: number | null;
   qualifyPerGroup: number | null;
+  americanoMinMatches?: number | null;
+  americanoRoundRobin?: boolean | null;
+  americanoSetsPerMatch?: number | null;
+  americanoTotalRounds?: number | null;
   finishedMatch: number;
   totalMatches: number;
   allMatchesFinished: boolean;
   categories?: Category[];
   groups: GroupWrapper[];
   playOff: PlayOff; // 👈 añadir esto al tipo existente
+  americano: AmericanoData;
 }
 
 export type GetAllStageGroup = TournamentGroup[];

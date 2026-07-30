@@ -364,6 +364,30 @@ export async function addTournamentAvailablePlayer({
   );
 }
 
+export async function registerTournamentAmericanoPlayer({
+  tournamentId,
+  playerId,
+  categoryId,
+}: {
+  tournamentId: string;
+  playerId: string;
+  categoryId?: string;
+}) {
+  const response = await playerFetch(`/tournament/americano/register`, {
+    method: "POST",
+    body: JSON.stringify({
+      tournamentId,
+      playerId,
+      ...(categoryId ? { categoryId } : {}),
+    }),
+  });
+
+  return parseTournamentApiResponse<TournamentActionResponse>(
+    response,
+    "No se pudo completar la inscripcion.",
+  );
+}
+
 export async function withdrawTournamentAvailablePlayer(availablePlayerId: string) {
   const response = await playerFetch(
     `/tournament/available-players/${availablePlayerId}`,

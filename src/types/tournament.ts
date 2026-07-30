@@ -12,7 +12,11 @@ export type TenantConfig = {
 };
 
 export type TournamentType = "regular" | "sum";
-export type TournamentFormat = "single_elimination" | "group_stage" | "group_stage_playoff";
+export type TournamentFormat =
+  | "single_elimination"
+  | "group_stage"
+  | "group_stage_playoff"
+  | "americano";
 export type Gender = "male" | "female" | "mixed" | "mixed-only";
 
 export type TournamentCategory = {

@@ -337,7 +337,7 @@ export function PlanConfigDialog({
 
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="w-[96vw] sm:!max-w-5xl border-white/[0.07] bg-[#0A0B0D] p-0 text-[#E4E5E7]"
+          className="max-h-[90vh] w-[96vw] overflow-y-auto border-white/[0.07] bg-[#0A0B0D] p-0 text-[#E4E5E7] sm:!max-w-5xl"
           onInteractOutside={(event) => {
             const target = event.target as HTMLElement;
             if (target.closest(".pac-container")) {
@@ -496,7 +496,7 @@ export function PlanConfigDialog({
               </div>
 
               {/* Images side by side */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="rounded-xl border border-dashed border-[#D6FF3D]/20 bg-[#101216] p-3">
                   <ImageUploader
                     id="dlg-logo"
@@ -526,18 +526,18 @@ export function PlanConfigDialog({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between border-t border-white/[0.07] px-6 py-4 sm:px-8">
+          <div className="flex flex-col gap-3 border-t border-white/[0.07] px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
             <p className="text-sm text-[#6B7280]">Podés editar todo después desde el panel.</p>
 
             {error ? (
-              <div className="mx-4 flex-1 rounded-lg border border-rose-800 bg-rose-950/30 px-3 py-2 text-xs text-rose-200">
+              <div className="rounded-lg border border-rose-800 bg-rose-950/30 px-3 py-2 text-xs text-rose-200 sm:mx-4 sm:flex-1">
                 {error}
               </div>
             ) : null}
 
             <Button
               type="button"
-              className="rounded-xl bg-[#D6FF3D] px-6 py-3 font-semibold text-[#0A0B0D] transition-all hover:bg-[#e4ff6a]"
+              className="w-full rounded-xl bg-[#D6FF3D] px-6 py-3 font-semibold text-[#0A0B0D] transition-all hover:bg-[#e4ff6a] sm:w-auto"
               disabled={redirecting || createTenantConfigMutation.isPending}
               onClick={() => { if (!redirecting) setShowLegalDialog(true); }}
             >

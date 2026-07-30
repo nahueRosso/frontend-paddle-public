@@ -114,7 +114,7 @@ export function ImageUploader({
 
       {preview ? (
         <div className="space-y-2">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <div
               className={cn(
                 "relative overflow-hidden rounded-xl border-2 border-white/10 bg-[#0A0B0D]",

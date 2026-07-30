@@ -43,8 +43,8 @@ export function LibroDiarioSection() {
               </ul>
             </div>
 
-            {/* Dashboard mock */}
-            <div className="rounded-2xl border border-white/[0.07] bg-[#0A0B0D]">
+            {/* Dashboard mock - hidden on phone, visible from sm: up */}
+            <div className="hidden rounded-2xl border border-white/[0.07] bg-[#0A0B0D] sm:block">
               {/* Title bar */}
               <div className="flex items-center gap-2 border-b border-white/[0.07] px-5 py-3">
                 <div className="flex gap-1.5">

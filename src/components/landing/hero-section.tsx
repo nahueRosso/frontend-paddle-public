@@ -259,9 +259,9 @@ export function HeroSection() {
           <p className="text-sm text-[#6B7280]">
             Pensado para clubes que no quieren perder más tiempo en planillas
           </p>
-          <div className="flex flex-wrap items-center gap-8">
+          <div className="grid w-full grid-cols-3 gap-4 sm:w-auto sm:flex sm:flex-wrap sm:items-center sm:gap-8">
             {METRICS.map((m) => (
-              <div key={m.value} className="flex items-baseline gap-2">
+              <div key={m.value} className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
                 <span className="font-heading text-2xl font-bold text-[#D6FF3D]">
                   {m.value}
                 </span>

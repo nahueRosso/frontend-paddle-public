@@ -168,7 +168,7 @@ export function Header() {
       {navOpen ? (
         <div
           ref={menuRef}
-          className="flex flex-col gap-0.5 border-t border-white/[0.07] bg-[rgba(10,11,13,0.97)] px-5 pb-5 pt-3.5 md:hidden"
+          className="absolute inset-x-0 top-full flex max-h-[calc(100vh-4.5rem)] flex-col gap-0.5 overflow-y-auto border-t border-white/[0.07] bg-[rgba(10,11,13,0.97)] px-5 pb-5 pt-3.5 md:hidden"
         >
           {NAV_LINKS.map((link) => (
             <a
