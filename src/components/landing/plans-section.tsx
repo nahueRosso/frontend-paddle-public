@@ -42,6 +42,7 @@ export type Plan = {
   currency: string;
   arsPrice?: number | null;
   arsCurrency?: string | null;
+  maxCourts?: number | null;
   frequency: string;
   features: string[];
   highlight?: boolean;
@@ -58,6 +59,7 @@ const basePlans: Plan[] = [
     shortDescription: "Para clubes de 1 cancha: pagos online, WhatsApp automatizado e IA incluidos.",
     price: 50,
     currency: "USD",
+    maxCourts: 1,
     frequency: "mes",
     buttonLabel: "Empezar",
     features: [
@@ -76,6 +78,7 @@ const basePlans: Plan[] = [
     shortDescription: "Hasta 3 canchas, con todo lo de Esencial y más tokens de IA por mes.",
     price: 70,
     currency: "USD",
+    maxCourts: 3,
     frequency: "mes",
     buttonLabel: "Probar gratis",
     features: [
@@ -93,6 +96,7 @@ const basePlans: Plan[] = [
     shortDescription: "Hasta 8 canchas, con todo lo de Cobros y más tokens de IA por mes.",
     price: 85,
     currency: "USD",
+    maxCourts: 8,
     frequency: "mes",
     buttonLabel: "Elegir plan",
     features: [
@@ -109,6 +113,7 @@ const basePlans: Plan[] = [
     shortDescription: "Más de 8 canchas, canchas y tokens de IA a medida — a consultar.",
     price: 100,
     currency: "USD",
+    maxCourts: null,
     frequency: "mes",
     buttonLabel: "Hablar con ventas",
     features: [
@@ -153,7 +158,12 @@ export function PlansSection() {
     return basePlans.map((plan) => {
       const backendPlan = backendPlansById.get(plan.id) ?? backendPlansById.get(plan.title);
       if (!backendPlan) return plan;
-      return { ...plan, arsPrice: backendPlan.price, arsCurrency: backendPlan.currency };
+      return {
+        ...plan,
+        arsPrice: backendPlan.price,
+        arsCurrency: backendPlan.currency,
+        maxCourts: backendPlan.maxCourts ?? plan.maxCourts,
+      };
     });
   }, [paymentsPlans]);
 

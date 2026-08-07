@@ -14,6 +14,8 @@ export const AUTH_BACKEND_ROUTES = {
     process.env.BACKEND_PUBLIC_SESSION_LOGIN_PATH ?? "/auth/google/public",
   publicLogout:
     process.env.BACKEND_PUBLIC_SESSION_LOGOUT_PATH ?? "/auth/logout/public",
+  publicDeleteAccount:
+    process.env.BACKEND_PUBLIC_ACCOUNT_DELETE_PATH ?? "/auth/account",
   playerEnsure:
     process.env.BACKEND_PLAYER_SESSION_ENSURE_PATH ?? "/auth/player-session",
   playerLogout:

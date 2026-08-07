@@ -25,6 +25,7 @@ export type PaymentsPlan = {
   name: string;
   price: number;
   currency: string;
+  maxCourts: number | null;
 };
 
 export async function createTenantConfig(payload: CreatePlanTenantConfigPayload) {

@@ -155,7 +155,13 @@ export async function createTenantConfigWithAssets({
     let body = "";
     try { body = await response.text(); } catch { /* noop */ }
     console.error("[createTenantConfigWithAssets] error body:", body);
-    throw new Error(`No pudimos guardar la configuración inicial. (${response.status}) ${body}`);
+    let message = "No pudimos guardar la configuración inicial.";
+    try {
+      const parsed = JSON.parse(body);
+      const parsedMessage = Array.isArray(parsed?.message) ? parsed.message.join(" ") : parsed?.message;
+      if (parsedMessage) message = parsedMessage;
+    } catch { /* body no era JSON */ }
+    throw new Error(message);
   }
 
   return response.json();

@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare const google: any;
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Script from "next/script";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { Check, CheckCircle2, Loader2, NotebookPen, Search, Settings, Pencil } from "lucide-react";
@@ -27,6 +27,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useCreateTenantConfigWithAssetsMutation } from "@/hooks/mutations/tenant-config";
 import { ImageUploader } from "@/components/PageImageUploader";
@@ -131,13 +138,13 @@ const defaultConfig: ConfigFormState = {
   openingEvening: "16:00",
   closingEvening: "22:00",
   priceMode: "uniform",
-  basePrice: 0,
+  basePrice: 5000,
   courtCount: 2,
 };
 
 const TIME_PATTERN = /^\d{2}:\d{2}$/;
 
-function validateInitialConfig(configForm: ConfigFormState, contactEmail: string) {
+function validateInitialConfig(configForm: ConfigFormState, contactEmail: string, maxCourts: number | null | undefined) {
   const trimmedClubName = configForm.clubName.trim();
   if (trimmedClubName.length < 2 || trimmedClubName.length > 50) return "El nombre del club debe tener entre 2 y 50 caracteres.";
   const trimmedAddress = configForm.address.trim();
@@ -151,6 +158,10 @@ function validateInitialConfig(configForm: ConfigFormState, contactEmail: string
   const trimmedEmail = contactEmail.trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) return "Ingresá un email de contacto válido.";
   if (!Number.isInteger(configForm.courtCount) || configForm.courtCount < 1) return "Ingresá una cantidad válida de canchas.";
+  if (typeof maxCourts === "number" && configForm.courtCount > maxCourts) {
+    return `Tu plan permite hasta ${maxCourts} cancha${maxCourts === 1 ? "" : "s"}. Elegí un plan superior para agregar más.`;
+  }
+  if (!Number.isFinite(configForm.basePrice) || configForm.basePrice < 1) return "Ingresá un precio base válido para el turno.";
   if (!TIME_PATTERN.test(configForm.openingMorning)) return "La apertura debe tener formato HH:mm.";
   if (!TIME_PATTERN.test(configForm.closingMorning)) return "El cierre debe tener formato HH:mm.";
   return null;
@@ -238,6 +249,19 @@ export function PlanConfigDialog({
     if (mapsReady) initAutocomplete();
   }, [mapsReady, initAutocomplete]);
 
+  useEffect(() => {
+    const maxCourts = selectedPlan.maxCourts;
+    if (typeof maxCourts !== "number") return;
+    setConfigForm((prev) =>
+      prev.courtCount > maxCourts ? { ...prev, courtCount: maxCourts } : prev,
+    );
+  }, [selectedPlan.id, selectedPlan.maxCourts]);
+
+  const courtCountOptions = useMemo(() => {
+    const max = typeof selectedPlan.maxCourts === "number" ? selectedPlan.maxCourts : 12;
+    return Array.from({ length: Math.max(1, max) }, (_, i) => i + 1);
+  }, [selectedPlan.maxCourts]);
+
   const buildCourts = () =>
     Array.from({ length: Math.max(1, configForm.courtCount) }).map((_, i) => ({
       number: i + 1,
@@ -250,7 +274,7 @@ export function PlanConfigDialog({
       return;
     }
     const contactEmail = session.user.email || configForm.contactEmail;
-    const validationError = validateInitialConfig(configForm, contactEmail);
+    const validationError = validateInitialConfig(configForm, contactEmail, selectedPlan.maxCourts);
     if (validationError) {
       setError(validationError);
       return;
@@ -291,8 +315,8 @@ export function PlanConfigDialog({
         formData,
       });
       await onSuccess();
-    } catch {
-      setError("No pudimos guardar la configuración inicial.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No pudimos guardar la configuración inicial.");
     } finally {
       setRedirecting(false);
     }
@@ -462,15 +486,41 @@ export function PlanConfigDialog({
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <Label className="text-sm text-[#9CA3AF]">Número de canchas</Label>
+                    <Select
+                      value={String(configForm.courtCount)}
+                      onValueChange={(value) => handleConfigChange("courtCount", Number(value))}
+                    >
+                      <SelectTrigger className="border-white/10 bg-[#0A0B0D] text-[#E4E5E7]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="border-white/10 bg-[#0A0B0D] text-[#E4E5E7]">
+                        {courtCountOptions.map((n) => (
+                          <SelectItem key={n} value={String(n)}>
+                            {n} cancha{n === 1 ? "" : "s"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {typeof selectedPlan.maxCourts === "number" ? (
+                      <p className="text-xs text-[#6B7280]">
+                        Tu plan {selectedPlan.title} permite hasta {selectedPlan.maxCourts} cancha{selectedPlan.maxCourts === 1 ? "" : "s"}.
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-[#9CA3AF]">Precio base por turno</Label>
                     <Input
                       type="number"
                       min={1}
-                      max={12}
-                      step={1}
-                      value={configForm.courtCount}
-                      onChange={(e) => handleConfigChange("courtCount", Math.max(1, Number(e.target.value) || 1))}
+                      step={100}
+                      value={configForm.basePrice}
+                      onChange={(e) => handleConfigChange("basePrice", Math.max(0, Number(e.target.value) || 0))}
+                      placeholder="Ej. 5000"
                       className="border-white/10 bg-[#0A0B0D] text-[#E4E5E7]"
                     />
+                    <p className="text-xs text-[#6B7280]">
+                      Podés ajustar precios por cancha u horario después desde el panel.
+                    </p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
