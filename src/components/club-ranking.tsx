@@ -2962,8 +2962,8 @@ function formatTournamentCategory(tournament: Tournament) {
 function formatGender(gender: string) {
   if (gender === "male") return "Masculino";
   if (gender === "female") return "Femenino";
-  if (gender === "mixed") return "Mixto";
-  if (gender === "mixed-only") return "Solo mixto";
+  if (gender === "mixed") return "Libre";
+  if (gender === "mixed-only") return "Mixto obligatorio";
   return "Sin definir";
 }
 

@@ -14,7 +14,7 @@ const NAV_LINKS = [
   { href: "#plataforma", label: "Plataforma" },
   { href: "#whatsapp", label: "WhatsApp IA" },
   { href: "#gestion", label: "Gestión" },
-  { href: "#planes", label: "Planes" },
+  { href: "#planes", label: "Sumá tu club" },
 ];
 
 export function Header() {

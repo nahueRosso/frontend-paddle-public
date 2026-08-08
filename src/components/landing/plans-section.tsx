@@ -1,37 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  CalendarDays,
-  Check,
-  CheckCircle2,
-  Lock,
-  Octagon,
-  Sparkles,
-} from "lucide-react";
+import { CalendarDays, Check, CheckCircle2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  type CarouselApi,
-} from "@/components/ui/carousel";
-import {
-  useCancelPlanMutation,
-  useChangePlanMutation,
-} from "@/hooks/mutations/plan";
+import { useCancelPlanMutation } from "@/hooks/mutations/plan";
 import { usePaymentsPlansQuery } from "@/hooks/queries/plan";
 import { useAuth } from "@/hooks/use-auth";
 import { planKeys } from "@/lib/queryKeys/plan";
 import { cn } from "@/lib/utils";
 import { PublicVideoCallBookingDialog } from "@/components/public-video-call-booking-dialog";
 import { SubscriptionBadge } from "@/components/public-mp-suscription";
-import { PlanConfigDialog } from "@/components/landing/plan-config-dialog";
+import { SignupDialog } from "@/components/landing/signup-dialog";
 
 export type Plan = {
   id: string;
@@ -45,11 +28,10 @@ export type Plan = {
   maxCourts?: number | null;
   frequency: string;
   features: string[];
-  highlight?: boolean;
-  locked?: boolean;
-  buttonLabel: string;
 };
 
+// Metadata de referencia para los planes ya asignados por el equipo comercial
+// (el precio real vive en la tabla de planes del backend, no acá).
 const basePlans: Plan[] = [
   {
     id: "plan-1",
@@ -61,7 +43,6 @@ const basePlans: Plan[] = [
     currency: "USD",
     maxCourts: 1,
     frequency: "mes",
-    buttonLabel: "Empezar",
     features: [
       "1 cancha",
       "20 tokens de IA por mes",
@@ -80,13 +61,11 @@ const basePlans: Plan[] = [
     currency: "USD",
     maxCourts: 3,
     frequency: "mes",
-    buttonLabel: "Probar gratis",
     features: [
       "Hasta 3 canchas",
       "50 tokens de IA por mes",
       "Todo lo del plan Esencial",
     ],
-    highlight: true,
   },
   {
     id: "plan-3",
@@ -98,7 +77,6 @@ const basePlans: Plan[] = [
     currency: "USD",
     maxCourts: 8,
     frequency: "mes",
-    buttonLabel: "Elegir plan",
     features: [
       "Hasta 8 canchas",
       "100 tokens de IA por mes",
@@ -115,7 +93,6 @@ const basePlans: Plan[] = [
     currency: "USD",
     maxCourts: null,
     frequency: "mes",
-    buttonLabel: "Hablar con ventas",
     features: [
       "Más de 8 canchas — a consultar",
       "Tokens de IA a medida",
@@ -126,30 +103,28 @@ const basePlans: Plan[] = [
   },
 ];
 
+const pitchFeatures = [
+  "Reservas, jugadores, partidos y torneos",
+  "Pagos online con Mercado Pago",
+  "Automatización por WhatsApp e IA",
+  "Configuración a medida de tu club",
+];
+
 export function PlansSection() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { session, planStatus } = useAuth();
-  const {
-    data: paymentsPlans,
-    error: paymentsPlansError,
-  } = usePaymentsPlansQuery();
-  const [priceDisplayCurrency, setPriceDisplayCurrency] = useState<"ARS" | "USD">("ARS");
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const { data: paymentsPlans } = usePaymentsPlansQuery();
   const [error, setError] = useState<string | null>(null);
   const [redirecting, setRedirecting] = useState(false);
-  const [isChangingPlan, setIsChangingPlan] = useState(false);
-  const [configDialogOpen, setConfigDialogOpen] = useState(false);
-  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
-  const [carouselSlide, setCarouselSlide] = useState(0);
+  const [signupDialogOpen, setSignupDialogOpen] = useState(false);
 
-  const changePlanMutation = useChangePlanMutation();
   const cancelPlanMutation = useCancelPlanMutation();
   const currentPlanStatus = planStatus?.status ?? null;
   const isApprovedPlan = currentPlanStatus === "approved";
   const isPendingPlan = currentPlanStatus === "pending";
-  const isRejectedPlan = currentPlanStatus === "rejected";
-  const shouldShowStatusCard = (isApprovedPlan || isPendingPlan) && !isChangingPlan;
+  const shouldShowStatusCard = isApprovedPlan || isPendingPlan;
+  const shouldShowPitch = !shouldShowStatusCard;
 
   const plans = useMemo(() => {
     const backendPlansById = new Map(
@@ -167,8 +142,6 @@ export function PlansSection() {
     });
   }, [paymentsPlans]);
 
-  const selectedPlan = plans.find((p) => p.id === selectedPlanId) ?? null;
-
   const activePlan = useMemo(() => {
     if (!planStatus?.planId && !planStatus?.planName) return null;
     return (
@@ -183,80 +156,22 @@ export function PlansSection() {
         currency: "ARS",
         frequency: "",
         features: [],
-        buttonLabel: "",
       }
     );
   }, [planStatus, plans]);
-
-  useEffect(() => {
-    if (paymentsPlansError) {
-      setError((c) => c ?? "No pudimos actualizar los precios de los planes.");
-    }
-  }, [paymentsPlansError]);
-
-  useEffect(() => {
-    if (!carouselApi) return;
-    const onSelect = () => setCarouselSlide(carouselApi.selectedScrollSnap());
-    onSelect();
-    carouselApi.on("select", onSelect);
-    return () => {
-      carouselApi.off("select", onSelect);
-    };
-  }, [carouselApi]);
 
   const formatDate = (value?: string | null) => {
     if (!value) return "Sin fecha de vencimiento";
     return new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(value));
   };
 
-  const formatPlanPrice = (price: number) =>
-    new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(price);
-
-  const getPlanDisplayPrice = (plan: Plan) => {
-    if (priceDisplayCurrency === "ARS" && typeof plan.arsPrice === "number" && plan.arsCurrency) {
-      return { price: plan.arsPrice, currency: plan.arsCurrency, usesFallback: false };
-    }
-    return { price: plan.price, currency: plan.currency, usesFallback: priceDisplayCurrency === "ARS" };
-  };
-
-  const handlePlanSelection = (plan: Plan) => {
-    if (plan.locked) return;
+  const handleStartSignup = () => {
     if (!session?.user?.id) {
       router.push("/login?redirect=/");
       return;
     }
-    if (planStatus?.active && isChangingPlan) {
-      void submitPlanChange(plan.id);
-      return;
-    }
-    setSelectedPlanId(plan.id);
     setError(null);
-    setConfigDialogOpen(true);
-  };
-
-  const submitPlanChange = async (newPlanId: string) => {
-    if (!session?.user?.id) {
-      setError("Necesitás iniciar sesión para cambiar tu plan.");
-      return;
-    }
-    setError(null);
-    setRedirecting(true);
-    try {
-      const data = await changePlanMutation.mutateAsync({
-        tenantId: session.user.id,
-        newPlanName: newPlanId,
-        email: session.user.email,
-      });
-      if (data.init_point) {
-        window.location.href = data.init_point;
-      } else {
-        toast.success("El plan fue actualizado correctamente.");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "No pudimos cambiar el plan. Intentá nuevamente.");
-    } finally {
-      setRedirecting(false);
-    }
+    setSignupDialogOpen(true);
   };
 
   const handleCancelPlan = async () => {
@@ -269,8 +184,6 @@ export function PlansSection() {
     try {
       await cancelPlanMutation.mutateAsync({ tenantId: session.user.id });
       toast.success("Tu suscripción fue cancelada correctamente.");
-      setIsChangingPlan(false);
-      setSelectedPlanId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No pudimos cancelar la suscripción. Intentá nuevamente.");
     } finally {
@@ -278,13 +191,12 @@ export function PlansSection() {
     }
   };
 
-  const handleConfigSuccess = async () => {
+  const handleSignupSuccess = async () => {
     if (session?.user?.id) {
       await queryClient.invalidateQueries({ queryKey: planKeys.statusByTenant(session.user.id) });
     }
-    toast.success("Configuración enviada. Revisá el estado de tu plan desde esta misma pantalla.");
-    setSelectedPlanId(null);
-    setConfigDialogOpen(false);
+    toast.success("¡Registro enviado! Ya podés seguir el estado de tu club desde esta misma pantalla.");
+    setSignupDialogOpen(false);
     setError(null);
   };
 
@@ -292,13 +204,13 @@ export function PlansSection() {
     <section id="planes" className="scroll-mt-20 border-t border-white/[0.05] py-24">
       <div className="mx-auto max-w-[1180px] px-6">
         <div className="mb-4 text-center text-sm font-semibold uppercase tracking-wider text-[#D6FF3D]">
-          Planes
+          Sumá tu club
         </div>
         <h2 className="text-center font-heading text-3xl font-bold text-[#F2F3F5] sm:text-4xl">
-          Elegí cuánto querés automatizar.
+          Automatizá tu club a tu medida.
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-[#9CA3AF]">
-          Cuatro planes que crecen con tu club. Cada uno incluye todo lo del anterior.
+          Registrá tu club y coordinamos una videollamada para conocer tu operación y armar el plan que mejor se adapte.
         </p>
 
         {/* Status card */}
@@ -329,7 +241,7 @@ export function PlansSection() {
             <p className="mt-2 text-sm text-[#9CA3AF]">
               {isApprovedPlan
                 ? "Tu plan ya fue aprobado. Desde acá podés coordinar la videollamada de alta y gestionar tu suscripción."
-                : "Tu compra está pendiente de aprobación. El siguiente paso es agendar la videollamada para terminar la activación."}
+                : "Tu registro está pendiente de aprobación. El siguiente paso es agendar la videollamada para terminar la activación."}
             </p>
 
             {/* Features */}
@@ -378,7 +290,7 @@ export function PlansSection() {
                       subscriptionStatus: "SubscriptionStatusValue",
                     }}
                     className="w-full justify-center rounded-xl bg-emerald-500 py-3 text-[#0A0B0D] hover:bg-emerald-400"
-                    icon={<Octagon className="h-4 w-4" />}
+                    icon={<Sparkles className="h-4 w-4" />}
                   />
                 </>
               ) : null}
@@ -394,6 +306,7 @@ export function PlansSection() {
                     variant="outline"
                     className="w-full rounded-xl border-rose-800 py-3 text-rose-400 hover:bg-rose-950/30"
                     onClick={handleCancelPlan}
+                    disabled={redirecting}
                   >
                     Cancelar suscripción
                   </Button>
@@ -403,203 +316,33 @@ export function PlansSection() {
           </div>
         ) : null}
 
-        {/* Plans grid */}
-        {isChangingPlan || !currentPlanStatus || isRejectedPlan ? (
-          <div className="mt-10">
-            {/* Currency toggle */}
-            <div className="mb-8 flex justify-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#111417] px-3 py-1.5">
-                <button
-                  type="button"
-                  onClick={() => setPriceDisplayCurrency("ARS")}
-                  className={cn(
-                    "text-xs font-medium transition-colors",
-                    priceDisplayCurrency === "ARS" ? "text-[#F2F3F5]" : "text-[#6B7280]",
-                  )}
-                >
-                  ARS
-                </button>
-                <Switch
-                  checked={priceDisplayCurrency === "USD"}
-                  onCheckedChange={(checked) => setPriceDisplayCurrency(checked ? "USD" : "ARS")}
-                  className="scale-90 cursor-pointer"
-                  aria-label="Cambiar entre ARS y USD"
-                />
-                <button
-                  type="button"
-                  onClick={() => setPriceDisplayCurrency("USD")}
-                  className={cn(
-                    "text-xs font-medium transition-colors",
-                    priceDisplayCurrency === "USD" ? "text-[#F2F3F5]" : "text-[#6B7280]",
-                  )}
-                >
-                  USD
-                </button>
-              </div>
-            </div>
+        {/* Simple pitch + CTA (no pricing exposed) */}
+        {shouldShowPitch ? (
+          <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-white/[0.07] bg-[#101216] p-8 text-center">
+            <ul className="mx-auto grid max-w-lg gap-3 text-left text-sm text-[#E4E5E7] sm:grid-cols-2">
+              {pitchFeatures.map((f) => (
+                <li key={f} className="flex items-start gap-2">
+                  <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#D6FF3D]" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
 
-            {isChangingPlan ? (
-              <div className="mb-6 rounded-2xl border border-white/10 bg-[#111417] p-4 text-center text-sm text-[#9CA3AF]">
-                Seleccioná el nuevo plan que querés activar.
-              </div>
-            ) : null}
+            <Button
+              type="button"
+              className="mt-8 w-full justify-center rounded-xl bg-[#D6FF3D] px-6 py-3 font-semibold text-[#0A0B0D] shadow-md transition-all hover:bg-[#e4ff6a] sm:w-auto"
+              onClick={handleStartSignup}
+            >
+              Probar gratis
+            </Button>
 
-            {/* Plan cards: swipeable carousel on mobile, grid from sm: up */}
-            {(() => {
-              const renderPlanCard = (plan: Plan) => {
-                const isSelected = selectedPlanId === plan.id;
-                const isChangeFlow = Boolean(isApprovedPlan && isChangingPlan);
-                const isContactPlan = plan.id === "plan-4";
-                const displayPrice = getPlanDisplayPrice(plan);
-
-                return (
-                  <article
-                    key={plan.id}
-                    className={cn(
-                      "relative flex h-full flex-col rounded-2xl border border-white/[0.07] bg-[#101216] p-6 transition hover:border-[#D6FF3D]/20",
-                      plan.highlight && "border-[#D6FF3D]/40 ring-1 ring-[#D6FF3D]/20",
-                      plan.locked && "opacity-70",
-                      isSelected && !isChangeFlow && "border-[#D6FF3D] ring-2 ring-[#D6FF3D]/40",
-                    )}
-                  >
-                    {/* Floating badge */}
-                    {plan.highlight ? (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#D6FF3D] px-4 py-1 text-[11px] font-bold uppercase tracking-wider text-[#0A0B0D] whitespace-nowrap">
-                        Más elegido
-                      </span>
-                    ) : null}
-
-                    {/* Title */}
-                    <h3 className="text-lg font-semibold text-[#F2F3F5]">{plan.title}</h3>
-
-                    {/* Price */}
-                    <div className="mt-3">
-                      <span className="text-sm text-[#6B7280]">{displayPrice.currency} </span>
-                      <span className="text-4xl font-bold text-[#F2F3F5]">
-                        {formatPlanPrice(displayPrice.price)}
-                      </span>
-                      <span className="text-sm text-[#6B7280]"> /{plan.frequency}</span>
-                    </div>
-
-                    {/* Short description */}
-                    <p className="mt-3 text-sm leading-relaxed text-[#6B7280]">{plan.shortDescription}</p>
-
-                    {/* CTA button */}
-                    <div className="mt-5">
-                      {isContactPlan && !plan.locked && !isChangeFlow ? (
-                        session?.user?.email ? (
-                          <PublicVideoCallBookingDialog
-                            session={session}
-                            triggerLabel={plan.buttonLabel}
-                            className="w-full justify-center rounded-xl border border-white/[0.14] px-4 py-3 font-medium text-[#E4E5E7] transition-all hover:border-white/30"
-                            icon={<CalendarDays className="h-4 w-4" />}
-                          />
-                        ) : (
-                          <Button
-                            type="button"
-                            disabled={redirecting}
-                            className="w-full justify-center rounded-xl border border-white/[0.14] px-4 py-3 font-medium text-[#E4E5E7] transition-all hover:border-white/30"
-                            onClick={() => router.push("/login?redirect=/")}
-                          >
-                            {plan.buttonLabel}
-                          </Button>
-                        )
-                      ) : (
-                        <Button
-                          type="button"
-                          disabled={plan.locked || redirecting}
-                          className={cn(
-                            "w-full justify-center rounded-xl px-4 py-3 font-medium transition-all",
-                            plan.highlight
-                              ? "bg-[#D6FF3D] text-[#0A0B0D] shadow-md hover:bg-[#e4ff6a]"
-                              : "border border-white/[0.14] text-[#E4E5E7] hover:border-white/30",
-                          )}
-                          onClick={() => {
-                            if (plan.locked) return;
-                            if (isChangeFlow) {
-                              void submitPlanChange(plan.id);
-                              return;
-                            }
-                            handlePlanSelection(plan);
-                          }}
-                        >
-                          {plan.locked ? (
-                            <>
-                              <Lock className="mr-2 h-4 w-4" />
-                              Próximamente
-                            </>
-                          ) : isChangeFlow ? (
-                            "Cambiar a este plan"
-                          ) : (
-                            plan.buttonLabel
-                          )}
-                        </Button>
-                      )}
-                    </div>
-
-                    {/* Features */}
-                    <div className="mt-5 border-t border-white/[0.07] pt-5">
-                      <div className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">
-                        Incluye
-                      </div>
-                      <ul className="space-y-2.5 text-sm text-[#9CA3AF]">
-                        {plan.features.map((f) => (
-                          <li key={f} className="flex items-start gap-2">
-                            <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#D6FF3D]" />
-                            <span>{f}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </article>
-                );
-              };
-
-              return (
-                <>
-                  {/* Mobile: swipeable carousel */}
-                  <div className="sm:hidden">
-                    <Carousel setApi={setCarouselApi} opts={{ align: "start" }}>
-                      <CarouselContent className="items-stretch pt-4">
-                        {plans.map((plan) => (
-                          <CarouselItem key={plan.id} className="basis-[85%]">
-                            {renderPlanCard(plan)}
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                    </Carousel>
-                    <div className="mt-5 flex justify-center gap-2">
-                      {plans.map((plan, i) => (
-                        <button
-                          key={plan.id}
-                          type="button"
-                          aria-label={`Ver plan ${plan.title}`}
-                          onClick={() => carouselApi?.scrollTo(i)}
-                          className={cn(
-                            "h-1.5 rounded-full transition-all",
-                            carouselSlide === i ? "w-6 bg-[#D6FF3D]" : "w-1.5 bg-white/20",
-                          )}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* sm and up: grid */}
-                  <div className="hidden gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-4">
-                    {plans.map((plan) => renderPlanCard(plan))}
-                  </div>
-                </>
-              );
-            })()}
-
-            {/* Footer note */}
-            <p className="mt-8 text-center text-sm text-[#6B7280]">
-              Precios en ARS basados en el valor fijo en USD · sin costo de instalación · cancelás cuando quieras
+            <p className="mt-4 text-sm text-[#6B7280]">
+              Coordinamos una videollamada para conocer tu club y definir el plan que mejor se ajuste.
             </p>
 
             {!session?.user?.id ? (
-              <p className="mt-3 text-center text-sm text-[#6B7280]">
-                Iniciá sesión para contratar un plan o recibir más información.
+              <p className="mt-3 text-sm text-[#6B7280]">
+                Iniciá sesión para registrar tu club.
               </p>
             ) : null}
           </div>
@@ -612,16 +355,12 @@ export function PlansSection() {
         ) : null}
       </div>
 
-      {/* Config dialog */}
-      {selectedPlan ? (
-        <PlanConfigDialog
-          open={configDialogOpen}
-          onOpenChange={setConfigDialogOpen}
-          selectedPlan={selectedPlan}
-          session={session}
-          onSuccess={handleConfigSuccess}
-        />
-      ) : null}
+      <SignupDialog
+        open={signupDialogOpen}
+        onOpenChange={setSignupDialogOpen}
+        session={session}
+        onSuccess={handleSignupSuccess}
+      />
     </section>
   );
 }
