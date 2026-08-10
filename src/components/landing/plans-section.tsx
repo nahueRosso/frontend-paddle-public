@@ -2,19 +2,28 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Check, CheckCircle2, Sparkles } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Check, CheckCircle2, Clock3, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { useCancelPlanMutation } from "@/hooks/mutations/plan";
 import { usePaymentsPlansQuery } from "@/hooks/queries/plan";
+import { useMyCalenderBookingQuery } from "@/hooks/queries/calender";
 import { useAuth } from "@/hooks/use-auth";
 import { planKeys } from "@/lib/queryKeys/plan";
 import { cn } from "@/lib/utils";
 import { PublicVideoCallBookingDialog } from "@/components/public-video-call-booking-dialog";
 import { SubscriptionBadge } from "@/components/public-mp-suscription";
 import { SignupDialog } from "@/components/landing/signup-dialog";
+
+const ADMIN_URL = "https://admin.miclubpadel.com";
+
+function formatBookingDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, (month ?? 1) - 1, day ?? 1);
+  return new Intl.DateTimeFormat("es-AR", { weekday: "long", day: "2-digit", month: "long" }).format(date);
+}
 
 export type Plan = {
   id: string;
@@ -125,6 +134,12 @@ export function PlansSection() {
   const isPendingPlan = currentPlanStatus === "pending";
   const shouldShowStatusCard = isApprovedPlan || isPendingPlan;
   const shouldShowPitch = !shouldShowStatusCard;
+
+  const { data: myBooking, isLoading: isLoadingBooking } = useMyCalenderBookingQuery(
+    session?.user?.email ?? undefined,
+    isPendingPlan,
+  );
+  const hasScheduledCall = Boolean(myBooking?.hasActiveBooking && myBooking.booking);
 
   const plans = useMemo(() => {
     const backendPlansById = new Map(
@@ -240,9 +255,26 @@ export function PlansSection() {
             <h3 className="mt-5 text-2xl font-bold text-[#F2F3F5]">{activePlan.title}</h3>
             <p className="mt-2 text-sm text-[#9CA3AF]">
               {isApprovedPlan
-                ? "Tu plan ya fue aprobado. Desde acá podés coordinar la videollamada de alta y gestionar tu suscripción."
-                : "Tu registro está pendiente de aprobación. El siguiente paso es agendar la videollamada para terminar la activación."}
+                ? "¡Tu club está habilitado! Ya podés gestionarlo desde el panel de administración."
+                : hasScheduledCall
+                  ? "Ya agendaste tu videollamada. Nos vemos ahí para terminar la activación."
+                  : "Tu registro está pendiente de aprobación. El siguiente paso es agendar la videollamada."}
             </p>
+
+            {/* Estado de la videollamada (solo mientras está pendiente) */}
+            {isPendingPlan && !isLoadingBooking && hasScheduledCall && myBooking?.booking ? (
+              <div className="mt-5 flex items-center gap-3 rounded-xl border border-amber-800 bg-[#0A0B0D] px-4 py-3.5">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-amber-500/15">
+                  <Clock3 className="h-4 w-4 text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-[#6B7280]">Tu videollamada</p>
+                  <p className="mt-0.5 text-sm font-semibold capitalize text-[#F2F3F5]">
+                    {formatBookingDate(myBooking.booking.bookingDate)} · {myBooking.booking.startTime}hs
+                  </p>
+                </div>
+              </div>
+            ) : null}
 
             {/* Features */}
             {activePlan.features.length > 0 ? (
@@ -274,7 +306,7 @@ export function PlansSection() {
                   <PublicVideoCallBookingDialog
                     session={session}
                     className="w-full justify-center rounded-xl bg-[#D6FF3D] py-3 text-[#0A0B0D] hover:bg-[#e4ff6a]"
-                    triggerLabel="Agendar videollamada"
+                    triggerLabel={hasScheduledCall ? "Ver o reprogramar videollamada" : "Agendar videollamada"}
                     icon={<CalendarDays className="h-4 w-4" />}
                   />
                   <SubscriptionBadge
@@ -296,12 +328,13 @@ export function PlansSection() {
               ) : null}
               {isApprovedPlan ? (
                 <>
-                  <PublicVideoCallBookingDialog
-                    session={session}
-                    className="w-full justify-center rounded-xl bg-[#D6FF3D] py-3 font-semibold text-[#0A0B0D] hover:bg-[#e4ff6a]"
-                    triggerLabel="Agendar videollamada"
-                    icon={<CalendarDays className="h-4 w-4" />}
-                  />
+                  <a
+                    href={ADMIN_URL}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#D6FF3D] py-3 font-semibold text-[#0A0B0D] no-underline transition-all hover:bg-[#e4ff6a]"
+                  >
+                    Ir al panel de administración
+                    <ArrowUpRight className="h-4 w-4" />
+                  </a>
                   <Button
                     variant="outline"
                     className="w-full rounded-xl border-rose-800 py-3 text-rose-400 hover:bg-rose-950/30"

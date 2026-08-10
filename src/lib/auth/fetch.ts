@@ -1,11 +1,13 @@
 import { API_URL, DEFAULT_TENANT_SCHEMA, buildRequestUrl } from "@/lib/auth/backend";
 import { BackendFetchError } from "@/lib/auth/errors";
+import { refreshWebSession } from "@/lib/auth/refresh";
 
 type FetchContext = "public" | "player" | "admin";
 
 type ContextualFetchOptions = RequestInit & {
   redirectOnAuthError?: boolean;
   authRedirectPath?: string;
+  skipAuthRefresh?: boolean;
 };
 
 function buildHeaders(init?: RequestInit) {
@@ -106,6 +108,16 @@ async function contextualFetch(
 
   if (response.ok) {
     return response;
+  }
+
+  // Access token expired but the refresh token cookie may still be valid:
+  // refresh once and retry transparently before falling back to the
+  // redirect-to-login/throw behavior below.
+  if (response.status === 401 && !init?.skipAuthRefresh) {
+    const refreshed = await refreshWebSession();
+    if (refreshed) {
+      return contextualFetch(context, input, { ...init, skipAuthRefresh: true });
+    }
   }
 
   const payload = await parseResponsePayload(response);

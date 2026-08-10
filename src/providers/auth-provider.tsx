@@ -16,6 +16,7 @@ import { isBackendFetchError } from "@/lib/auth/errors";
 import { buildRelativeUrl, sanitizeRelativeRedirect } from "@/lib/auth/navigation";
 import { logoutPlayer } from "@/lib/auth/player-session";
 import { loginWithGooglePublic, logoutPublic } from "@/lib/auth/public-session";
+import { refreshWebSession } from "@/lib/auth/refresh";
 import type { SessionState } from "@/lib/auth/types";
 import { usePlanStatusQuery } from "@/hooks/queries/plan";
 
@@ -61,13 +62,24 @@ function AuthContextBridge({ children }: { children: ReactNode }) {
   );
 
   const syncPublicSession = useCallback(async () => {
+    setPublicSessionStatus("loading");
+
+    // The public_refresh_token cookie lives for 30 days and can silently
+    // renew an existing backend session. Try that first so a page load
+    // doesn't force a fresh Google id_token verification below, whose
+    // id_token is only valid for ~1h after the original NextAuth sign-in
+    // and never gets rotated on its own.
+    if (await refreshWebSession()) {
+      setPublicSessionStatus("authenticated");
+      setSessionScope("public");
+      return;
+    }
+
     if (!session?.idToken) {
       setPublicSessionStatus("unauthenticated");
       setSessionScope("none");
       return;
     }
-
-    setPublicSessionStatus("loading");
 
     try {
       const response = await loginWithGooglePublic(session.idToken);
