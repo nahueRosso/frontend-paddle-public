@@ -37,6 +37,20 @@ import { usePlayer } from "@/providers/player-provider";
 import VerifyClubPlayerDialog from "./verify-club-player-dialog";
 import VerifyPlayerDialog from "./verify-player-dialog";
 
+// El backend manda un código corto en `reason` (no un mensaje para el
+// usuario): antes se mostraba tal cual ("player_not_verified") en el diálogo.
+function describeVerificationRequiredReason(reason?: string): string {
+  switch (reason) {
+    case "player_pending_verification":
+      return "Tu verificación está en revisión por el club. Te avisamos apenas esté lista.";
+    case "club_unverified_booking_disabled":
+      return "El club no permite reservar turnos a jugadores no verificados. Contactate con la administración para verificar tu cuenta.";
+    case "player_not_verified":
+    default:
+      return "Tu cuenta todavía no está verificada por el club. Contactate con la administración para poder reservar.";
+  }
+}
+
 function formatCourtEnvironment(environment?: CourtConfig["environment"]) {
   if (environment === "abierta") {
     return "Abierta";
@@ -371,9 +385,7 @@ export function ClubTurnos() {
       ]);
 
       if (response.mode === "verification_required") {
-        setVerifyReason(
-          response.reason?.trim() || "Tu cuenta debe ser verificada.",
-        );
+        setVerifyReason(describeVerificationRequiredReason(response.reason));
         setVerifyPlayer(true);
         return;
       }

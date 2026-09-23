@@ -18,7 +18,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Badge } from "@/components/ui/badge";
 
 type SessionWithProfile = Session & {
   profile?: { sub?: unknown };
@@ -214,44 +213,55 @@ export function VideoCallBookingPanel({ session, onBooked, defaultPhone }: Video
 
         {/* Existing booking */}
         {!loadingBooking && booking ? (
-          <div className="space-y-4 rounded-2xl border border-emerald-800 bg-emerald-950/20 p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-emerald-400">Ya tenés una videollamada agendada</p>
-                <p className="text-sm text-[#9CA3AF]">Si querés otra, primero tenés que cancelar la actual.</p>
-              </div>
-              <Badge variant="outline" className="border-emerald-800 text-emerald-400">
+          <div className="space-y-4 rounded-2xl border border-[rgba(216,255,71,0.28)] bg-[linear-gradient(180deg,rgba(216,255,71,0.055),rgba(216,255,71,0.012)_55%,transparent)] p-5 shadow-[0_24px_60px_-34px_rgba(216,255,71,0.22)]">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(216,255,71,0.3)] bg-[rgba(216,255,71,0.12)] px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#d8ff47]">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Turno reservado
+              </span>
+              <span className="flex items-center gap-1.5 text-xs text-[#9aa494]">
+                <span className="h-2 w-2 rounded-full bg-[#4ade80] shadow-[0_0_0_4px_rgba(74,222,128,0.16)]" />
                 {getStatusLabel(booking.status)}
-              </Badge>
+              </span>
             </div>
-            <div className="grid gap-3 rounded-xl border border-white/[0.07] bg-[#0A0B0D] p-4 text-sm sm:grid-cols-2">
+
+            <div>
+              <p className="text-base font-bold text-[#f4f6f0]">Ya tenés una videollamada agendada</p>
+              <p className="mt-1 text-sm text-[#8d938a]">Si querés otra, primero tenés que cancelar la actual.</p>
+            </div>
+
+            <div className="grid gap-3 rounded-xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.035)] p-4 text-sm sm:grid-cols-2">
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#6B7280]">Fecha</p>
-                <p className="font-semibold text-[#F2F3F5]">{formatDateLong(booking.bookingDate)}</p>
+                <p className="text-xs uppercase tracking-wide text-[#77806f]">Fecha</p>
+                <p className="font-semibold text-[#f2f4ec]">{formatDateLong(booking.bookingDate)}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#6B7280]">Horario</p>
-                <p className="font-semibold text-[#F2F3F5]">{booking.startTime} a {booking.endTime}</p>
+                <p className="text-xs uppercase tracking-wide text-[#77806f]">Horario</p>
+                <p className="font-semibold text-[#f2f4ec]">{booking.startTime} a {booking.endTime}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#6B7280]">Duración</p>
-                <p className="font-semibold text-[#F2F3F5]">{booking.durationMinutes} minutos</p>
+                <p className="text-xs uppercase tracking-wide text-[#77806f]">Duración</p>
+                <p className="font-semibold text-[#f2f4ec]">{booking.durationMinutes} minutos</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wide text-[#6B7280]">Estado</p>
-                <p className="font-semibold text-[#F2F3F5]">{getStatusLabel(booking.status)}</p>
+                <p className="text-xs uppercase tracking-wide text-[#77806f]">Estado</p>
+                <p className="font-semibold text-[#d8ff47]">{getStatusLabel(booking.status)}</p>
               </div>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="border-rose-800 text-rose-400 hover:bg-rose-950/30 sm:w-auto"
-              onClick={handleCancelBooking}
-              disabled={cancelling}
-            >
-              {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-              Cancelar reserva
-            </Button>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-[#77806f]">Te enviamos el link por WhatsApp 15 minutos antes.</p>
+              <Button
+                type="button"
+                variant="outline"
+                className="border-[rgba(248,113,113,0.4)] text-[#f87171] hover:border-[rgba(248,113,113,0.7)] hover:bg-[rgba(248,113,113,0.1)] sm:w-auto"
+                onClick={handleCancelBooking}
+                disabled={cancelling}
+              >
+                {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                Cancelar reserva
+              </Button>
+            </div>
           </div>
         ) : null}
 

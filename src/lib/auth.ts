@@ -3,6 +3,27 @@ import type { Session } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import GoogleProvider from "next-auth/providers/google";
 
+/**
+ * Google id_tokens are JWTs carrying their own `exp` claim (Unix seconds).
+ * Reading it directly is more reliable than assuming a fixed lifetime (in
+ * practice ~1h, but Google doesn't contractually guarantee that duration).
+ */
+function decodeIdTokenExpiresAt(idToken: string): number | undefined {
+  const segments = idToken.split(".");
+  if (segments.length < 2) {
+    return undefined;
+  }
+
+  try {
+    const base64 = segments[1].replace(/-/g, "+").replace(/_/g, "/");
+    const json = Buffer.from(base64, "base64").toString("utf8");
+    const payload = JSON.parse(json) as { exp?: number };
+    return typeof payload.exp === "number" ? payload.exp * 1000 : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function extractProviderId(profile: unknown): string | undefined {
   if (profile && typeof profile === "object") {
     const candidate = profile as { sub?: unknown; id?: unknown };
@@ -59,6 +80,7 @@ export const authOptions: NextAuthOptions = {
       const extendedToken = token as JWT & {
         accessToken?: string;
         idToken?: string;
+        idTokenExpiresAt?: number;
         profile?: Record<string, unknown>;
         userId?: string;
       };
@@ -69,6 +91,7 @@ export const authOptions: NextAuthOptions = {
 
       if (account?.id_token) {
         extendedToken.idToken = account.id_token;
+        extendedToken.idTokenExpiresAt = decodeIdTokenExpiresAt(account.id_token);
       }
 
       if (profile) {
@@ -92,12 +115,14 @@ export const authOptions: NextAuthOptions = {
       const extendedSession = session as Session & {
         accessToken?: string;
         idToken?: string;
+        idTokenExpiresAt?: number;
         profile?: Record<string, unknown>;
       };
 
       const extendedToken = token as JWT & {
         accessToken?: string;
         idToken?: string;
+        idTokenExpiresAt?: number;
         profile?: Record<string, unknown>;
         userId?: string;
       };
@@ -108,6 +133,10 @@ export const authOptions: NextAuthOptions = {
 
       if (typeof extendedToken.idToken === "string") {
         extendedSession.idToken = extendedToken.idToken;
+      }
+
+      if (typeof extendedToken.idTokenExpiresAt === "number") {
+        extendedSession.idTokenExpiresAt = extendedToken.idTokenExpiresAt;
       }
 
       if (extendedToken.profile) {

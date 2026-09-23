@@ -36,18 +36,24 @@ export function PublicVideoCallBookingDialog({
         {triggerLabel}
       </Button>
 
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-white/[0.07] bg-[#0A0B0D] p-0 text-[#E4E5E7] sm:max-w-3xl">
+      <DialogContent
+        className="max-h-[90vh] overflow-y-auto border-[rgba(255,255,255,0.09)] p-0 text-[#E4E5E7] shadow-[0_40px_90px_-40px_rgba(0,0,0,0.9)] sm:max-w-3xl"
+        style={{
+          background:
+            "radial-gradient(120% 90% at 50% -10%, rgba(216,255,71,0.06), rgba(6,8,6,0) 60%), #0b0d0a",
+        }}
+      >
         <DialogHeader className="border-b border-white/[0.07] px-8 pt-8 pb-6">
           <div className="flex items-center gap-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#D6FF3D]/10">
-              <Video className="h-5 w-5 text-[#D6FF3D]" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(216,255,71,0.24)] bg-[rgba(216,255,71,0.12)]">
+              <Video className="h-5 w-5 text-[#d8ff47]" />
             </div>
             <div>
-              <DialogTitle className="font-heading text-xl text-[#F2F3F5]">
+              <DialogTitle className="font-heading text-xl text-[#f4f6f0]">
                 Agendar videollamada
               </DialogTitle>
-              <p className="mt-1 text-sm text-[#6B7280]">
-                Conocé la plataforma en una videollamada y obtené <strong className="text-[#D6FF3D]">15 días gratis</strong>.
+              <p className="mt-1 text-sm text-[#8d938a]">
+                Conocé la plataforma en una videollamada y obtené <strong className="text-[#d8ff47]">15 días gratis</strong>.
               </p>
             </div>
           </div>

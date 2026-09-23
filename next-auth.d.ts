@@ -4,6 +4,7 @@ declare module "next-auth" {
   interface Session {
     accessToken?: string;
     idToken?: string;
+    idTokenExpiresAt?: number;
     profile?: Record<string, unknown>;
     user?: DefaultSession["user"] & {
       id?: string;
@@ -19,6 +20,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     accessToken?: string;
     idToken?: string;
+    idTokenExpiresAt?: number;
     profile?: Record<string, unknown>;
     userId?: string;
   }
