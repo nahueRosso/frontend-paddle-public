@@ -68,8 +68,7 @@ export default function TermsPage() {
             cuenta con los permisos para utilizar los datos cargados.
           </li>
           <li>
-            Cumplir con las políticas de uso de Meta y los proveedores
-            seleccionados (ej. Mercado Pago, Stripe).
+            Cumplir con las políticas de uso de Meta y de Mercado Pago.
           </li>
           <li>
             Proteger las credenciales de acceso y notificar a{" "}
@@ -162,7 +161,7 @@ export default function TermsPage() {
       </section>
 
       <footer className="rounded-3xl border border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400">
-        Última actualización: Junio de 2026 — {company.brandName}.
+        Última actualización: Septiembre de 2026 — {company.brandName}.
       </footer>
     </LegalPageLayout>
   );

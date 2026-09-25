@@ -67,9 +67,22 @@ export default function PrivacidadJugadorPage() {
             <strong>Datos de contacto:</strong> email, número de teléfono.
           </li>
           <li>
+            <strong>Verificación por WhatsApp:</strong> para confirmar que el
+            teléfono es tuyo, te pedimos que nos escribas desde tu WhatsApp;
+            ese mensaje (tu número y el texto que enviás) pasa por la
+            plataforma de Meta / WhatsApp Business antes de llegar a
+            nosotros.
+          </li>
+          <li>
             <strong>Datos de cuenta:</strong> si iniciás sesión con Google o
             Apple, recibimos tu nombre y email asociados a esa cuenta (no
             accedemos a tu contraseña).
+          </li>
+          <li>
+            <strong>Identificador del dispositivo:</strong> generamos un
+            identificador aleatorio en tu teléfono para mantener tu sesión
+            iniciada de forma segura. No identifica a otras personas ni se
+            usa para publicidad.
           </li>
           <li>
             <strong>Datos deportivos:</strong> categoría, puntos de ranking,
@@ -77,7 +90,9 @@ export default function PrivacidadJugadorPage() {
           </li>
           <li>
             <strong>Foto de perfil:</strong> si elegís subir una, accedemos a
-            tu cámara o galería solo en ese momento.
+            tu cámara o galería solo en ese momento. Antes de publicarse, la
+            foto pasa por un filtro automático que detecta contenido
+            inapropiado (ver sección 4).
           </li>
           <li>
             <strong>Ubicación:</strong> con tu permiso, usamos tu ubicación
@@ -86,8 +101,13 @@ export default function PrivacidadJugadorPage() {
           </li>
           <li>
             <strong>Datos de pago:</strong> los pagos se procesan a través de
-            Mercado Pago y Stripe. No almacenamos números de tarjeta ni datos
+            Mercado Pago. No almacenamos números de tarjeta ni datos
             financieros sensibles.
+          </li>
+          <li>
+            <strong>Denuncias:</strong> si denunciás a otro jugador (o te
+            denuncian a vos), guardamos el motivo y el resultado de la
+            revisión que hace el club.
           </li>
         </ul>
 
@@ -100,23 +120,68 @@ export default function PrivacidadJugadorPage() {
           <li>Mostrarte clubes cercanos a tu ubicación.</li>
           <li>Procesar pagos a través de nuestros proveedores.</li>
           <li>Brindarte soporte cuando nos escribís.</li>
+          <li>
+            Detectar automáticamente fotos de perfil con contenido
+            inapropiado antes de que se publiquen.
+          </li>
+          <li>
+            Revisar las denuncias entre jugadores y, si corresponde, tomar
+            medidas sobre la cuenta denunciada.
+          </li>
         </ul>
 
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           4. Con quién compartimos datos
         </h3>
         <p>
-          No vendemos tus datos a terceros. Los compartimos únicamente con:
+          No vendemos tus datos a terceros. Los compartimos únicamente con
+          los proveedores que necesitamos para operar la app:
         </p>
         <ul className="list-disc space-y-2 pl-6">
           <li>Google / Apple (autenticación).</li>
-          <li>Mercado Pago / Stripe (procesamiento de pagos).</li>
+          <li>Mercado Pago (procesamiento de pagos).</li>
           <li>Google Maps (ubicación de clubes).</li>
+          <li>
+            Meta / WhatsApp Business (verificación de tu teléfono y avisos
+            sobre tus partidos).
+          </li>
+          <li>
+            Cloudflare (almacenamiento de las fotos de perfil que subís).
+          </li>
+          <li>
+            fal.ai (analiza automáticamente tu foto de perfil para detectar
+            contenido inapropiado antes de publicarla; no la usa para nada
+            más).
+          </li>
+          <li>
+            OpenAI (cuando escribís por WhatsApp, ayuda a identificar a qué
+            club te referís).
+          </li>
+          <li>Resend (envío de emails, por ejemplo de soporte).</li>
           <li>El club al que pertenecés, para gestionar tu participación.</li>
         </ul>
 
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          5. Cuánto tiempo conservamos tus datos
+          5. Visibilidad dentro del club
+        </h3>
+        <p>
+          Tu nombre, foto de perfil y categoría son visibles para otros
+          jugadores verificados del mismo club: en el ranking, al buscar
+          pareja para un torneo y en los partidos de Match que jugás. Podés
+          bloquear a otro jugador para dejar de verlo y que no te contacte, y
+          podés denunciarlo si su conducta o su foto te parecen
+          inapropiadas — ver{" "}
+          <a
+            href="#terminos"
+            className="font-semibold text-slate-900 underline underline-offset-4 dark:text-slate-100"
+          >
+            Contenido y conducta
+          </a>{" "}
+          en los Términos.
+        </p>
+
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          6. Cuánto tiempo conservamos tus datos
         </h3>
         <p>
           Mientras tu cuenta esté activa. Si solicitás la eliminación de tu
@@ -132,7 +197,7 @@ export default function PrivacidadJugadorPage() {
         </p>
 
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          6. Tus derechos
+          7. Tus derechos
         </h3>
         <p>
           Podés acceder, corregir o eliminar tus datos en cualquier momento
@@ -147,7 +212,7 @@ export default function PrivacidadJugadorPage() {
         </p>
 
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          7. Seguridad
+          8. Seguridad
         </h3>
         <p>
           Aplicamos medidas técnicas y organizativas razonables para proteger
@@ -155,7 +220,7 @@ export default function PrivacidadJugadorPage() {
         </p>
 
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          8. Menores de edad
+          9. Menores de edad
         </h3>
         <p>
           La app no está dirigida a menores de 13 años. Si sos menor de edad,
@@ -163,7 +228,7 @@ export default function PrivacidadJugadorPage() {
         </p>
 
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          9. Cambios a esta política
+          10. Cambios a esta política
         </h3>
         <p>
           Podemos actualizar esta política. Si hay cambios importantes, te
@@ -210,16 +275,61 @@ export default function PrivacidadJugadorPage() {
         </p>
 
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          4. Pagos
+          4. Contenido y conducta con otros jugadores
         </h3>
         <p>
-          Los pagos de reservas/torneos se procesan mediante Mercado
-          Pago/Stripe según sus propios términos. {company.brandName} no
-          gestiona ni almacena datos financieros.
+          Tenemos <strong>tolerancia cero</strong> con el contenido ofensivo y
+          el acoso entre jugadores. Al subir una foto de perfil o interactuar
+          con otros jugadores, aceptás que:
+        </p>
+        <ul className="list-disc space-y-2 pl-6">
+          <li>
+            No está permitido subir fotos con contenido sexual, violento,
+            discriminatorio o que de cualquier forma resulte ofensivo. Las
+            fotos pasan por un filtro automático antes de publicarse, y
+            pueden ser eliminadas y tu cuenta suspendida si igual se detecta
+            contenido inapropiado.
+          </li>
+          <li>
+            No está permitido acosar, amenazar o discriminar a otro jugador
+            dentro de la app, en Match, en torneos o al coordinar un partido.
+          </li>
+          <li>
+            Podés <strong>bloquear</strong> a cualquier jugador desde su
+            perfil: dejás de verlo y de recibir solicitudes suyas, sin que él
+            se entere. Es una decisión personal e inmediata, no requiere
+            revisión de nuestra parte.
+          </li>
+          <li>
+            Podés <strong>denunciar</strong> a un jugador si su foto o su
+            conducta te parecen inapropiadas. El club revisa cada denuncia y
+            puede suspender la cuenta denunciada si corresponde. Denunciar no
+            suspende una cuenta automáticamente.
+          </li>
+          <li>
+            Si tenés que reportarnos algo urgente sobre contenido o
+            comportamiento de otro jugador, también podés escribirnos a{" "}
+            <a
+              href={`mailto:${company.email}`}
+              className="font-semibold text-slate-900 underline underline-offset-4 dark:text-slate-100"
+            >
+              {company.email}
+            </a>
+            .
+          </li>
+        </ul>
+
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          5. Pagos
+        </h3>
+        <p>
+          Los pagos de reservas/torneos se procesan mediante Mercado Pago
+          según sus propios términos. {company.brandName} no gestiona ni
+          almacena datos financieros.
         </p>
 
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          5. Disponibilidad del servicio
+          6. Disponibilidad del servicio
         </h3>
         <p>
           El servicio se ofrece &ldquo;tal cual&rdquo;. Podemos modificar,
@@ -228,7 +338,7 @@ export default function PrivacidadJugadorPage() {
         </p>
 
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          6. Limitación de responsabilidad
+          7. Limitación de responsabilidad
         </h3>
         <p>
           {company.brandName} no se responsabiliza por disputas entre
@@ -237,14 +347,14 @@ export default function PrivacidadJugadorPage() {
         </p>
 
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          7. Ley aplicable
+          8. Ley aplicable
         </h3>
         <p>
           Estos términos se rigen por las leyes de la República Argentina.
         </p>
 
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          8. Contacto
+          9. Contacto
         </h3>
         <p>
           <a
@@ -257,7 +367,7 @@ export default function PrivacidadJugadorPage() {
       </section>
 
       <footer className="rounded-3xl border border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400">
-        Última actualización: Agosto de 2026 — {company.brandName}.
+        Última actualización: Septiembre de 2026 — {company.brandName}.
       </footer>
     </LegalPageLayout>
   );

@@ -93,7 +93,7 @@ export default function PoliticasJugadorPage() {
           </li>
           <li>
             <strong>Métodos de pago:</strong> los pagos se procesan a través de
-            proveedores habilitados por el club (como Mercado Pago o Stripe).{" "}
+            Mercado Pago, con la cuenta habilitada por cada club.{" "}
             {company.brandName} no almacena datos de tarjetas ni información
             financiera sensible.
           </li>
@@ -434,7 +434,7 @@ export default function PoliticasJugadorPage() {
       </section>
 
       <footer className="rounded-3xl border border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400">
-        Última actualización: Junio de 2026 — {company.brandName}.
+        Última actualización: Septiembre de 2026 — {company.brandName}.
       </footer>
     </LegalPageLayout>
   );
